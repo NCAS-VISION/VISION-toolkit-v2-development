@@ -1,11 +1,14 @@
-This document demonstrates reading in and inspecting data related to the VISION
-project using cf-python. The work was done on a 'sci' node on JASMIN where a
-Python environment with cf-python had been pre-loaded using the command
-'module add jaspy'.
+### Read and inspect data
 
+**This document demonstrates reading in and inspecting data related to the VISION
+project using cf-python.** The work was done on a `sci` node on JASMIN where a
+Python environment with cf-python had been pre-loaded using the command
+`module add jaspy`.
+
+```console
 [slb93@sci4 workwith-test-flight-simulator]$ pwd
 /home/users/slb93/vision-twine/workwith-test-flight-simulator
-[slb93@sci4 workwith-test-flight-simulator]$ # This dir is a direct copy of Maria's
+[slb93@sci4 workwith-test-flight-simulator]$ # This dir is a direct copy of Maria's '/gws/nopw/j04/ukca_vol2/mrrusso/TEST_flight_simulator'
 [slb93@sci4 workwith-test-flight-simulator]$ ls
 Code  flight_simulator.py  Model_Input  Model_Output  Obs_Input
 [slb93@sci4 workwith-test-flight-simulator]$ tree
@@ -53,6 +56,9 @@ Code  flight_simulator.py  Model_Input  Model_Output  Obs_Input
 
 5 directories, 35 files
 [slb93@sci4 workwith-test-flight-simulator]$ python
+```
+
+```pycon
 Python 3.10.8 | packaged by conda-forge | (main, Nov 22 2022, 08:23:14) [GCC 10.4.0] on linux
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import cf
@@ -224,5 +230,5 @@ Data            : air_pressure(ncdim%obs(15663)) hPa
 >>> # From here, you can access fields via mi[N], mo[L] or oi[M] for relevant
 >>> # integer N, L, M in range and apply cf operations to view, analyse or
 >>> # edit the fields.
->>> 
->>> # END
+```
+
