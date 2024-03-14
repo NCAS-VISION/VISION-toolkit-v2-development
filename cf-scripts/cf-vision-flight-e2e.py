@@ -6,13 +6,14 @@ Demonstration for the TWINE-funded (NCAS-)VISION project.
 
 """
 
-# NOTE: itertools.pairwise is only available in Python 3.10 plus, so >v3.10
+# NOTE: itertools.pairwise is only available in Python 3.10 plus, so >= v.3.10
 import itertools
 import logging
 import numpy as np
+import sys
 import time
 
-from pprint import pprint, pformat
+from pprint import pformat
 
 import cfplot as cfp
 import cf
@@ -20,11 +21,12 @@ import cf
 # Define all inputs here:
 # TODO eventually these can be set as command-line arguments (w/ manpage, etc.)
 # configured and managed using getopts/getargs, etc.
-
 DATA_DIR_LOC = "data/main-workwith-test-ISO-simulator"
 OBS_DATA_DIR = "../compliant-data/core_faam_20170703_c016_STANCO_CF.nc"
 MODEL_DATA_DIR = "Model_Input"
 
+# Configure messaging to STDOUT, which is very verbose if INFO=True, else
+# as minimal as allows without log control in cf-plot (at present).
 # TODO: Get ESMF logging via cf incoporated into Python logging system,
 #       see Issue #286.
 INFO = True
@@ -33,23 +35,27 @@ INFO = True
 # STAGE 0: OPTIONAL DIAGNOSTICS REPORT
 # ----------------------------------------------------------------------------
 # Configure logging level
-logging.basicConfig()
+
 # NOTE we use 'CRITICAL' level to avoid seeing cf log level messaging which is
 # a bit spammy and hides the output from this script.
-logging.getLogger().setLevel(logging.CRITICAL)
+logger = logging.getLogger(__name__)
+if INFO:
+    logger.setLevel(logging.CRITICAL)
+else:
+    ###logger.propagate = False
+    logger.setLevel(logging.CRITICAL + 1)  # prevents even critical log messages
 
 OBS_DATA_LOC = f"{DATA_DIR_LOC}/{OBS_DATA_DIR}"
 MODEL_DATA_LOC = f"{DATA_DIR_LOC}/{MODEL_DATA_DIR}"
 
-if INFO:
-    logging.critical(
-        f"Using Python and CF environment of: {cf.environment(display=False)}"
-    )
-    logging.critical(
-        f"Using data locations of:\n"
-        f"Obs data: '{OBS_DATA_LOC}'\n"
-        f"Model data: '{MODEL_DATA_LOC}'"
-    )
+logger.critical(
+    f"Using Python and CF environment of: {cf.environment(display=False)}"
+)
+logger.critical(
+    f"Using data locations of:\n"
+    f"Obs data: '{OBS_DATA_LOC}'\n"
+    f"Model data: '{MODEL_DATA_LOC}'"
+)
 
 # ----------------------------------------------------------------------------
 # STAGE 1: READ IN INPUT DATA (format agnostic with cf!)
@@ -68,21 +74,21 @@ model_data = cf.read(MODEL_DATA_LOC)
 read_model_endtime = time.time()
 read_model_totaltime = read_model_endtime - read_model_starttime
 
-if INFO:
-    logging.critical("Data successfully read in.")
-    logging.critical(
-        f"Time taken to read observational data was: {read_obs_totaltime}")
-    logging.critical(
-        f"Time taken to read observational data was: {read_model_totaltime}"
-    )
+logger.critical("Data successfully read in.")
+logger.critical(
+    f"Time taken to read observational data was: {read_obs_totaltime}")
+logger.critical(
+    f"Time taken to read observational data was: {read_model_totaltime}"
+)
 
 # 1.2: Inspection of read-in fields
+logger.critical(f"Observational (flight) data is:\n {obs_data}")
+logger.critical(f"For example, first obs. field is:\n")
 if INFO:
-    logging.critical(f"Observational (flight) data is:\n {obs_data}")
-    logging.critical(f"For example, first obs. field is:\n")
     obs_data[0].dump()
-    logging.critical(f"Model data is:\n {model_data}")
-    logging.critical(f"For example, first model field is:\n")
+logger.critical(f"Model data is:\n {model_data}")
+logger.critical(f"For example, first model field is:\n")
+if INFO:
     model_data[0].dump()
 
 # ----------------------------------------------------------------------------
@@ -144,12 +150,12 @@ obs_times_units = obs_times.Units
 model_times_units = model_times.Units
 model_times.Units = obs_times.Units
 
-logging.critical(f"UNIT-CONFORMED MODEL FIELD IS: {model_field}")
+logger.critical(f"UNIT-CONFORMED MODEL FIELD IS: {model_field}")
 same_units = (
     model_field.dimension_coordinate("time").data.Units
     == obs_field.auxiliary_coordinate("time").data.Units,
 )
-logging.critical(
+logger.critical(
     f"CONFIRMING: THE UNITS ON OBS AND MODEL DATETIMES ARE THE SAME: "
     f"{same_units};\n"
 )
@@ -163,7 +169,7 @@ logging.critical(
 # for when they are not).
 model_calendar = model_times.calendar
 obs_calendar = obs_times.calendar
-logging.critical(
+logger.critical(
     f"Calendars for relevant times are:\n"
     f"MODEL: {model_calendar},\n"
     f"OBSERVATIONS: {obs_calendar}."
@@ -176,7 +182,7 @@ logging.critical(
 # NOTE: need the datetime array in order to do arithmetic with a TimeDuration
 obs_earliest_dayhour = obs_times[0].datetime_array[0]
 obs_latest_dayhour = obs_times[-1].datetime_array[0]
-logging.critical(
+logger.critical(
     f"EARLIEST AND LATEST ARE: {obs_earliest_dayhour}, {obs_latest_dayhour}")
 # Add an extra hour before the earliest, and after the latest
 #
@@ -193,7 +199,7 @@ obs_latest_dayhour += cf.TimeDuration(1, "hour")
 model_field_bb = model_field.subspace(
     T=cf.wi(obs_earliest_dayhour, obs_latest_dayhour)
 )
-logging.critical(
+logger.critical(
     f"TIME BOUNDING BOX CALC'D, MODEL DATA FIELD AFTER BB IS: {model_field_bb}"
 )
 
@@ -212,8 +218,7 @@ logging.critical(
 
 # TODO: UGRID grids might need some extra steps/work for this.
 
-if INFO:
-    logging.critical(f"Starting spatial interpolation (regridding) step...")
+logger.critical(f"Starting spatial interpolation (regridding) step...")
 spat_regrid_starttime = time.time()
 
 # NOTE: this requires recently-added support for ESMF LocStream
@@ -227,11 +232,11 @@ spatially_colocated_data = model_field_bb.regrids(
 spat_regrid_endtime = time.time()
 spat_regrid_totaltime = spat_regrid_endtime - spat_regrid_starttime
 
+logger.critical(
+    f"Time taken to spatially regrid was: {spat_regrid_totaltime}")
+logger.critical(f"XYZ-colocated data is:\n {spatially_colocated_data}")
 if INFO:
-    logging.critical(
-        f"Time taken to spatially regrid was: {spat_regrid_totaltime}")
-    logging.critical(f"XYZ-colocated data is:\n {spatially_colocated_data}")
-    logging.critical(spatially_colocated_data.dump())
+    spatially_colocated_data.dump()
 
 # TODO: consider whether or not to persist the regridded / spatial interp
 # before the next stage, or to do in a fully lazy way.
@@ -245,8 +250,7 @@ if INFO:
 #
 # ----------------------------------------------------------------------------
 
-if INFO:
-    logging.critical("\n\n\nStarting time interpolation step...\n\n\n")
+logger.critical("\n\n\nStarting time interpolation step...\n\n\n")
 time_interp_starttime = time.time()
 
 # In our fild after spatial interpolation, the Dimension Coord has the model
@@ -256,11 +260,11 @@ model_times = spatially_colocated_data.dimension_coordinate("time")
 obs_times = spatially_colocated_data.auxiliary_coordinate("time")
 model_times_len = len(model_times.data)
 obs_times_len = len(obs_times.data)
-if INFO:
-    logging.critical(
-        f"Number of model time data points: {model_times_len}\n"
-        f"Number of observational time sample data points: {obs_times_len}"
-    )
+
+logger.critical(
+    f"Number of model time data points: {model_times_len}\n"
+    f"Number of observational time sample data points: {obs_times_len}"
+)
 
 # Using a direct subspace method, which works generally.
 # 1. Chop the flight path up into *segments*. Find the segment endpoints.
@@ -271,9 +275,9 @@ fieldlist_subspaces_by_segment = cf.FieldList()
 key = m.auxiliary_coordinate("T", key=True)
 subsidiary_key = m.dimension_coordinate("T", key=True)
 
-logging.critical(m.constructs())
-logging.critical(f"Key (aux coor time) )is: {key}")
-logging.critical(f"Subsidiary key (dim coor key) is: {subsidiary_key}")
+logger.critical(m.constructs())
+logger.critical(f"Key (aux coor time) )is: {key}")
+logger.critical(f"Subsidiary key (dim coor key) is: {subsidiary_key}")
 
 
 final_4d_colocated_field = m.copy()  # TODO add dimension and squeeze.
@@ -287,11 +291,11 @@ final_index = len(list(itertools.pairwise(model_times.datetime_array)))
 # Iterate over pairs of adjacent model datetimes, defining 'segments'.
 for index, (t1, t2) in enumerate(itertools.pairwise(model_times.datetime_array)):
     # 1. Define the pairwise segment endpoints
-    logging.critical(f"\n\nTimes for segments are\n\n: {t1}, {t2}.")
+    logger.critical(f"\n\nTimes for segments are\n\n: {t1}, {t2}.")
     datetime_segments.append((t1, t2))
 
     q = cf.wi(cf.dt(t1), cf.dt(t2))  # had cf.dt wrapping these before, but no need now?
-    logging.critical(f"Querying on query: {q} with field: {m}")
+    logger.critical(f"Querying on query: {q} with field: {m}")
     # 2. *Subspace* the observational times to match the segments above:
     #    Subspace the field for the segment time range
 
@@ -349,7 +353,7 @@ for index, (t1, t2) in enumerate(itertools.pairwise(model_times.datetime_array))
     weights_0 = distances_1 / distance_01
     weights_1 = distances_0 / distance_01
 
-    logging.critical(
+    logger.critical(
         "MASKED VALUE COUNTS ARE:\n"
         f"FOR DISTANCES (0, 1): {distances_0.count()}, {distances_1.count()}\n"
         f"FOR WEIGHTS (0, 1): {weights_0.count()}, {weights_1.count()}\n"
@@ -357,14 +361,13 @@ for index, (t1, t2) in enumerate(itertools.pairwise(model_times.datetime_array))
     )
 
     # X.3 Calculate the final value using a basic weighting formulae
-    print("WEIGHTS TOTAL IS:", weights_0 + weights_1)  # should be 1, no need to div
+    # Total of weights should be 1, no need to divide by that, though confirm:
+    logger.critical(f"WEIGHTS TOTAL IS: {weights_0 + weights_1}")
     values_weighted = (weights_0 * values_0 + weights_1 * values_1)
-
     v_w.append(values_weighted)
 
-
-logging.critical("FINAL WEIGHTED VALUES ARE:")
-logging.critical(pformat(v_w))
+logger.critical("FINAL WEIGHTED VALUES ARE:")
+logger.critical(pformat(v_w))
 
 # NOTE SADIE: masked values are mostly/all to do with the pressure being below
 # when lands and takes off etc. on runway and close, cases realting to heavusde
@@ -372,7 +375,7 @@ logging.critical(pformat(v_w))
 # option.
 
 for v in v_w:
-    logging.critical(
+    logger.critical(
         f"GETTING: {v} WITH LEN {len(v)} AND NON-MASKED COUNT {v.count()}"
     )
 
@@ -380,11 +383,11 @@ for v in v_w:
 # on the right domain, though we still need to adapt the metadata to reflect
 # the new context.
 concatenated_weighted_values = cf.Data.concatenate(v_w)
-logging.critical(
+logger.critical(
     f"WEIGHTED VALS ARE: {concatenated_weighted_values}, WITH LEN: "
     f"{len(concatenated_weighted_values)}"
 )
-logging.critical(
+logger.critical(
     "NUMBER OF NON-MASKED VALUES IN THIS ARE:\n"
     f"{concatenated_weighted_values.count()} VS MASKED:\n"
     f"{len(concatenated_weighted_values) - concatenated_weighted_values.count()}"
@@ -393,10 +396,11 @@ logging.critical(
 # Set the data onto the observational field domain after spatial interpolation
 final_result_field = obs_field.copy()
 final_result_field.set_data(concatenated_weighted_values)
-logging.critical(
+logger.critical(
     "FINAL RESULT FIELD AFTER DATA SETTING, PRE-METADATA PROPERTY EDIT: "
     f"{final_result_field}\n AND IN FULL DETAIL:")
-final_result_field.dump()
+if INFO:
+    final_result_field.dump()
 
 # Making the aux coor for time a dimension coord. too, so we can plot it.
 # TODO: there is probably a better way to plot from aux coor?
@@ -420,11 +424,12 @@ final_result_field.set_properties(model_field.properties())
 # TODO: add new, or append to if already exists, to 'history' property
 # to say that we colocated etc. with VISION / cf.
 
-logging.critical(
+logger.critical(
     f"2. FINAL RESULT FIELD AFTER DATA SETTING (DONE) {final_result_field}")
-final_result_field.dump()
+if INFO:
+    final_result_field.dump()
 
-logging.critical(
+logger.critical(
     "The final result field has:\n"
     f"DATA STATS: {final_result_field.data.stats()}\n"
 )
@@ -454,7 +459,7 @@ cf.write(final_result_field, "cf_vision_result_field.nc")
 # 9.1 Change the viewpoint to be over the UK only, with high-res map outline
 cfp.mapset(lonmin=-2, lonmax=2, latmin=50, latmax=54, resolution="10m")
 
-# 9.2
+# 9.2 Set levels for plotting of data in a colourmap
 # Min, max as determined using final_result_field.min(), .max():
 cfp.levs(min=5e-08, max=10e-08, step=0.25e-08)
 cfp.cscale("viridis")
