@@ -48,7 +48,6 @@ logger = logging.getLogger(__name__)
 if INFO:
     logger.setLevel(logging.CRITICAL)
 else:
-    ###logger.propagate = False
     logger.setLevel(logging.CRITICAL + 1)  # prevents even critical log messages
 
 OBS_DATA_LOC = f"{DATA_DIR_LOC}/{OBS_DATA_DIR}"
@@ -80,7 +79,7 @@ read_model_totaltime = read_model_endtime - read_model_starttime
 
 logger.critical("Data successfully read in.")
 logger.critical(f"Time taken to read observational data was: {read_obs_totaltime}")
-logger.critical(f"Time taken to read observational data was: {read_model_totaltime}")
+logger.critical(f"Time taken to read model data was: {read_model_totaltime}")
 
 # 1.2: Inspection of read-in fields
 logger.critical(f"Observational (flight) data is:\n {obs_data}")
@@ -126,7 +125,6 @@ model_field = model_data[-2]
 #       we don't need to worry about it being slow either way.
 # IGNORE FOR NOW
 
-
 # ----------------------------------------------------------------------------
 # STAGE 4: TIME BOUNDING BOX: FIND RELEVANT DAYS FOR FLIGHT IN THE MODEL
 #          DATA FOR COLOCATION
@@ -134,6 +132,8 @@ model_field = model_data[-2]
 #          IS DIFFERENT TO THE SPATIAL B.B. CASE SINCE IT NEEDS TO BE DONE
 #          DAILY TO ACCCOUNT FOR FLIGHTS BEING CONTAINED IN SEPARATE DAYS.
 # ----------------------------------------------------------------------------
+
+time_bb_starttime = time.time()
 
 # TODO: ensure this works for flights that take off on one day and end on
 # another e.g. 11 pm - 3 am flight.
@@ -203,6 +203,12 @@ model_field_bb = model_field.subspace(T=cf.wi(obs_earliest_dayhour, obs_latest_d
 logger.critical(
     f"TIME BOUNDING BOX CALC'D, MODEL DATA FIELD AFTER BB IS: {model_field_bb}"
 )
+
+time_bb_endtime = time.time()
+time_bb_totaltime = time_bb_endtime - time_bb_starttime
+
+logger.critical("Time bounding box created.")
+logger.critical(f"Time taken to create time BB: {time_bb_totaltime}")
 
 # ----------------------------------------------------------------------------
 # STAGE 5: FULL XYZ/SPATIAL INTERPORLATION, I.E. INTERPOLATE THE
@@ -435,6 +441,11 @@ logger.critical(
 # TODO: consider whether or not to persist the regridded / time interp.
 # before the next stage, or to do in a fully lazy way.
 
+time_interp_endtime = time.time()
+time_interp_totaltime = time_interp_endtime - time_interp_starttime
+logger.critical("Time interpolation done.")
+logger.critical(f"Time taken to do time interpolation: {time_interp_totaltime}")
+
 # ----------------------------------------------------------------------------
 # STAGE 7: CREATE OUTPUTS AS A CONCATENATED CONTIGUOUS RAGGED ARRAY OF ALL
 #          FLIGHT PATH PROJECTIONS FOR THE VARIOUS DAYS.
@@ -448,12 +459,22 @@ logger.critical(
 # STAGE 8: WRITE OUT FINAL OUTPUT WHICH HAS BEEN CO-LOCATED
 #          FOR X, Y, Z AND T.
 # ----------------------------------------------------------------------------
+
+write_starttime = time.time()
+
 # 8.1 Write straight out to file on-disk
 cf.write(final_result_field, OUTPUT_FILE_NAME)
+
+write_endtime = time.time()
+write_totaltime = write_endtime - write_starttime
+logger.critical("Writing of output file complete.")
+logger.critical(f"Time taken to write output file: {time_bb_totaltime}")
 
 # ----------------------------------------------------------------------------
 # STAGE 9: VISUALISE OUTPUT AND SHOW THE PLOT
 # ----------------------------------------------------------------------------
+
+vis_starttime = time.time()
 
 # 9.0 Upgrade the aux coor to a dim coor, so we can plot the trajectory.
 # TODO: avoid doing this, as is not 'proper', when there is a way to
@@ -485,5 +506,9 @@ cfp.cscale("viridis")
 #       the two scatter marker points, if preferable?
 cfp.traj(final_result_field, verbose=True, legend=True)
 
+vis_endtime = time.time()
+vis_totaltime = vis_endtime - vis_starttime
+logger.critical("Plot created.")
+logger.critical(f"Time to create plot: {time_bb_totaltime}")
 
 # [END]
