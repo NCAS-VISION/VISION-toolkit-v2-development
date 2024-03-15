@@ -18,12 +18,18 @@ from pprint import pformat
 import cfplot as cfp
 import cf
 
-# Define all inputs here:
+# Define all inputs and output choices
 # TODO eventually these can be set as command-line arguments (w/ manpage, etc.)
 # configured and managed using getopts/getargs, etc.
 DATA_DIR_LOC = "data/main-workwith-test-ISO-simulator"
 OBS_DATA_DIR = "../compliant-data/core_faam_20170703_c016_STANCO_CF.nc"
 MODEL_DATA_DIR = "Model_Input"
+# Set output information
+OUTPUT_FILE_NAME = "cf_vision_result_field.nc"
+HISTORY_MESSAGE = (  # gets added to the 'history' property on the output file
+    "Processed using the NCAS VISION flight simulator script to colocate from "
+    "model data to the observational flight data spatio-temporal location."
+)
 
 # Configure messaging to STDOUT, which is very verbose if INFO=True, else
 # as minimal as allows without log control in cf-plot (at present).
@@ -133,8 +139,8 @@ model_field = model_data[-2]
 # another e.g. 11 pm - 3 am flight.
 
 # 4.1 pre-process to get relevant constructs
-obs_times = obs_field.auxiliary_coordinate("time")
-model_times_key, model_times = model_field.dimension_coordinate("time", item=True)
+obs_times = obs_field.auxiliary_coordinate("T")
+model_times_key, model_times = model_field.dimension_coordinate("T", item=True)
 
 # 4.2 Ensure the units of the obs and model datetimes are consistent - conform
 #     them if they differ (if they don't, Units setting operation is harmless).
@@ -146,8 +152,8 @@ model_times.Units = obs_times.Units
 
 logger.critical(f"UNIT-CONFORMED MODEL FIELD IS: {model_field}")
 same_units = (
-    model_field.dimension_coordinate("time").data.Units
-    == obs_field.auxiliary_coordinate("time").data.Units,
+    model_field.dimension_coordinate("T").data.Units
+    == obs_field.auxiliary_coordinate("T").data.Units,
 )
 logger.critical(
     f"CONFIRMING: THE UNITS ON OBS AND MODEL DATETIMES ARE THE SAME: "
@@ -251,8 +257,8 @@ time_interp_starttime = time.time()
 # In our field after spatial interpolation, the Dimension Coord has the model
 # time data and the Aux Coord has the observational time data
 # NOTE: keep these calls in, desite earlier ones probably in-place.
-model_times = spatially_colocated_field.dimension_coordinate("time")
-obs_times = spatially_colocated_field.auxiliary_coordinate("time")
+model_times = spatially_colocated_field.dimension_coordinate("T")
+obs_times = spatially_colocated_field.auxiliary_coordinate("T")
 model_times_len = len(model_times.data)
 obs_times_len = len(obs_times.data)
 
@@ -340,7 +346,6 @@ for index, (t1, t2) in enumerate(itertools.pairwise(model_times.datetime_array))
     #       between different fields, so may need to re-determine these at
     #       different steps, else (ideally) find a robust way not using keys
     #       to pick out the relevant time constructs.
-    # TODO: tidy up "time" to "T"
     # NOTE: All calc variables are arrays, except this first one,
     #       a scalar (constant whatever the obs time)
     distance_01 = (s1.dimension_coordinate("T") - s0.dimension_coordinate("T")).data
@@ -414,8 +419,11 @@ if INFO:
 # 6.6.1: general properties
 final_result_field.clear_properties()
 final_result_field.set_properties(model_field.properties())
-# 6.6.2 TODO: add new, or append to if already exists, 'history' property
-#             details to say that we colocated etc. with VISION / cf.
+# 6.6.2 Add new, or append to if already exists, 'history' property
+#       details to say that we colocated etc. with VISION / cf.
+history_details = final_result_field.get_property("history")
+history_details += " ~ " + HISTORY_MESSAGE  # include divider to previous info
+final_result_field.set_property("history", history_details)
 
 logger.critical(f"FINAL RESULT FIELD AFTER DATA SETTING (DONE) {final_result_field}")
 if INFO:
@@ -441,7 +449,7 @@ logger.critical(
 #          FOR X, Y, Z AND T.
 # ----------------------------------------------------------------------------
 # 8.1 Write straight out to file on-disk
-cf.write(final_result_field, "cf_vision_result_field.nc")
+cf.write(final_result_field, OUTPUT_FILE_NAME)
 
 # ----------------------------------------------------------------------------
 # STAGE 9: VISUALISE OUTPUT AND SHOW THE PLOT
@@ -460,7 +468,7 @@ cf.write(final_result_field, "cf_vision_result_field.nc")
 #       massive red herring. In which case, generalise it so that the input
 #       can be a field with a 2D *or* a 1D array to plot. If 1D, it means
 #       it has a trajectory dimension leading, which can be dropped.
-aux_coor_t = final_result_field.auxiliary_coordinate("time")
+aux_coor_t = final_result_field.auxiliary_coordinate("T")
 dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
 final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
 
