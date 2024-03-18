@@ -1,0 +1,620 @@
+Using Python and CF environment of: Platform: Linux-6.5.13-7-MANJARO-x86_64-with-glibc2.39 
+HDF5 library: 1.14.2 
+netcdf library: 4.9.2 
+udunits2 library: /home/slb93/miniconda3/envs/cf-env-312/lib/libudunits2.so.0 
+esmpy/ESMF: 8.4.2 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/esmpy/__init__.py
+Python: 3.12.0 /home/slb93/miniconda3/envs/cf-env-312/bin/python
+dask: 2023.10.0 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/dask/__init__.py
+netCDF4: 1.6.4 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/netCDF4/__init__.py
+psutil: 5.9.5 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/psutil/__init__.py
+packaging: 23.2 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/packaging/__init__.py
+numpy: 1.26.0 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/numpy/__init__.py
+scipy: 1.11.3 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/scipy/__init__.py
+matplotlib: 3.8.3 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/matplotlib/__init__.py
+cftime: 1.6.2 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/cftime/__init__.py
+cfunits: 3.3.6 /home/slb93/git-repos/cfunits/cfunits/__init__.py
+cfplot: 3.3.0 /home/slb93/git-repos/cf-plot/cfplot/__init__.py
+cfdm: 1.11.1.0 /home/slb93/git-repos/cfdm/cfdm/__init__.py
+cf: 3.16.1 /home/slb93/git-repos/cf-python/cf/__init__.py
+Using data locations of:
+Obs data: 'data/main-workwith-test-ISO-simulator/../compliant-data/core_faam_20170703_c016_STANCO_CF.nc'
+Model data: 'data/main-workwith-test-ISO-simulator/Model_Input'
+Data successfully read in.
+Time taken to read observational data was: 0.03204178810119629
+Time taken to read model data was: 2.8360817432403564
+Observational (flight) data is:
+ [<CF Field: mole_fraction_of_ozone_in_air(ncdim%obs(11160)) ppb>]
+For example, first obs. field is:
+
+----------------------------------------------------
+Field: mole_fraction_of_ozone_in_air (ncvar%O3_TECO)
+----------------------------------------------------
+Conventions = 'CF-1.11'
+NCO = 'netCDF Operators version 5.0.6 (Homepage = http://nco.sf.net, Code =
+       http://github.com/nco/nco)'
+_FillValue = -9999.0
+featureType = 'trajectory'
+frequency = 1
+history = 'Fri Feb  9 18:53:35 2024: ncatted -O -a
+           featureType,global,c,c,trajectory -a coordinates,O3_TECO,c,c,time
+           altitude air_pressure latitude longitude -a
+           cf_role,campaign,c,c,trajectory_id -a units,campaign,d,, -a
+           missing_value,campaign,d,, -a _FillValue,campaign,d,, -a
+           frequency,campaign,d,, -o core_faam_20170703_c016_STANCO
+           core_faam_20170703_c016_STANCO.nc'
+long_name = 'Mole fraction of Ozone in air from the TECO 49 instrument'
+missing_value = -9999.0
+number = 574
+source = 'CIS1.7.4'
+standard_name = 'mole_fraction_of_ozone_in_air'
+units = 'ppb'
+
+Data(ncdim%obs(11160)) = [49.95000076293945, ..., 0.8899999856948853] ppb
+
+Domain Axis: cf_role=trajectory_id(1)
+Domain Axis: ncdim%obs(11160)
+
+Auxiliary coordinate: time
+    _FillValue = -1.0
+    calendar = 'standard'
+    long_name = 'time of measurement'
+    missing_value = -1.0
+    standard_name = 'time'
+    units = 'days since 1900-01-01 00:00:00'
+    Data(ncdim%obs(11160)) = [2017-07-03 11:15:07, ..., 2017-07-03 14:21:06] standard
+
+Auxiliary coordinate: altitude
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Altitude from POS AV 510 GPS-aided Inertial Navigation unit'
+    missing_value = -9999.0
+    number = 612
+    standard_name = 'altitude'
+    units = 'm'
+    Data(ncdim%obs(11160)) = [2577.927001953125, ..., 151.16905212402344] m
+
+Auxiliary coordinate: air_pressure
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Static pressure from the aircraft RVSM (air data) system'
+    missing_value = -9999.0
+    number = 576
+    standard_name = 'air_pressure'
+    units = 'hPa'
+    Data(ncdim%obs(11160)) = [751.6758422851562, ..., 1006.53076171875] hPa
+
+Auxiliary coordinate: latitude
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Latitude from POS AV 510 GPS-aided Inertial Navigation unit'
+    missing_value = -9999.0
+    number = 610
+    standard_name = 'latitude'
+    units = 'degree_north'
+    Data(ncdim%obs(11160)) = [52.56147766113281, ..., 52.0729866027832] degree_north
+
+Auxiliary coordinate: longitude
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Longitude from POS AV 510 GPS-aided Inertial Navigation unit'
+    missing_value = -9999.0
+    number = 611
+    standard_name = 'longitude'
+    units = 'degree_east'
+    Data(ncdim%obs(11160)) = [0.3171832859516144, ..., -0.6249311566352844] degree_east
+
+Auxiliary coordinate: cf_role=trajectory_id
+    cf_role = 'trajectory_id'
+    long_name = 'campaign'
+    Data(cf_role=trajectory_id(1)) = [STANCO]
+
+Model data is:
+ [<CF Field: id%UM_m01s34i001_vn1105(time(216), atmosphere_hybrid_height_coordinate(27), latitude(144), longitude(192)) 1>,
+ <CF Field: id%UM_m01s34i010_vn1105(time(216), atmosphere_hybrid_height_coordinate(27), latitude(144), longitude(192)) 1>,
+ <CF Field: id%UM_m01s51i001_vn1105(time(216), air_pressure(19), latitude(144), longitude(192)) 1>,
+ <CF Field: id%UM_m01s51i010_vn1105(time(216), air_pressure(19), latitude(144), longitude(192)) 1>,
+ <CF Field: id%UM_m01s51i999_vn1105(time(216), air_pressure(19), latitude(144), longitude(192))>]
+For example, first model field is:
+
+-----------------------------------------------------------
+Field: id%UM_m01s34i001_vn1105 (ncvar%UM_m01s34i001_vn1105)
+-----------------------------------------------------------
+Conventions = 'CF-1.11'
+_FillValue = -1073741824.0
+history = 'Converted from UM/PP by cf-python v3.16.1'
+lbproc = '0'
+lbtim = '11'
+long_name = 'O3 MASS MIXING RATIO AFTER TIMESTEP'
+runid = 'aaaaa'
+source = 'UM vn1105'
+stash_code = '34001'
+submodel = '1'
+um_stash_source = 'm01s34i001'
+units = '1'
+
+Data(time(216), atmosphere_hybrid_height_coordinate(27), latitude(144), longitude(192)) = [[[[2.5158492178434244e-08, ..., 8.979477428283644e-08]]]] 1
+
+Cell Method: time(216): point
+
+Domain Axis: atmosphere_hybrid_height_coordinate(27)
+Domain Axis: latitude(144)
+Domain Axis: longitude(192)
+Domain Axis: time(216)
+
+Dimension coordinate: time
+    axis = 'T'
+    calendar = 'gregorian'
+    standard_name = 'time'
+    units = 'days since 2017-1-1'
+    Data(time(216)) = [2017-07-03 01:00:00, ..., 2017-08-01 00:00:00] gregorian
+
+Dimension coordinate: atmosphere_hybrid_height_coordinate
+    axis = 'Z'
+    positive = 'up'
+    standard_name = 'atmosphere_hybrid_height_coordinate'
+    units = '1'
+    Data(atmosphere_hybrid_height_coordinate(27)) = [0.003696857951581478, ..., 0.9648799300193787] 1
+    Bounds:units = '1'
+    Bounds:Data(atmosphere_hybrid_height_coordinate(27), 2) = [[0.0, ..., 1.0]] 1
+
+Dimension coordinate: latitude
+    axis = 'Y'
+    standard_name = 'latitude'
+    units = 'degrees_north'
+    Data(latitude(144)) = [-89.375, ..., 89.375] degrees_north
+    Bounds:units = 'degrees_north'
+    Bounds:Data(latitude(144), 2) = [[-90.0, ..., 90.0]] degrees_north
+
+Dimension coordinate: longitude
+    axis = 'X'
+    standard_name = 'longitude'
+    units = 'degrees_east'
+    Data(longitude(192)) = [0.9375, ..., 359.0625] degrees_east
+    Bounds:units = 'degrees_east'
+    Bounds:Data(longitude(192), 2) = [[0.0, ..., 360.0]] degrees_east
+
+Auxiliary coordinate: model_level_number
+    standard_name = 'model_level_number'
+    units = '1'
+    Data(atmosphere_hybrid_height_coordinate(27)) = [1, ..., 27] 1
+
+Domain ancillary: id%UM_atmosphere_hybrid_height_coordinate_a
+    long_name = 'height based hybrid coeffient a'
+    units = 'm'
+    Data(atmosphere_hybrid_height_coordinate(27)) = [19.999998092651367, ..., 5219.99951171875] m
+    Bounds:units = 'm'
+    Bounds:Data(atmosphere_hybrid_height_coordinate(27), 2) = [[0.0, ..., 5409.9990234375]] m
+
+Domain ancillary: id%UM_atmosphere_hybrid_height_coordinate_b
+    long_name = 'height based hybrid coeffient b'
+    units = '1'
+    Data(atmosphere_hybrid_height_coordinate(27)) = [0.9977412819862366, ..., 0.4971233606338501] 1
+    Bounds:units = '1'
+    Bounds:Data(atmosphere_hybrid_height_coordinate(27), 2) = [[1.0, ..., 0.48210078477859497]] 1
+
+Coordinate reference: standard_name:atmosphere_hybrid_height_coordinate
+    Coordinate conversion:standard_name = atmosphere_hybrid_height_coordinate
+    Coordinate conversion:a = Domain Ancillary: id%UM_atmosphere_hybrid_height_coordinate_a
+    Coordinate conversion:b = Domain Ancillary: id%UM_atmosphere_hybrid_height_coordinate_b
+    Coordinate conversion:orog = 
+    Dimension Coordinate: atmosphere_hybrid_height_coordinate
+
+UNIT-CONFORMED MODEL FIELD IS: Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(216), air_pressure(19), latitude(144), longitude(192)) 1
+Cell methods    : time(216): point
+Dimension coords: time(216) = [2017-07-03 01:00:00, ..., 2017-08-01 00:00:00] standard
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+                : latitude(144) = [-89.375, ..., 89.375] degrees_north
+                : longitude(192) = [0.9375, ..., 359.0625] degrees_east
+CONFIRMING: THE UNITS ON OBS AND MODEL DATETIMES ARE THE SAME: (True,);
+
+Calendars for relevant times are:
+MODEL: standard,
+OBSERVATIONS: standard.
+EARLIEST AND LATEST ARE: 2017-07-03 11:15:07, 2017-07-03 14:21:06
+TIME BOUNDING BOX CALC'D, MODEL DATA FIELD AFTER BB IS: Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(5), air_pressure(19), latitude(144), longitude(192)) 1
+Cell methods    : time(5): point
+Dimension coords: time(5) = [2017-07-03 11:00:00, ..., 2017-07-03 15:00:00] standard
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+                : latitude(144) = [-89.375, ..., 89.375] degrees_north
+                : longitude(192) = [0.9375, ..., 359.0625] degrees_east
+Time bounding box created.
+Time taken to create time BB: 9.162085056304932
+Starting spatial interpolation (regridding) step...
+Time taken to spatially regrid was: 5.828465461730957
+XYZ-colocated data is:
+ Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(5), ncdim%obs(11160)) 1
+Cell methods    : time(5): point
+Dimension coords: time(5) = [2017-07-03 11:00:00, ..., 2017-07-03 15:00:00] standard
+Auxiliary coords: time(ncdim%obs(11160)) = [2017-07-03 11:15:07, ..., 2017-07-03 14:21:06] standard
+                : altitude(ncdim%obs(11160)) = [2577.927001953125, ..., 151.16905212402344] m
+                : air_pressure(ncdim%obs(11160)) = [751.6758422851562, ..., 1006.53076171875] hPa
+                : latitude(ncdim%obs(11160)) = [52.56147766113281, ..., 52.0729866027832] degree_north
+                : longitude(ncdim%obs(11160)) = [0.3171832859516144, ..., -0.6249311566352844] degree_east
+-----------------------------------------------------------
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Conventions = 'CF-1.11'
+_FillValue = -1073741824.0
+history = 'Converted from UM/PP by cf-python v3.16.1'
+lbproc = '0'
+lbtim = '11'
+long_name = 'CO MASS MIX RATIO ON PRESS LEVS'
+runid = 'aaaaa'
+source = 'UM vn1105'
+stash_code = '51010'
+submodel = '1'
+um_stash_source = 'm01s51i010'
+units = '1'
+
+Data(time(5), ncdim%obs(11160)) = [[6.738163632034453e-08, ..., --]] 1
+
+Cell Method: time(5): point
+
+Domain Axis: ncdim%obs(11160)
+Domain Axis: time(5)
+
+Dimension coordinate: time
+    axis = 'T'
+    calendar = 'standard'
+    standard_name = 'time'
+    units = 'days since 1900-01-01 00:00:00'
+    Data(time(5)) = [2017-07-03 11:00:00, ..., 2017-07-03 15:00:00] standard
+
+Auxiliary coordinate: time
+    _FillValue = -1.0
+    calendar = 'standard'
+    long_name = 'time of measurement'
+    missing_value = -1.0
+    standard_name = 'time'
+    units = 'days since 1900-01-01 00:00:00'
+    Data(ncdim%obs(11160)) = [2017-07-03 11:15:07, ..., 2017-07-03 14:21:06] standard
+
+Auxiliary coordinate: altitude
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Altitude from POS AV 510 GPS-aided Inertial Navigation unit'
+    missing_value = -9999.0
+    number = 612
+    standard_name = 'altitude'
+    units = 'm'
+    Data(ncdim%obs(11160)) = [2577.927001953125, ..., 151.16905212402344] m
+
+Auxiliary coordinate: air_pressure
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Static pressure from the aircraft RVSM (air data) system'
+    missing_value = -9999.0
+    number = 576
+    standard_name = 'air_pressure'
+    units = 'hPa'
+    Data(ncdim%obs(11160)) = [751.6758422851562, ..., 1006.53076171875] hPa
+
+Auxiliary coordinate: latitude
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Latitude from POS AV 510 GPS-aided Inertial Navigation unit'
+    missing_value = -9999.0
+    number = 610
+    standard_name = 'latitude'
+    units = 'degree_north'
+    Data(ncdim%obs(11160)) = [52.56147766113281, ..., 52.0729866027832] degree_north
+
+Auxiliary coordinate: longitude
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Longitude from POS AV 510 GPS-aided Inertial Navigation unit'
+    missing_value = -9999.0
+    number = 611
+    standard_name = 'longitude'
+    units = 'degree_east'
+    Data(ncdim%obs(11160)) = [0.3171832859516144, ..., -0.6249311566352844] degree_east
+
+
+
+
+Starting time interpolation step...
+
+
+
+Number of model time data points: 5
+Number of observational time sample data points: 11160
+Constructs:
+{'auxiliarycoordinate0': <CF AuxiliaryCoordinate: time(11160) days since 1900-01-01 00:00:00 standard>,
+ 'auxiliarycoordinate1': <CF AuxiliaryCoordinate: altitude(11160) m>,
+ 'auxiliarycoordinate2': <CF AuxiliaryCoordinate: air_pressure(11160) hPa>,
+ 'auxiliarycoordinate3': <CF AuxiliaryCoordinate: latitude(11160) degree_north>,
+ 'auxiliarycoordinate4': <CF AuxiliaryCoordinate: longitude(11160) degree_east>,
+ 'cellmethod0': <CF CellMethod: domainaxis0: point>,
+ 'dimensioncoordinate0': <CF DimensionCoordinate: time(5) days since 1900-01-01 00:00:00 standard>,
+ 'domainaxis0': <CF DomainAxis: size(5)>,
+ 'domainaxis4': <CF DomainAxis: size(11160)>}
+Aux coor time key is: auxiliarycoordinate0
+Dim coor time key is: dimensioncoordinate0
+
+
+Times for segments are
+
+: 2017-07-03 11:00:00, 2017-07-03 12:00:00.
+Querying on query: (wi [cftime.DatetimeGregorian(2017, 7, 3, 11, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 3, 12, 0, 0, 0, has_year_zero=False)]) with field: Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(5), ncdim%obs(11160)) 1
+Cell methods    : time(5): point
+Dimension coords: time(5) = [2017-07-03 11:00:00, ..., 2017-07-03 15:00:00] standard
+Auxiliary coords: time(ncdim%obs(11160)) = [2017-07-03 11:15:07, ..., 2017-07-03 14:21:06] standard
+                : altitude(ncdim%obs(11160)) = [2577.927001953125, ..., 151.16905212402344] m
+                : air_pressure(ncdim%obs(11160)) = [751.6758422851562, ..., 1006.53076171875] hPa
+                : latitude(ncdim%obs(11160)) = [52.56147766113281, ..., 52.0729866027832] degree_north
+                : longitude(ncdim%obs(11160)) = [0.3171832859516144, ..., -0.6249311566352844] degree_east
+MASKED VALUE COUNTS ARE:
+FOR DISTANCES (0, 1): [1], [1]
+FOR WEIGHTS (0, 1): [1], [1]
+FOR VALUES (0, 1): [2576], [2576]
+WEIGHTS TOTAL IS: [1.0] 1
+
+
+Times for segments are
+
+: 2017-07-03 12:00:00, 2017-07-03 13:00:00.
+Querying on query: (wi [cftime.DatetimeGregorian(2017, 7, 3, 12, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 3, 13, 0, 0, 0, has_year_zero=False)]) with field: Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(5), ncdim%obs(11160)) 1
+Cell methods    : time(5): point
+Dimension coords: time(5) = [2017-07-03 11:00:00, ..., 2017-07-03 15:00:00] standard
+Auxiliary coords: time(ncdim%obs(11160)) = [2017-07-03 11:15:07, ..., 2017-07-03 14:21:06] standard
+                : altitude(ncdim%obs(11160)) = [2577.927001953125, ..., 151.16905212402344] m
+                : air_pressure(ncdim%obs(11160)) = [751.6758422851562, ..., 1006.53076171875] hPa
+                : latitude(ncdim%obs(11160)) = [52.56147766113281, ..., 52.0729866027832] degree_north
+                : longitude(ncdim%obs(11160)) = [0.3171832859516144, ..., -0.6249311566352844] degree_east
+MASKED VALUE COUNTS ARE:
+FOR DISTANCES (0, 1): [1], [1]
+FOR WEIGHTS (0, 1): [1], [1]
+FOR VALUES (0, 1): [2831], [2831]
+WEIGHTS TOTAL IS: [1.0] 1
+
+
+Times for segments are
+
+: 2017-07-03 13:00:00, 2017-07-03 14:00:00.
+Querying on query: (wi [cftime.DatetimeGregorian(2017, 7, 3, 13, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 3, 14, 0, 0, 0, has_year_zero=False)]) with field: Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(5), ncdim%obs(11160)) 1
+Cell methods    : time(5): point
+Dimension coords: time(5) = [2017-07-03 11:00:00, ..., 2017-07-03 15:00:00] standard
+Auxiliary coords: time(ncdim%obs(11160)) = [2017-07-03 11:15:07, ..., 2017-07-03 14:21:06] standard
+                : altitude(ncdim%obs(11160)) = [2577.927001953125, ..., 151.16905212402344] m
+                : air_pressure(ncdim%obs(11160)) = [751.6758422851562, ..., 1006.53076171875] hPa
+                : latitude(ncdim%obs(11160)) = [52.56147766113281, ..., 52.0729866027832] degree_north
+                : longitude(ncdim%obs(11160)) = [0.3171832859516144, ..., -0.6249311566352844] degree_east
+MASKED VALUE COUNTS ARE:
+FOR DISTANCES (0, 1): [1], [1]
+FOR WEIGHTS (0, 1): [1], [1]
+FOR VALUES (0, 1): [2643], [2643]
+WEIGHTS TOTAL IS: [1.0] 1
+
+
+Times for segments are
+
+: 2017-07-03 14:00:00, 2017-07-03 15:00:00.
+Querying on query: (wi [cftime.DatetimeGregorian(2017, 7, 3, 14, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 3, 15, 0, 0, 0, has_year_zero=False)]) with field: Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(5), ncdim%obs(11160)) 1
+Cell methods    : time(5): point
+Dimension coords: time(5) = [2017-07-03 11:00:00, ..., 2017-07-03 15:00:00] standard
+Auxiliary coords: time(ncdim%obs(11160)) = [2017-07-03 11:15:07, ..., 2017-07-03 14:21:06] standard
+                : altitude(ncdim%obs(11160)) = [2577.927001953125, ..., 151.16905212402344] m
+                : air_pressure(ncdim%obs(11160)) = [751.6758422851562, ..., 1006.53076171875] hPa
+                : latitude(ncdim%obs(11160)) = [52.56147766113281, ..., 52.0729866027832] degree_north
+                : longitude(ncdim%obs(11160)) = [0.3171832859516144, ..., -0.6249311566352844] degree_east
+MASKED VALUE COUNTS ARE:
+FOR DISTANCES (0, 1): [1], [1]
+FOR WEIGHTS (0, 1): [1], [1]
+FOR VALUES (0, 1): [892], [892]
+WEIGHTS TOTAL IS: [1.0] 1
+FINAL WEIGHTED VALUES ARE:
+[<CF Data(2693): [6.779750336892289e-08, ..., 7.413941330134375e-08] 1>,
+ <CF Data(3600): [7.27975015137213e-08, ..., 7.769948717839781e-08] 1>,
+ <CF Data(3600): [7.635724391534766e-08, ..., 6.869928659902447e-08] 1>,
+ <CF Data(1267): [6.765407103750328e-08, ..., --] 1>]
+GETTING: [6.779750336892289e-08, ..., 7.413941330134375e-08] 1 WITH LEN 2693 AND NON-MASKED COUNT [2576]
+GETTING: [7.27975015137213e-08, ..., 7.769948717839781e-08] 1 WITH LEN 3600 AND NON-MASKED COUNT [2831]
+GETTING: [7.635724391534766e-08, ..., 6.869928659902447e-08] 1 WITH LEN 3600 AND NON-MASKED COUNT [2643]
+GETTING: [6.765407103750328e-08, ..., --] 1 WITH LEN 1267 AND NON-MASKED COUNT [892]
+WEIGHTED VALS ARE: [6.779750336892289e-08, ..., --] 1, WITH LEN: 11160
+NUMBER OF NON-MASKED VALUES IN THIS ARE:
+[8942] VS MASKED:
+[2218]
+FINAL RESULT FIELD AFTER DATA SETTING, PRE-METADATA PROPERTY EDIT: Field: mole_fraction_of_ozone_in_air (ncvar%O3_TECO)
+----------------------------------------------------
+Data            : mole_fraction_of_ozone_in_air(ncdim%obs(11160)) 1
+Auxiliary coords: time(ncdim%obs(11160)) = [2017-07-03 11:15:07, ..., 2017-07-03 14:21:06] standard
+                : altitude(ncdim%obs(11160)) = [2577.927001953125, ..., 151.16905212402344] m
+                : air_pressure(ncdim%obs(11160)) = [751.6758422851562, ..., 1006.53076171875] hPa
+                : latitude(ncdim%obs(11160)) = [52.56147766113281, ..., 52.0729866027832] degree_north
+                : longitude(ncdim%obs(11160)) = [0.3171832859516144, ..., -0.6249311566352844] degree_east
+                : cf_role=trajectory_id(cf_role=trajectory_id(1)) = [STANCO]
+ AND IN FULL DETAIL:
+----------------------------------------------------
+Field: mole_fraction_of_ozone_in_air (ncvar%O3_TECO)
+----------------------------------------------------
+Conventions = 'CF-1.11'
+NCO = 'netCDF Operators version 5.0.6 (Homepage = http://nco.sf.net, Code =
+       http://github.com/nco/nco)'
+_FillValue = -9999.0
+featureType = 'trajectory'
+frequency = 1
+history = 'Fri Feb  9 18:53:35 2024: ncatted -O -a
+           featureType,global,c,c,trajectory -a coordinates,O3_TECO,c,c,time
+           altitude air_pressure latitude longitude -a
+           cf_role,campaign,c,c,trajectory_id -a units,campaign,d,, -a
+           missing_value,campaign,d,, -a _FillValue,campaign,d,, -a
+           frequency,campaign,d,, -o core_faam_20170703_c016_STANCO
+           core_faam_20170703_c016_STANCO.nc'
+long_name = 'Mole fraction of Ozone in air from the TECO 49 instrument'
+missing_value = -9999.0
+number = 574
+source = 'CIS1.7.4'
+standard_name = 'mole_fraction_of_ozone_in_air'
+units = '1'
+
+Data(ncdim%obs(11160)) = [6.779750336892289e-08, ..., --] 1
+
+Domain Axis: cf_role=trajectory_id(1)
+Domain Axis: ncdim%obs(11160)
+
+Auxiliary coordinate: time
+    _FillValue = -1.0
+    calendar = 'standard'
+    long_name = 'time of measurement'
+    missing_value = -1.0
+    standard_name = 'time'
+    units = 'days since 1900-01-01 00:00:00'
+    Data(ncdim%obs(11160)) = [2017-07-03 11:15:07, ..., 2017-07-03 14:21:06] standard
+
+Auxiliary coordinate: altitude
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Altitude from POS AV 510 GPS-aided Inertial Navigation unit'
+    missing_value = -9999.0
+    number = 612
+    standard_name = 'altitude'
+    units = 'm'
+    Data(ncdim%obs(11160)) = [2577.927001953125, ..., 151.16905212402344] m
+
+Auxiliary coordinate: air_pressure
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Static pressure from the aircraft RVSM (air data) system'
+    missing_value = -9999.0
+    number = 576
+    standard_name = 'air_pressure'
+    units = 'hPa'
+    Data(ncdim%obs(11160)) = [751.6758422851562, ..., 1006.53076171875] hPa
+
+Auxiliary coordinate: latitude
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Latitude from POS AV 510 GPS-aided Inertial Navigation unit'
+    missing_value = -9999.0
+    number = 610
+    standard_name = 'latitude'
+    units = 'degree_north'
+    Data(ncdim%obs(11160)) = [52.56147766113281, ..., 52.0729866027832] degree_north
+
+Auxiliary coordinate: longitude
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Longitude from POS AV 510 GPS-aided Inertial Navigation unit'
+    missing_value = -9999.0
+    number = 611
+    standard_name = 'longitude'
+    units = 'degree_east'
+    Data(ncdim%obs(11160)) = [0.3171832859516144, ..., -0.6249311566352844] degree_east
+
+Auxiliary coordinate: cf_role=trajectory_id
+    cf_role = 'trajectory_id'
+    long_name = 'campaign'
+    Data(cf_role=trajectory_id(1)) = [STANCO]
+
+FINAL RESULT FIELD AFTER DATA SETTING (DONE) Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%O3_TECO)
+----------------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%obs(11160)) 1
+Auxiliary coords: time(ncdim%obs(11160)) = [2017-07-03 11:15:07, ..., 2017-07-03 14:21:06] standard
+                : altitude(ncdim%obs(11160)) = [2577.927001953125, ..., 151.16905212402344] m
+                : air_pressure(ncdim%obs(11160)) = [751.6758422851562, ..., 1006.53076171875] hPa
+                : latitude(ncdim%obs(11160)) = [52.56147766113281, ..., 52.0729866027832] degree_north
+                : longitude(ncdim%obs(11160)) = [0.3171832859516144, ..., -0.6249311566352844] degree_east
+                : cf_role=trajectory_id(cf_role=trajectory_id(1)) = [STANCO]
+----------------------------------------------------------------
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%O3_TECO)
+----------------------------------------------------------------
+Conventions = 'CF-1.11'
+_FillValue = -1073741824.0
+history = 'Converted from UM/PP by cf-python v3.16.1 ~ Processed using the NCAS
+           VISION flight simulator script to colocate from model data to the
+           observational flight data spatio-temporal location.'
+lbproc = '0'
+lbtim = '11'
+long_name = 'CO MASS MIX RATIO ON PRESS LEVS'
+runid = 'aaaaa'
+source = 'UM vn1105'
+stash_code = '51010'
+submodel = '1'
+um_stash_source = 'm01s51i010'
+units = '1'
+
+Data(ncdim%obs(11160)) = [6.779750336892289e-08, ..., --] 1
+
+Domain Axis: cf_role=trajectory_id(1)
+Domain Axis: ncdim%obs(11160)
+
+Auxiliary coordinate: time
+    _FillValue = -1.0
+    calendar = 'standard'
+    long_name = 'time of measurement'
+    missing_value = -1.0
+    standard_name = 'time'
+    units = 'days since 1900-01-01 00:00:00'
+    Data(ncdim%obs(11160)) = [2017-07-03 11:15:07, ..., 2017-07-03 14:21:06] standard
+
+Auxiliary coordinate: altitude
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Altitude from POS AV 510 GPS-aided Inertial Navigation unit'
+    missing_value = -9999.0
+    number = 612
+    standard_name = 'altitude'
+    units = 'm'
+    Data(ncdim%obs(11160)) = [2577.927001953125, ..., 151.16905212402344] m
+
+Auxiliary coordinate: air_pressure
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Static pressure from the aircraft RVSM (air data) system'
+    missing_value = -9999.0
+    number = 576
+    standard_name = 'air_pressure'
+    units = 'hPa'
+    Data(ncdim%obs(11160)) = [751.6758422851562, ..., 1006.53076171875] hPa
+
+Auxiliary coordinate: latitude
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Latitude from POS AV 510 GPS-aided Inertial Navigation unit'
+    missing_value = -9999.0
+    number = 610
+    standard_name = 'latitude'
+    units = 'degree_north'
+    Data(ncdim%obs(11160)) = [52.56147766113281, ..., 52.0729866027832] degree_north
+
+Auxiliary coordinate: longitude
+    _FillValue = -9999.0
+    frequency = 32
+    long_name = 'Longitude from POS AV 510 GPS-aided Inertial Navigation unit'
+    missing_value = -9999.0
+    number = 611
+    standard_name = 'longitude'
+    units = 'degree_east'
+    Data(ncdim%obs(11160)) = [0.3171832859516144, ..., -0.6249311566352844] degree_east
+
+Auxiliary coordinate: cf_role=trajectory_id
+    cf_role = 'trajectory_id'
+    long_name = 'campaign'
+    Data(cf_role=trajectory_id(1)) = [STANCO]
+
+The final result field has:
+DATA STATS: {'minimum': 5.648336081495664e-08, 'mean': 6.931143485433616e-08, 'median': 7.132299399372318e-08, 'maximum': 8.12758410456799e-08, 'range': 2.479248023072326e-08, 'mid_range': 6.887960093031828e-08, 'standard_deviation': 7.575440098466652e-09, 'root_mean_square': 6.972418729718075e-08, 'sample_size': 8942}
+
+Time interpolation done.
+Time taken to do time interpolation: 74.02144050598145
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+plotting lines
+plotting markers
+con - adding cylindrical axes
+con - adding a colour bar
