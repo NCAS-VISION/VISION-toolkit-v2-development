@@ -35,7 +35,7 @@ HISTORY_MESSAGE = (  # gets added to the 'history' property on the output file
 # as minimal as allows without log control in cf-plot (at present).
 # TODO: Get ESMF logging via cf incoporated into Python logging system,
 #       see Issue #286.
-INFO = True
+VERBOSE = True
 
 # ----------------------------------------------------------------------------
 # STAGE 0: OPTIONAL DIAGNOSTICS REPORT
@@ -45,7 +45,7 @@ INFO = True
 # NOTE we use 'CRITICAL' level to avoid seeing cf log level messaging which is
 # a bit spammy and hides the output from this script.
 logger = logging.getLogger(__name__)
-if INFO:
+if VERBOSE:
     logger.setLevel(logging.CRITICAL)
 else:
     logger.setLevel(logging.CRITICAL + 1)  # prevents even critical log messages
@@ -84,12 +84,10 @@ logger.critical(f"Time taken to read model data was: {read_model_totaltime}")
 # 1.2: Inspection of read-in fields
 logger.critical(f"Observational (flight) data is:\n {obs_data}")
 logger.critical(f"For example, first obs. field is:\n")
-if INFO:
-    obs_data[0].dump()
+logger.critical(obs_data[0].dump(display=False))
 logger.critical(f"Model data is:\n {model_data}")
 logger.critical(f"For example, first model field is:\n")
-if INFO:
-    model_data[0].dump()
+logger.critical(model_data[0].dump(display=False))
 
 # ----------------------------------------------------------------------------
 # STAGE 2: ENSURE CF COMPLIANCE AND CORRECT FORMAT OF DATA READ-IN
@@ -242,8 +240,7 @@ spat_regrid_totaltime = spat_regrid_endtime - spat_regrid_starttime
 
 logger.critical(f"Time taken to spatially regrid was: {spat_regrid_totaltime}")
 logger.critical(f"XYZ-colocated data is:\n {spatially_colocated_field}")
-if INFO:
-    spatially_colocated_field.dump()
+logger.critical(spatially_colocated_field.dump(display=False))
 
 # TODO: consider whether or not to persist the regridded / spatial interp
 # before the next stage, or to do in a fully lazy way.
@@ -417,8 +414,7 @@ logger.critical(
     "FINAL RESULT FIELD AFTER DATA SETTING, PRE-METADATA PROPERTY EDIT: "
     f"{final_result_field}\n AND IN FULL DETAIL:"
 )
-if INFO:
-    final_result_field.dump()
+logger.critical(final_result_field.dump(display=False))
 
 # 6.6 Finally, re-set the properties on the final result field so it has model
 # data properties not obs preoprties.
@@ -432,8 +428,7 @@ history_details += " ~ " + HISTORY_MESSAGE  # include divider to previous info
 final_result_field.set_property("history", history_details)
 
 logger.critical(f"FINAL RESULT FIELD AFTER DATA SETTING (DONE) {final_result_field}")
-if INFO:
-    final_result_field.dump()
+logger.critical(final_result_field.dump(display=False))
 logger.critical(
     "The final result field has:\n" f"DATA STATS: {final_result_field.data.stats()}\n"
 )
@@ -504,7 +499,7 @@ cfp.cscale("viridis")
 # 9.3 Make and open the final plot
 # NOTE: can try 'legend_lines=True' for the lines plotted with average between
 #       the two scatter marker points, if preferable?
-cfp.traj(final_result_field, verbose=True, legend=True)
+cfp.traj(final_result_field, verbose=VERBOSE, legend=True)
 
 vis_endtime = time.time()
 vis_totaltime = vis_endtime - vis_starttime
