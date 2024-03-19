@@ -463,7 +463,7 @@ cf.write(final_result_field, OUTPUT_FILE_NAME)
 write_endtime = time.time()
 write_totaltime = write_endtime - write_starttime
 logger.critical("Writing of output file complete.")
-logger.critical(f"Time taken to write output file: {time_bb_totaltime}")
+logger.critical(f"Time taken to write output file: {write_totaltime}")
 
 # ----------------------------------------------------------------------------
 # STAGE 9: VISUALISE OUTPUT AND SHOW THE PLOT
@@ -504,6 +504,6 @@ cfp.traj(final_result_field, verbose=VERBOSE, legend=True)
 vis_endtime = time.time()
 vis_totaltime = vis_endtime - vis_starttime
 logger.critical("Plot created.")
-logger.critical(f"Time to create plot: {time_bb_totaltime}")
+logger.critical(f"Time to create plot: {vis_totaltime}")
 
 # [END]

@@ -20,8 +20,8 @@ Using data locations of:
 Obs data: 'data/main-workwith-test-ISO-simulator/../compliant-data/core_faam_20170703_c016_STANCO_CF.nc'
 Model data: 'data/main-workwith-test-ISO-simulator/Model_Input'
 Data successfully read in.
-Time taken to read observational data was: 0.03204178810119629
-Time taken to read model data was: 2.8360817432403564
+Time taken to read observational data was: 0.017569780349731445
+Time taken to read model data was: 1.3275387287139893
 Observational (flight) data is:
  [<CF Field: mole_fraction_of_ozone_in_air(ncdim%obs(11160)) ppb>]
 For example, first obs. field is:
@@ -222,9 +222,9 @@ Dimension coords: time(5) = [2017-07-03 11:00:00, ..., 2017-07-03 15:00:00] stan
                 : latitude(144) = [-89.375, ..., 89.375] degrees_north
                 : longitude(192) = [0.9375, ..., 359.0625] degrees_east
 Time bounding box created.
-Time taken to create time BB: 9.162085056304932
+Time taken to create time BB: 4.1143693923950195
 Starting spatial interpolation (regridding) step...
-Time taken to spatially regrid was: 5.828465461730957
+Time taken to spatially regrid was: 3.280254364013672
 XYZ-colocated data is:
  Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
 -----------------------------------------------------------
@@ -611,7 +611,7 @@ The final result field has:
 DATA STATS: {'minimum': 5.648336081495664e-08, 'mean': 6.931143485433616e-08, 'median': 7.132299399372318e-08, 'maximum': 8.12758410456799e-08, 'range': 2.479248023072326e-08, 'mid_range': 6.887960093031828e-08, 'standard_deviation': 7.575440098466652e-09, 'root_mean_square': 6.972418729718075e-08, 'sample_size': 8942}
 
 Time interpolation done.
-Time taken to do time interpolation: 74.02144050598145
+Time taken to do time interpolation: 33.552849531173706
 traj - making a trajectory plot
 traj - plotting different colour markers based on a user set of levels
 plotting lines
