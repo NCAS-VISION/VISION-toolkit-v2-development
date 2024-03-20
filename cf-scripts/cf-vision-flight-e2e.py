@@ -37,6 +37,19 @@ HISTORY_MESSAGE = (  # gets added to the 'history' property on the output file
 #       see Issue #286.
 VERBOSE = True
 
+# Optionally, display plots of the input observational data, or its track
+# only in one colour (if 'PLOT_OF_INPUT_OBS_TRACK_ONLY' is set to True).
+# This could be useful for previewing the track to be colocated
+# onto, to fail early if the user isn't happy with the track,
+# or for demo'ing the code to compare the original observational data
+# to the co-located data to see the differences.
+SHOW_PLOT_OF_INPUT_OBS = True
+PLOT_OF_INPUT_OBS_TRACK_ONLY = False
+
+
+# TODO: for whole script, consider what is useful to persist (Dask-wise)
+# for efficiency.
+
 # ----------------------------------------------------------------------------
 # STAGE 0: OPTIONAL DIAGNOSTICS REPORT
 # ----------------------------------------------------------------------------
@@ -86,8 +99,33 @@ logger.critical(f"Observational (flight) data is:\n {obs_data}")
 logger.critical(f"For example, first obs. field is:\n")
 logger.critical(obs_data[0].dump(display=False))
 logger.critical(f"Model data is:\n {model_data}")
-logger.critical(f"For example, first model field is:\n")
-logger.critical(model_data[0].dump(display=False))
+logging.critical(f"For example, model field we use is:\n")
+logger.critical(model_data[-2].dump(display=False))
+
+# (FOR NOW, 1.3 Take relevant fields from the list of fields read in)
+obs_field = obs_data[0]
+model_field = model_data[-2]
+
+# 1.4 Plots, if requested
+if SHOW_PLOT_OF_INPUT_OBS:
+    # Plot the *input* observational data for a preview, before doing any work
+    # Min, max as determined using final_result_field.min(), .max():
+    cfp.mapset(lonmin=-2, lonmax=2, latmin=50, latmax=54, resolution="10m")
+    cfp.levs(min=-5, max=55, step=5)
+    if PLOT_OF_INPUT_OBS_TRACK_ONLY:
+        equal_data_obs_field = obs_field.copy()
+        new_data = np.zeros(len(equal_data_obs_field.data))  # 0 -> force red
+        equal_data_obs_field.set_data(new_data, inplace=True)
+        cfp.cscale("scale28")  # has bright red for the lowest values
+        cfp.traj(
+            equal_data_obs_field, verbose=VERBOSE, legend=True,
+            colorbar=False,
+            title="Flight path from obs field to co-locate model field onto:",
+        )
+    else:
+        cfp.cscale("parula")
+        cfp.traj(obs_field, verbose=VERBOSE, legend=True)
+
 
 # ----------------------------------------------------------------------------
 # STAGE 2: ENSURE CF COMPLIANCE AND CORRECT FORMAT OF DATA READ-IN
@@ -108,9 +146,6 @@ logger.critical(model_data[0].dump(display=False))
 # ----------------------------------------------------------------------------
 
 # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT BY DH
-# (FOR NOW, 2.1 Take relevant fields from the list of fields read in)
-obs_field = obs_data[0]
-model_field = model_data[-2]
 
 # ----------------------------------------------------------------------------
 # STAGE 3: SPATIAL BOUNDING BOX: FIND THIS FOR THE FLIGHT PATH AND 'CROP'
