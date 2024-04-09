@@ -37,6 +37,9 @@ HISTORY_MESSAGE = (  # gets added to the 'history' property on the output file
 #       see Issue #286.
 VERBOSE = True
 
+# Plotting general config.
+CSCALE = "plasma"
+
 # Optionally, display plots of the input observational data, or its track
 # only in one colour (if 'PLOT_OF_INPUT_OBS_TRACK_ONLY' is set to True).
 # This could be useful for previewing the track to be colocated
@@ -102,17 +105,22 @@ logger.critical(f"Model data is:\n {model_data}")
 logging.critical(f"For example, model field we use is:\n")
 logger.critical(model_data[-2].dump(display=False))
 
-# (FOR NOW, 1.3 Take relevant fields from the list of fields read in)
+# 1.3 Take relevant fields from the list of fields read in
 obs_field = obs_data[0]
 model_field = model_data[-2]
 
-# 1.4 Plots, if requested
+# 1.4 Plots, if requested. First configure general settings for plot:
+# a) Change the viewpoint to be over the UK only, with high-res map outline
+cfp.mapset(lonmin=-2, lonmax=2, latmin=50, latmax=54, resolution="10m")
+# b) Colour scale that better shows detail for typical flights
+cfp.cscale(CSCALE)
 if SHOW_PLOT_OF_INPUT_OBS:
     # Plot the *input* observational data for a preview, before doing any work
     # Min, max as determined using final_result_field.min(), .max():
-    cfp.mapset(lonmin=-2, lonmax=2, latmin=50, latmax=54, resolution="10m")
     cfp.levs(min=-5, max=55, step=5)
     if PLOT_OF_INPUT_OBS_TRACK_ONLY:
+        # Use the same field but set all data to zero so can plot the whole
+        # track in the same colour to just display the path, not orig. data
         equal_data_obs_field = obs_field.copy()
         new_data = np.zeros(len(equal_data_obs_field.data))  # 0 -> force red
         equal_data_obs_field.set_data(new_data, inplace=True)
@@ -123,7 +131,6 @@ if SHOW_PLOT_OF_INPUT_OBS:
             title="Flight path from obs field to co-locate model field onto:",
         )
     else:
-        cfp.cscale("parula")
         cfp.traj(obs_field, verbose=VERBOSE, legend=True)
 
 
@@ -523,13 +530,9 @@ aux_coor_t = final_result_field.auxiliary_coordinate("T")
 dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
 final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
 
-# 9.1 Change the viewpoint to be over the UK only, with high-res map outline
-cfp.mapset(lonmin=-2, lonmax=2, latmin=50, latmax=54, resolution="10m")
-
 # 9.2 Set levels for plotting of data in a colourmap
 # Min, max as determined using final_result_field.min(), .max():
 cfp.levs(min=5e-08, max=10e-08, step=0.25e-08)
-cfp.cscale("viridis")
 
 # 9.3 Make and open the final plot
 # NOTE: can try 'legend_lines=True' for the lines plotted with average between
