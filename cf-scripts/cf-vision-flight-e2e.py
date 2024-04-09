@@ -126,7 +126,9 @@ if SHOW_PLOT_OF_INPUT_OBS:
         equal_data_obs_field.set_data(new_data, inplace=True)
         cfp.cscale("scale28")  # has bright red for the lowest values
         cfp.traj(
-            equal_data_obs_field, verbose=VERBOSE, legend=True,
+            equal_data_obs_field,
+            verbose=VERBOSE,
+            legend=True,
             colorbar=False,
             title="Flight path from obs field to co-locate model field onto:",
         )
@@ -156,14 +158,55 @@ if SHOW_PLOT_OF_INPUT_OBS:
 
 # ----------------------------------------------------------------------------
 # STAGE 3: SPATIAL BOUNDING BOX: FIND THIS FOR THE FLIGHT PATH AND 'CROP'
-#          MODEL DATA SO
-#          WE ONLY CONSIDER THE BOUNDING BOX AND NOT IRRELEVENT DATA OUTSIDE
+#          MODEL DATA TO IGNORE IRRELEVENT DATA OUTSIDE THE BOUNDARIES.
 # ----------------------------------------------------------------------------
 
-# TODO: might be best to do this before time bounding since it will mean you
-#       only need to do thise once, not ~30 days for whole month. But
-#       we don't need to worry about it being slow either way.
-# IGNORE FOR NOW
+spat_bb_starttime = time.time()
+
+
+# 3.1 Find the spatial obs. path X-Y-Z boundaries to crop the model field to.
+#     Note: avoid calling these 'bounds' since that has meaning in CF, so to
+#           prevent potential ambiguity/confusion.
+# TODO SLB use coordinate check that isn't specific to type (dim/aux).
+try:
+    obs_X = obs_field.dimension_coordinate("X")
+except ValueError:
+    obs_X = obs_field.auxiliary_coordinate("X")
+try:
+    obs_Y = obs_field.dimension_coordinate("Y")
+except ValueError:
+    obs_Y = obs_field.auxiliary_coordinate("Y")
+try:
+    obs_Z = obs_field.dimension_coordinate("Z")
+except ValueError:
+    obs_Z = obs_field.auxiliary_coordinate("Z")
+
+logger.critical(
+    "STATS ON SPATIAL BOUNARING BOX TO US ARE:",
+    obs_X.data.stats(), obs_Y.data.stats()
+)
+# TODO SLB: need to think about possible compications of cyclicity, etc.,
+#           and account for those.
+obs_X_boundaries = (obs_X.data.minimum(), obs_X.data.maximum())
+obs_Y_boundaries = (obs_Y.data.minimum(), obs_Y.data.maximum())
+obs_Z_boundaries = (obs_Z.data.minimum(), obs_Z.data.maximum())
+
+# 3.1 Perform the spatial 3D X-Y-Z subspace to spatially bound to those values
+model_field_sbb = model_field.subspace(
+    X=cf.wi(*obs_X_boundaries),
+    Y=cf.wi(*obs_Y_boundaries),
+    Z=cf.wi(*obs_Z_boundaries)
+)
+
+spat_bb_endtime = time.time()
+spat_bb_totaltime = spat_bb_endtime - spat_bb_starttime
+
+logger.critical(
+    "SPAT. BOUNDING BOX CALC'D, MODEL DATA FIELD AFTER SPAT. BB "
+    f"IS: {model_field_sbb}"
+)
+logger.critical("Spatial bounding box created.")
+logger.critical(f"Time taken to create spatial BB: {spat_bb_totaltime}")
 
 # ----------------------------------------------------------------------------
 # STAGE 4: TIME BOUNDING BOX: FIND RELEVANT DAYS FOR FLIGHT IN THE MODEL
@@ -178,9 +221,9 @@ time_bb_starttime = time.time()
 # TODO: ensure this works for flights that take off on one day and end on
 # another e.g. 11 pm - 3 am flight.
 
-# 4.1 pre-process to get relevant constructs
+# 4.1 Pre-process to get relevant constructs
 obs_times = obs_field.auxiliary_coordinate("T")
-model_times_key, model_times = model_field.dimension_coordinate("T", item=True)
+model_times_key, model_times = model_field_sbb.dimension_coordinate("T", item=True)
 
 # 4.2 Ensure the units of the obs and model datetimes are consistent - conform
 #     them if they differ (if they don't, Units setting operation is harmless).
@@ -190,9 +233,9 @@ obs_times_units = obs_times.Units
 model_times_units = model_times.Units
 model_times.Units = obs_times.Units
 
-logger.critical(f"UNIT-CONFORMED MODEL FIELD IS: {model_field}")
+logger.critical(f"UNIT-CONFORMED MODEL FIELD IS: {model_field_sbb}")
 same_units = (
-    model_field.dimension_coordinate("T").data.Units
+    model_field_sbb.dimension_coordinate("T").data.Units
     == obs_field.auxiliary_coordinate("T").data.Units,
 )
 logger.critical(
@@ -239,7 +282,9 @@ obs_earliest_dayhour -= cf.TimeDuration(1, "hour")
 obs_latest_dayhour += cf.TimeDuration(1, "hour")
 
 # 4.5 Finally, perform the subspace to crop field to the bounding box of time
-model_field_bb = model_field.subspace(T=cf.wi(obs_earliest_dayhour, obs_latest_dayhour))
+model_field_bb = model_field_sbb.subspace(
+    T=cf.wi(obs_earliest_dayhour, obs_latest_dayhour)
+)
 logger.critical(
     f"TIME BOUNDING BOX CALC'D, MODEL DATA FIELD AFTER BB IS: {model_field_bb}"
 )
@@ -258,9 +303,7 @@ logger.critical(f"Time taken to create time BB: {time_bb_totaltime}")
 
 #          WE DO THIS WITH ESMF LOCSTREAM, SEE:
 #          https://xesmf.readthedocs.io/en/latest/notebooks/Using_LocStream.html
-#
-#          (WE ACHIEVE Z INTERP THS USING A (SPARSE) MATRIX METHOD BASED ON ESMF
-#          WEIGHTS TO DOT PRODUCT WITH THE DATA, FOR EACH MODEL TIME.)
+
 # ----------------------------------------------------------------------------
 
 # TODO: UGRID grids might need some extra steps/work for this.
