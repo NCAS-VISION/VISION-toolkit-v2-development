@@ -21,6 +21,9 @@ import cf
 # Define all inputs and output choices
 # TODO eventually these can be set as command-line arguments (w/ manpage, etc.)
 # configured and managed using getopts/getargs, etc.
+#
+# TODO: document assumptions about data that we use that the input data need
+# to abide by, for it to work (input data quality requirements).
 DATA_DIR_LOC = "data/main-workwith-test-ISO-simulator"
 OBS_DATA_DIR = "../compliant-data/core_faam_20170703_c016_STANCO_CF.nc"
 MODEL_DATA_DIR = "Model_Input"
@@ -30,6 +33,8 @@ HISTORY_MESSAGE = (  # gets added to the 'history' property on the output file
     "Processed using the NCAS VISION flight simulator script to colocate from "
     "model data to the observational flight data spatio-temporal location."
 )
+
+REGRIDS_METHOD = "linear"
 
 # Configure messaging to STDOUT, which is very verbose if INFO=True, else
 # as minimal as allows without log control in cf-plot (at present).
@@ -163,27 +168,18 @@ if SHOW_PLOT_OF_INPUT_OBS:
 
 spat_bb_starttime = time.time()
 
-
 # 3.1 Find the spatial obs. path X-Y-Z boundaries to crop the model field to.
 #     Note: avoid calling these 'bounds' since that has meaning in CF, so to
 #           prevent potential ambiguity/confusion.
-# TODO SLB use coordinate check that isn't specific to type (dim/aux).
-try:
-    obs_X = obs_field.dimension_coordinate("X")
-except ValueError:
-    obs_X = obs_field.auxiliary_coordinate("X")
-try:
-    obs_Y = obs_field.dimension_coordinate("Y")
-except ValueError:
-    obs_Y = obs_field.auxiliary_coordinate("Y")
-try:
-    obs_Z = obs_field.dimension_coordinate("Z")
-except ValueError:
-    obs_Z = obs_field.auxiliary_coordinate("Z")
+
+# For a DSG, the spatial coordinates will always be auxiliary:
+obs_X = obs_field.auxiliary_coordinate("X")
+obs_Y = obs_field.auxiliary_coordinate("Y")
+obs_Z = obs_field.auxiliary_coordinate("Z")
 
 logger.critical(
-    "STATS ON SPATIAL BOUNARING BOX TO US ARE:",
-    obs_X.data.stats(), obs_Y.data.stats()
+    "STATS ON SPATIAL BOUNARING BOX TO US ARE: "
+    f"{obs_X.data.stats()}, {obs_Y.data.stats()}"
 )
 # TODO SLB: need to think about possible compications of cyclicity, etc.,
 #           and account for those.
@@ -191,7 +187,44 @@ obs_X_boundaries = (obs_X.data.minimum(), obs_X.data.maximum())
 obs_Y_boundaries = (obs_Y.data.minimum(), obs_Y.data.maximum())
 obs_Z_boundaries = (obs_Z.data.minimum(), obs_Z.data.maximum())
 
-# 3.1 Perform the spatial 3D X-Y-Z subspace to spatially bound to those values
+
+# 3.1 Get the model data point one beyond this boundaries, using indices slices
+# TODO SLB potentially use '_indices' which can give indices which map more
+# simply to the relevant domain axes -> find which axes is spanned by each
+# to find what corresponds to X, Y, Z etc.
+
+tight_bb_indices = model_field.indices(
+    X=cf.wi(*obs_X_boundaries),
+    Y=cf.wi(*obs_Y_boundaries),
+    Z=cf.wi(*obs_Z_boundaries),
+)
+
+logger.critical(f"INDICES ARE {tight_bb_indices}")
+
+# Note: DH adding halo method we can use anyway, but until then do this:
+#
+# Note: getting some dask arrays out instead of slices, due to Dask laziness.
+# DH to look into.
+#
+# TODO SLB: get the next gridpoint out - +/- 1, use slice methods, like:
+# >>> slice(0, 1)
+# slice(0, 1, None)
+# >>> x = slice(0, 1)
+# >>> x.start
+# 0
+# >>> x.stop
+# 1
+# >>> x.step
+# >>> slice(x.start - 1, x.stop, x.step)
+# slice(-1, 1, None)
+# >>> slice(x.start - 1, x.stop, x.step)
+#
+# For now, until DH halo code in, add/subtract res. for grid step as per time
+# code (expand min and max by the gridsteps relevant distance), then covered.
+
+# 3.2 Perform the spatial 3D X-Y-Z subspace to spatially bound to those values
+###model_field_sbb = model_field.subspace("TODO USE INDICES ABOVE")
+
 model_field_sbb = model_field.subspace(
     X=cf.wi(*obs_X_boundaries),
     Y=cf.wi(*obs_Y_boundaries),
@@ -223,7 +256,12 @@ time_bb_starttime = time.time()
 
 # 4.1 Pre-process to get relevant constructs
 obs_times = obs_field.auxiliary_coordinate("T")
-model_times_key, model_times = model_field_sbb.dimension_coordinate("T", item=True)
+################################
+# TODO SLB  quick revert:
+###model_field_sbb = model_field
+################################
+
+model_times_key, model_times = model_field.dimension_coordinate("T", item=True)
 
 # 4.2 Ensure the units of the obs and model datetimes are consistent - conform
 #     them if they differ (if they don't, Units setting operation is harmless).
@@ -263,8 +301,11 @@ logger.critical(
 # time with indices getting higher. Otherwise might need to use .sort() etc.
 #
 # NOTE: need the datetime array in order to do arithmetic with a TimeDuration
-obs_earliest_dayhour = obs_times[0].datetime_array[0]
-obs_latest_dayhour = obs_times[-1].datetime_array[0]
+#
+# NOTE: use max and min to account for any missing data even at endpoints
+# TODO SLB
+obs_earliest_dayhour = obs_times.data.minimum().datetime_array[0]
+obs_latest_dayhour = obs_times.data.maximum().datetime_array[0]
 logger.critical(
     f"EARLIEST AND LATEST ARE: {obs_earliest_dayhour}, {obs_latest_dayhour}"
 )
@@ -295,6 +336,7 @@ time_bb_totaltime = time_bb_endtime - time_bb_starttime
 logger.critical("Time bounding box created.")
 logger.critical(f"Time taken to create time BB: {time_bb_totaltime}")
 
+pre_spatregrid_cyclic = model_field_bb.cyclic()
 # ----------------------------------------------------------------------------
 # STAGE 5: FULL XYZ/SPATIAL INTERPORLATION, I.E. INTERPOLATE THE
 #          FLIGHT PATH LOCATIONS SPATIALLY, FOR THE XY HORIZONTAL AND THE Z
@@ -311,15 +353,28 @@ logger.critical(f"Time taken to create time BB: {time_bb_totaltime}")
 logger.critical(f"Starting spatial interpolation (regridding) step...")
 spat_regrid_starttime = time.time()
 
+# 5.0: Creating the spatial bounding box may have made some of the spatial
+# dimensions singular, which would lead to an error or:
+#     ValueError: Neither the X nor Y dimensions of the source field <field>
+#     can be of size 1 for spherical 'linear' regridding.
+# so we have to account for this.
+
 # 5.1 Perform the spherical regrid which does the spatial interpolation
 # NOTE: this requires recently-added support for ESMF LocStream
 # functionality, hence cf-python version >= 3.16.1 to work.
+#
+# TODO: If there is a size 0 axes, the spatial bounding box could have
+# collapsed axes down to a size 0, and halo-ing will get to size 1(???, or
+# not, have nothing to work with) but
+# regrids method can't work with a size-1.
+# Can we use 'contains' or (better?) 'cellwi' method to do this?
 spatially_colocated_field = model_field_bb.regrids(
     obs_field,
-    method="linear",
+    method=REGRIDS_METHOD,
     z="air_pressure",
     ln_z=True,
 )
+post_spatregrid_cyclic = model_field_bb.cyclic()
 spat_regrid_endtime = time.time()
 spat_regrid_totaltime = spat_regrid_endtime - spat_regrid_starttime
 
@@ -396,6 +451,10 @@ for index, (t1, t2) in enumerate(itertools.pairwise(model_times.datetime_array))
     #
     # NOTE: without the earlier bounding box step, this will fail due to
     #       not being able to find the subspace at irrelevant times.
+    print({
+            aux_time_key: q,
+            dim_time_key: [index],
+        })
     s0 = m.subspace(
         **{
             aux_time_key: q,
