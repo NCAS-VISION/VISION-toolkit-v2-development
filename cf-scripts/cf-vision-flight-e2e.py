@@ -135,10 +135,19 @@ if SHOW_PLOT_OF_INPUT_OBS:
             verbose=VERBOSE,
             legend=True,
             colorbar=False,
+            markersize=0.75,
+            linewidth=0,  # effectively turn off lines to only have markers
             title="Flight path from obs field to co-locate model field onto:",
         )
     else:
-        cfp.traj(obs_field, verbose=VERBOSE, legend=True)
+        cfp.traj(
+            obs_field,
+            verbose=VERBOSE,
+            legend=True,
+            markersize=0.75,
+            linewidth=0,  # effectively turn off lines to only have markers
+            title="Obs field input:",
+        )
 
 
 # ----------------------------------------------------------------------------

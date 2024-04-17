@@ -51,110 +51,65 @@ detail.*
 
         ```diff
         diff --git a/cfplot/cfplot.py b/cfplot/cfplot.py
-        index 95a45c7..36c1805 100644
+        index 95a45c7..605b2de 100644
         --- a/cfplot/cfplot.py
         +++ b/cfplot/cfplot.py
-        @@ -8379,7 +8379,11 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
+        @@ -8379,7 +8379,7 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
              for track in np.arange(ntracks):
                  xpts = lons[track, :]
                  ypts = lats[track, :]
         -        data2 = data[track, :]
-        +        ###print("DEBUG", data, track, xpts)
-        +        ###try:
-        +        data2 = data  #[track, :]
-        +        ###except:
-        +        ###data2 = data[track]
+        +        data2 = data
 
                  xpts_orig = deepcopy(xpts)
                  xpts = np.mod(xpts + 180, 360) - 180
-        @@ -8417,17 +8421,26 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
-                     else:
-                         line_xpts = xpts.compressed()
-                         line_ypts = ypts.compressed()
-        -                line_data = data2.compressed()
-        +                line_data = data2.compressed()  # TODO SADIE BUG
+        @@ -8421,12 +8421,10 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
 
-        -                for i in np.arange(np.size(line_xpts)-1):
-        -                    val = (line_data[i] + line_data[i+1])/2.0
-        +                for i in np.arange(np.size(line_xpts)-1):  ## CHANGE FROM -1
-
-        -                    col = plotvars.cs[np.max(np.where(val > plotvars.levels))]
-        -                    mymap.plot(line_xpts[i:i+2], line_ypts[i:i+2], color=col,
-        -                               linewidth=plot_linewidth, linestyle=linestyle,
-        -                               zorder=zorder, clip_on=True, transform=ccrs.PlateCarree())
+                         for i in np.arange(np.size(line_xpts)-1):
+                             val = (line_data[i] + line_data[i+1])/2.0
         -
-        -        # Plot vectors
-        +                    #print("JUPITER'S MOONS", i, np.size(line_xpts)-2)
-        +                    #if i != np.size(line_xpts)-2:
-        +                    #try:
-        +                    try:
-        +                        val = (line_data[i] + line_data[i+1])/2.0   # SADIE
-        +                        #else:
-        +                        #    val = line_data[i]
-        +                        # SADIE HERE
-        +                        col = plotvars.cs[np.max(np.where(val > plotvars.levels))]
-        +                        mymap.plot(line_xpts[i:i+2], line_ypts[i:i+2], color=col,
-        +                                   linewidth=plot_linewidth, linestyle=linestyle,
-        +                                   zorder=zorder, clip_on=True,
-        +                                   transform=ccrs.PlateCarree())
-        +                    except:
-        +                        pass
-        +                        # Plot vectors
+                             col = plotvars.cs[np.max(np.where(val > plotvars.levels))]
+                             mymap.plot(line_xpts[i:i+2], line_ypts[i:i+2], color=col,
+                                        linewidth=plot_linewidth, linestyle=linestyle,
+                                        zorder=zorder, clip_on=True, transform=ccrs.PlateCarree())
+        -
+                 # Plot vectors
                  if vector:
                      if verbose and track == 0:
-                         print('plotting vectors')
-        @@ -8469,10 +8482,24 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
+        @@ -8448,6 +8446,7 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
+                                         head_width=head_width,
+                                         head_length=head_length,
+                                         fc=fc, ec=ec,
+        +                                linewidth=plot_linewidth,
+                                         length_includes_head=True,
+                                         zorder=plot_zorder, clip_on=True,
+                                         transform=ccrs.PlateCarree())
+        @@ -8469,9 +8468,7 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
                  for track in np.arange(ntracks):
                      xpts = lons[track, :]
                      ypts = lats[track, :]
         -            data2 = data[track, :]
         -
         -
-        -
-        +            ###print("DEBUG", data, track, xpts)
-        +            ###try:
-        +            data2 = data  ###[track, :]
-        +            ###except:
-        +            ###data2 = data[track]
-        +            ###print("DATA2 IS", data2)
-        +
-        +            """
-        +            col_sadie = plotvars.cs[np.max(np.where(data2 > plotvars.levels))]
-        +            mymap.scatter(xpts, ypts,  #xpts[pts], ypts[pts],
-        +                                  s=markersize*2,##*15,
-        +                                  c=col_sadie,   # SADIE HERE
-        +                                  marker=marker,
-        +                                  edgecolors=markeredgecolor,
-        +                                  transform=ccrs.PlateCarree(),
-        +                                  zorder=101
-        +            )
-        +            """
+        +            data2 = data
+
                      for i in np.arange(np.size(levs)-1):
                          color = plotvars.cs[i]
-
-        @@ -8486,13 +8513,17 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
+        @@ -8486,11 +8483,11 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
                          else:
                              plot_zorder = zorder
                          if np.size(pts) > 0:
         -
-        -                    mymap.scatter(xpts[pts], ypts[pts],
-        -                                  s=markersize*15,
+                             mymap.scatter(xpts[pts], ypts[pts],
+                                           s=markersize*15,
         -                                  c=color,
-        +                    ###print("ADDING A SCATTER HERE", xpts, len(xpts))
-        +                    ###print("DATA IS FOR COLOURS", data)
-        +                    mymap.scatter(xpts[pts], ypts[pts],  #xpts[pts], ypts[pts],
-        +                                  linewidth=0.0,
-        +                                  s=markersize/2,##*15,
-        +                                  c=[plotvars.cs[np.max(np.where(d > plotvars.levels))] for d in data2[pts]],   # SADIE HERE
+        +                                  c=[plotvars.cs[np.max(np.where(d > plotvars.levels))] for d in data2[pts]],
                                            marker=marker,
+        +                                  linewidth=plot_linewidth,
                                            edgecolors=markeredgecolor,
-        -                                  transform=ccrs.PlateCarree(), zorder=plot_zorder)
-        +                                  transform=ccrs.PlateCarree(),
-        +                                  zorder=plot_zorder
-        +                                  )
+                                           transform=ccrs.PlateCarree(), zorder=plot_zorder)
 
-             # Axes
-             plot_map_axes(axes=axes, xaxis=xaxis, yaxis=yaxis,
+
         ```
 
 3. As for the script, new features have been added which introduce failures,
