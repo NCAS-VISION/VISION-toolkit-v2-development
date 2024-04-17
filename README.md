@@ -51,7 +51,7 @@ detail.*
 
         ```diff
         diff --git a/cfplot/cfplot.py b/cfplot/cfplot.py
-        index 95a45c7..605b2de 100644
+        index 95a45c7..da6e785 100644
         --- a/cfplot/cfplot.py
         +++ b/cfplot/cfplot.py
         @@ -8379,7 +8379,7 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
@@ -63,20 +63,7 @@ detail.*
 
                  xpts_orig = deepcopy(xpts)
                  xpts = np.mod(xpts + 180, 360) - 180
-        @@ -8421,12 +8421,10 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
-
-                         for i in np.arange(np.size(line_xpts)-1):
-                             val = (line_data[i] + line_data[i+1])/2.0
-        -
-                             col = plotvars.cs[np.max(np.where(val > plotvars.levels))]
-                             mymap.plot(line_xpts[i:i+2], line_ypts[i:i+2], color=col,
-                                        linewidth=plot_linewidth, linestyle=linestyle,
-                                        zorder=zorder, clip_on=True, transform=ccrs.PlateCarree())
-        -
-                 # Plot vectors
-                 if vector:
-                     if verbose and track == 0:
-        @@ -8448,6 +8446,7 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
+        @@ -8448,6 +8448,7 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
                                          head_width=head_width,
                                          head_length=head_length,
                                          fc=fc, ec=ec,
@@ -84,7 +71,7 @@ detail.*
                                          length_includes_head=True,
                                          zorder=plot_zorder, clip_on=True,
                                          transform=ccrs.PlateCarree())
-        @@ -8469,9 +8468,7 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
+        @@ -8469,9 +8470,7 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
                  for track in np.arange(ntracks):
                      xpts = lons[track, :]
                      ypts = lats[track, :]
@@ -95,11 +82,8 @@ detail.*
 
                      for i in np.arange(np.size(levs)-1):
                          color = plotvars.cs[i]
-        @@ -8486,11 +8483,11 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
-                         else:
-                             plot_zorder = zorder
-                         if np.size(pts) > 0:
-        -
+        @@ -8489,8 +8488,9 @@ def traj(f=None, title=None, ptype=0, linestyle='-', linewidth=1.0, linecolor='b
+
                              mymap.scatter(xpts[pts], ypts[pts],
                                            s=markersize*15,
         -                                  c=color,
