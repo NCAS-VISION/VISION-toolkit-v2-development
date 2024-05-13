@@ -150,6 +150,7 @@ if SHOW_PLOT_OF_INPUT_OBS:
             linewidth=0,  # effectively turn off lines to only have markers
             title="Flight path from obs field to co-locate model field onto:",
         )
+        cfp.cscale(CSCALE)  # reset for normal (default-style) plots after
     else:
         cfp.traj(
             obs_field,
@@ -228,9 +229,11 @@ obs_Z_boundaries = (obs_Z.data.minimum(), obs_Z.data.maximum())
 # code (expand min and max by the gridsteps relevant distance), then covered.
 
 # 3.2 Perform the spatial 3D X-Y-Z subspace to spatially bound to those values
-###model_field_sbb = model_field.subspace("TODO USE INDICES ABOVE")
 
+# Note: this requires a 'halo' config. feature introduced in cf-ython 3.16.2.
 model_field_sbb = model_field.subspace(
+    "compress",
+    1,
     X=cf.wi(*obs_X_boundaries),
     Y=cf.wi(*obs_Y_boundaries),
     Z=cf.wi(*obs_Z_boundaries)
@@ -439,11 +442,7 @@ for index, (t1, t2) in enumerate(itertools.pairwise(model_times.datetime_array))
 
     # 6.3.2 Define a query which will find any datetimes within these times
     #       to map all observational times to the appropriate segment, later.
-    # TODO: see Issue relating to (half-)open endpoints which we can ues
-    #       here once ready to avoid need to skip some indices in certain
-    #       cases later, cf-python Issue 740 at:
-    #       https://github.com/NCAS-CMS/cf-python/issues/740
-    q = cf.wi(cf.dt(t1), cf.dt(t2))  # TODO is cf.dt wrapping necessary?
+    q = cf.wi(cf.dt(t1), cf.dt(t2), open_upper=True)  # TODO is cf.dt wrapping necessary?
     logger.critical(f"Querying on query: {q} with field: {m}")
 
     # 6.3.3 Subspace the observational times to match the segments above,
@@ -452,7 +451,7 @@ for index, (t1, t2) in enumerate(itertools.pairwise(model_times.datetime_array))
     #
     # NOTE: without the earlier bounding box step, this will fail due to
     #       not being able to find the subspace at irrelevant times.
-    print({
+    logger.critical({
             aux_time_key: q,
             dim_time_key: [index],
         })
@@ -474,16 +473,6 @@ for index, (t1, t2) in enumerate(itertools.pairwise(model_times.datetime_array))
     # NOTE: a=0 and b=1 from old/whiteboard schematic and notes).
     values_0 = s0.data.squeeze()
     values_1 = s1.data.squeeze()
-
-    # 6.3.5 Remove final value as that gets included from next segment,
-    # except in the case of the final segment, where it doesn't get double
-    # counted. See TO-DO on step 6.3.2 on a way soon to avoid need for this.
-    #
-    # TODO: add some assertion which will check the double counting is
-    #       indeed correct i.e. last value of previous is same as first of next
-    if index != (final_index - 1):
-        values_0 = s0.data.squeeze()[:-1]
-        values_1 = s1.data.squeeze()[:-1]
 
     # 6.3.6 Calculate the arrays to be used in the weighting calculation.
     # All arithmetic done numpy-array wise, so no need to iterate over values.
