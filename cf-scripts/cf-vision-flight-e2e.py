@@ -34,7 +34,8 @@ HISTORY_MESSAGE = (  # gets added to the 'history' property on the output file
     "model data to the observational flight data spatio-temporal location."
 )
 
-REGRIDS_METHOD = "linear"
+REGRID_METHOD = "linear"
+REGRID_Z_COORD = "air_pressure"
 
 # Configure messaging to STDOUT, which is very verbose if INFO=True, else
 # as minimal as allows without log control in cf-plot (at present).
@@ -43,7 +44,7 @@ REGRIDS_METHOD = "linear"
 VERBOSE = True
 
 # Plotting general config.
-CSCALE = "plasma"
+CSCALE = "plasma"  # "parula" also works well, as alternative for dev.
 
 # Optionally, display plots of the input observational data, or its track
 # only in one colour (if 'PLOT_OF_INPUT_OBS_TRACK_ONLY' is set to True).
@@ -71,14 +72,14 @@ if VERBOSE:
 else:
     logger.setLevel(logging.CRITICAL + 1)  # prevents even critical log messages
 
-OBS_DATA_LOC = f"{DATA_DIR_LOC}/{OBS_DATA_DIR}"
-MODEL_DATA_LOC = f"{DATA_DIR_LOC}/{MODEL_DATA_DIR}"
+obs_data_loc = f"{DATA_DIR_LOC}/{OBS_DATA_DIR}"
+model_data_loc = f"{DATA_DIR_LOC}/{MODEL_DATA_DIR}"
 
 logger.critical(f"Using Python and CF environment of: {cf.environment(display=False)}")
 logger.critical(
     f"Using data locations of:\n"
-    f"Obs data: '{OBS_DATA_LOC}'\n"
-    f"Model data: '{MODEL_DATA_LOC}'"
+    f"Obs data: '{obs_data_loc}'\n"
+    f"Model data: '{model_data_loc}'"
 )
 
 # ----------------------------------------------------------------------------
@@ -88,13 +89,13 @@ logger.critical(
 
 # 1.1.1 Observational data (from the FAAM aircraft flights in this case).
 read_obs_starttime = time.time()
-obs_data = cf.read(OBS_DATA_LOC)
+obs_data = cf.read(obs_data_loc)
 read_obs_endtime = time.time()
 read_obs_totaltime = read_obs_endtime - read_obs_starttime
 
 # 1.1.2 Model data.
 read_model_starttime = time.time()
-model_data = cf.read(MODEL_DATA_LOC)
+model_data = cf.read(model_data_loc)
 read_model_endtime = time.time()
 read_model_totaltime = read_model_endtime - read_model_starttime
 
@@ -135,7 +136,7 @@ if SHOW_PLOT_OF_INPUT_OBS:
             verbose=VERBOSE,
             legend=True,
             colorbar=False,
-            markersize=0.75,
+            markersize=0.5,
             linewidth=0,  # effectively turn off lines to only have markers
             title="Flight path from obs field to co-locate model field onto:",
         )
@@ -144,8 +145,8 @@ if SHOW_PLOT_OF_INPUT_OBS:
             obs_field,
             verbose=VERBOSE,
             legend=True,
-            markersize=0.75,
-            linewidth=0,  # effectively turn off lines to only have markers
+            markersize=5,
+            linewidth=0.4,
             title="Obs field input:",
         )
 
@@ -197,21 +198,6 @@ obs_Y_boundaries = (obs_Y.data.minimum(), obs_Y.data.maximum())
 obs_Z_boundaries = (obs_Z.data.minimum(), obs_Z.data.maximum())
 
 
-# 3.1 Get the model data point one beyond this boundaries, using indices slices
-# TODO SLB potentially use '_indices' which can give indices which map more
-# simply to the relevant domain axes -> find which axes is spanned by each
-# to find what corresponds to X, Y, Z etc.
-
-tight_bb_indices = model_field.indices(
-    X=cf.wi(*obs_X_boundaries),
-    Y=cf.wi(*obs_Y_boundaries),
-    Z=cf.wi(*obs_Z_boundaries),
-)
-
-logger.critical(f"INDICES ARE {tight_bb_indices}")
-
-# Note: DH adding halo method we can use anyway, but until then do this:
-#
 # Note: getting some dask arrays out instead of slices, due to Dask laziness.
 # DH to look into.
 #
@@ -379,8 +365,8 @@ spat_regrid_starttime = time.time()
 # Can we use 'contains' or (better?) 'cellwi' method to do this?
 spatially_colocated_field = model_field_bb.regrids(
     obs_field,
-    method=REGRIDS_METHOD,
-    z="air_pressure",
+    method=REGRID_METHOD,
+    z=REGRID_Z_COORD,
     ln_z=True,
 )
 post_spatregrid_cyclic = model_field_bb.cyclic()
@@ -648,7 +634,14 @@ cfp.levs(min=5e-08, max=10e-08, step=0.25e-08)
 # 9.3 Make and open the final plot
 # NOTE: can try 'legend_lines=True' for the lines plotted with average between
 #       the two scatter marker points, if preferable?
-cfp.traj(final_result_field, verbose=VERBOSE, legend=True)
+cfp.traj(
+    final_result_field,
+    verbose=VERBOSE,
+    legend=True,
+    markersize=5,
+    linewidth=0.4,
+    title="Co-located field, with model data located onto observational path",
+)
 
 vis_endtime = time.time()
 vis_totaltime = vis_endtime - vis_starttime
