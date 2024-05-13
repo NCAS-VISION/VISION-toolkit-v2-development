@@ -4,6 +4,16 @@ flight digital twin, using cf-python and cf-plot.
 
 Demonstration for the TWINE-funded (NCAS-)VISION project.
 
+Requirements to run the script successfully (else the script needs fixes
+so please get in touch with Sadie RE any issues, noting this is a WIP!):
+* environment with versions, at least, Python 3.10 and cf-python 3.16.2;
+* input data conforming to toolkit requirements (documentation TODO).
+
+Note: this script assumes track data from a flight as the observational input,
+where other inputs for the VISION project such as satellite data will be
+considered in future later-stage updates only, so will not yet work for this
+script.
+
 """
 
 # NOTE: itertools.pairwise is only available in Python 3.10 plus, so >= v.3.10
@@ -251,10 +261,6 @@ time_bb_starttime = time.time()
 
 # 4.1 Pre-process to get relevant constructs
 obs_times = obs_field.auxiliary_coordinate("T")
-################################
-# TODO SLB  quick revert:
-###model_field_sbb = model_field
-################################
 
 model_times_key, model_times = model_field.dimension_coordinate("T", item=True)
 
