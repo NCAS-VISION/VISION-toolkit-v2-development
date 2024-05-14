@@ -183,69 +183,15 @@ if SHOW_PLOT_OF_INPUT_OBS:
 # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT BY DH
 
 # ----------------------------------------------------------------------------
-# STAGE 3: SPATIAL BOUNDING BOX: FIND THIS FOR THE FLIGHT PATH AND 'CROP'
-#          MODEL DATA TO IGNORE IRRELEVENT DATA OUTSIDE THE BOUNDARIES.
-# ----------------------------------------------------------------------------
-
-spat_bb_starttime = time.time()
-
-# 3.1 Find the spatial obs. path X-Y-Z boundaries to crop the model field to.
-#     Note: avoid calling these 'bounds' since that has meaning in CF, so to
-#           prevent potential ambiguity/confusion.
-
-# For a DSG, the spatial coordinates will always be auxiliary:
-obs_X = obs_field.auxiliary_coordinate("X")
-obs_Y = obs_field.auxiliary_coordinate("Y")
-obs_Z = obs_field.auxiliary_coordinate("Z")
-
-logger.critical(
-    "STATS ON SPATIAL BOUNARING BOX TO US ARE: "
-    f"{obs_X.data.stats()}, {obs_Y.data.stats()}"
-)
-
-# 3.2 Perform the spatial 3D X-Y-Z subspace to spatially bound to those values
-
-# Note: this requires a 'halo' config. feature introduced in cf-ython 3.16.2.
-# TODO SLB: need to think about possible compications of cyclicity, etc.,
-#           and account for those.
-# Note: getting some dask arrays out instead of slices, due to Dask laziness.
-# DH to look into.
-model_field_sbb = model_field.subspace(
-    1,  # the halo size that extends the bounding box by 1 in index-space
-    X=cf.wi(obs_X.data.minimum(), obs_X.data.maximum()),
-    Y=cf.wi(obs_Y.data.minimum(), obs_Y.data.maximum()),
-    Z=cf.wi(obs_Z.data.minimum(), obs_Z.data.maximum())
-)
-
-spat_bb_endtime = time.time()
-spat_bb_totaltime = spat_bb_endtime - spat_bb_starttime
-
-logger.critical(
-    "SPAT. BOUNDING BOX CALC'D, MODEL DATA FIELD AFTER SPAT. BB "
-    f"IS: {model_field_sbb}"
-)
-logger.critical("Spatial bounding box created.")
-logger.critical(f"Time taken to create spatial BB: {spat_bb_totaltime}")
-
-# ----------------------------------------------------------------------------
-# STAGE 4: TIME BOUNDING BOX: FIND RELEVANT DAYS FOR FLIGHT IN THE MODEL
-#          DATA FOR COLOCATION
+# STAGE 3: UNITS AND CALENDAR CONSISTENCY CONSIDERATIONS
 #
-#          IS DIFFERENT TO THE SPATIAL B.B. CASE SINCE IT NEEDS TO BE DONE
-#          DAILY TO ACCCOUNT FOR FLIGHTS BEING CONTAINED IN SEPARATE DAYS.
 # ----------------------------------------------------------------------------
-
-time_bb_starttime = time.time()
-
-# TODO: ensure this works for flights that take off on one day and end on
-# another e.g. 11 pm - 3 am flight.
-
-# 4.1 Pre-process to get relevant constructs
+# 3.1 Pre-process to get relevant constructs
 obs_times = obs_field.auxiliary_coordinate("T")
 
 model_times_key, model_times = model_field.dimension_coordinate("T", item=True)
 
-# 4.2 Ensure the units of the obs and model datetimes are consistent - conform
+# 3.2 Ensure the units of the obs and model datetimes are consistent - conform
 #     them if they differ (if they don't, Units setting operation is harmless).
 # NOTE: Change the units on the model (not obs) times since there are fewer
 # data points on those, meaning less converting work.
@@ -253,9 +199,9 @@ obs_times_units = obs_times.Units
 model_times_units = model_times.Units
 model_times.Units = obs_times.Units
 
-logger.critical(f"UNIT-CONFORMED MODEL FIELD IS: {model_field_sbb}")
+logger.critical(f"UNIT-CONFORMED MODEL FIELD IS: {model_field}")
 same_units = (
-    model_field_sbb.dimension_coordinate("T").data.Units
+    model_field.dimension_coordinate("T").data.Units
     == obs_field.auxiliary_coordinate("T").data.Units,
 )
 logger.critical(
@@ -263,7 +209,7 @@ logger.critical(
     f"{same_units};\n"
 )
 
-# 4.3 Ensure calendars are consistent, if not convert to equivalent.
+# 3.3 Ensure calendars are consistent, if not convert to equivalent.
 # TODO what to do if calendar conversion means missing days when need them?
 #      look at Maria's code as to how it is dealt with (e.g. in CIS)
 #
@@ -278,35 +224,76 @@ logger.critical(
     f"OBSERVATIONS: {obs_calendar}."
 )
 
+
+# ----------------------------------------------------------------------------
+# STAGE 4: BOUNDING BOX, IN TIME AND SPACE: FIND THIS FOR THE FLIGHT PATH AND
+#          'CROP' MODEL DATA TO IGNORE IRRELEVENT DATA OUTSIDE THE BOUNDARIES.
+# ----------------------------------------------------------------------------
+
+# TODO: ensure this works for flights that take off on one day and end on
+# another e.g. 11 pm - 3 am flight.
+
+bb_starttime = time.time()
+
+# 3.1: prep. towards the BB component subspace.
+# Find the spatial obs. path X-Y-Z boundaries to crop the model field to.
+#     Note: avoid calling these 'bounds' since that has meaning in CF, so to
+#           prevent potential ambiguity/confusion.
+
+# For a DSG, the spatial coordinates will always be auxiliary:
+obs_X = obs_field.auxiliary_coordinate("X")
+obs_Y = obs_field.auxiliary_coordinate("Y")
+obs_Z = obs_field.auxiliary_coordinate("Z")
+
+logger.critical(
+    "STATS ON SPATIAL BOUNARING BOX TO US ARE: "
+    f"{obs_X.data.stats()}, {obs_Y.data.stats()}"
+)
+
+# 3.2: prep. towards the temporal BB component.
 # TODO: are we assuming the model and obs data are strictly increasing, as we
 # might be assuming for some of this. - > trajectories should be inc'ing with
 # time with indices getting higher. Otherwise might need to use .sort() etc.
 #
-# NOTE: need the datetime array in order to do arithmetic with a TimeDuration
-#
-# NOTE: use max and min to account for any missing data even at endpoints
-obs_earliest_dayhour = obs_times.data.minimum().datetime_array[0]
-obs_latest_dayhour = obs_times.data.maximum().datetime_array[0]
+# NOTE: use max and min to account for any missing data even at endpoints,
+#       as opposed to taking the values at first and last position/index.
 logger.critical(
-    f"EARLIEST AND LATEST ARE: {obs_earliest_dayhour}, {obs_latest_dayhour}"
+    "EARLIEST AND LATEST TIMES ARE: "
+    f"{obs_times.data.minimum()}, {obs_times.data.maximum()}"
 )
 
-# 4.4 Finally, perform the subspace to crop field to the bounding box of time
-model_field_bb = model_field_sbb.subspace(
-    1,  # the halo size that extends the bounding box by 1 in index-space
-    T=cf.wi(obs_earliest_dayhour, obs_latest_dayhour),
+# 3.3 Perform the 4D spatio-temporal bounding box to reduce the model data down
+#     to only that which is relevant for the calculations on the observational
+#     data path in 4D space, that is:
+#     * a spatial 3D X-Y-Z subspace to spatially bound to those values; plus
+#     * a time 1D T subspace to bound it in time i.e. cover only relevant times
+
+# Note: this requires a 'halo' config. feature introduced in cf-ython 3.16.2.
+# TODO SLB: need to think about possible compications of cyclicity, etc.,
+#           and account for those.
+# Note: getting some dask arrays out instead of slices, due to Dask laziness.
+# DH to look into.
+
+# Note: can do the spatial and the temporal subspacing separately, and if
+# want to do this make the call twice for each coordinate arg. Reasons we may
+# want to do this include having separate halo sizes for each coordinate, etc.
+model_field_bb = model_field.subspace(
+    1,  # the halo size that extends the bounding box by 1 in index space
+    X=cf.wi(obs_X.data.minimum(), obs_X.data.maximum()),
+    Y=cf.wi(obs_Y.data.minimum(), obs_Y.data.maximum()),
+    Z=cf.wi(obs_Z.data.minimum(), obs_Z.data.maximum()),
+    T=cf.wi(obs_times.data.minimum(), obs_times.data.maximum()),
 )
+
+bb_endtime = time.time()
+bb_totaltime = bb_endtime - bb_starttime
+
 logger.critical(
-    f"TIME BOUNDING BOX CALC'D, MODEL DATA FIELD AFTER BB IS: {model_field_bb}"
+    "4D bounding box calculated. Model data with BB applied is: "
+    f"{model_field_bb}"
 )
+logger.critical(f"Time taken to create bounding box: {bb_totaltime}")
 
-time_bb_endtime = time.time()
-time_bb_totaltime = time_bb_endtime - time_bb_starttime
-
-logger.critical("Time bounding box created.")
-logger.critical(f"Time taken to create time BB: {time_bb_totaltime}")
-
-pre_spatregrid_cyclic = model_field_bb.cyclic()
 # ----------------------------------------------------------------------------
 # STAGE 5: FULL XYZ/SPATIAL INTERPORLATION, I.E. INTERPOLATE THE
 #          FLIGHT PATH LOCATIONS SPATIALLY, FOR THE XY HORIZONTAL AND THE Z
@@ -527,11 +514,13 @@ history_details = final_result_field.get_property("history")
 history_details += " ~ " + HISTORY_MESSAGE  # include divider to previous info
 final_result_field.set_property("history", history_details)
 
-logger.critical(f"FINAL RESULT FIELD AFTER DATA SETTING (DONE) {final_result_field}")
+logger.critical(
+    f"Final resultant field after data co-location is: {final_result_field}")
 logger.critical(final_result_field.dump(display=False))
 logger.critical(
-    "The final result field has:\n" f"DATA STATS: {final_result_field.data.stats()}\n"
+    "The final result field has data statistics of:\n"
 )
+logger.critical(pformat(final_result_field.data.stats()))
 
 # TODO: consider whether or not to persist the regridded / time interp.
 # before the next stage, or to do in a fully lazy way.
