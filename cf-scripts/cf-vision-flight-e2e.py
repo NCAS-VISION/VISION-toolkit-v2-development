@@ -37,13 +37,18 @@ import cf
 DATA_DIR_LOC = "data/main-workwith-test-ISO-simulator"
 OBS_DATA_DIR = "../compliant-data/core_faam_20170703_c016_STANCO_CF.nc"
 MODEL_DATA_DIR = "Model_Input"
+
 # Set output information
 OUTPUT_FILE_NAME = "cf_vision_result_field.nc"
 HISTORY_MESSAGE = (  # gets added to the 'history' property on the output file
     "Processed using the NCAS VISION flight simulator script to colocate from "
     "model data to the observational flight data spatio-temporal location."
 )
+# Default to current directory to output. A given directory must exist already.
+OUTPUTS_DIR = "."  
+PLOTNAME_START = "vision_toolkit"
 
+# Regridding config.
 REGRID_METHOD = "linear"
 REGRID_Z_COORD = "air_pressure"
 
@@ -63,7 +68,7 @@ CSCALE = "plasma"  # "parula" also works well, as alternative for dev.
 # or for demo'ing the code to compare the original observational data
 # to the co-located data to see the differences.
 SHOW_PLOT_OF_INPUT_OBS = True
-PLOT_OF_INPUT_OBS_TRACK_ONLY = True
+PLOT_OF_INPUT_OBS_TRACK_ONLY = 2  # for dev. purposes, == 2 then shows both
 
 
 # TODO: for whole script, consider what is useful to persist (Dask-wise)
@@ -134,14 +139,14 @@ if SHOW_PLOT_OF_INPUT_OBS:
     # Plot the *input* observational data for a preview, before doing any work
     # Min, max as determined using final_result_field.min(), .max():
     cfp.levs(min=-5, max=55, step=5)
-    if PLOT_OF_INPUT_OBS_TRACK_ONLY:
+    if PLOT_OF_INPUT_OBS_TRACK_ONLY in (1, 2):
         # Use the same field but set all data to zero so can plot the whole
         # track in the same colour to just display the path, not orig. data
         equal_data_obs_field = obs_field.copy()
         new_data = np.zeros(len(equal_data_obs_field.data))  # 0 -> force red
         equal_data_obs_field.set_data(new_data, inplace=True)
         cfp.cscale("scale28")  # has bright red for the lowest values
-        cfp.gopen(file="obs_track_only.png")
+        cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_only.png")
         cfp.traj(
             equal_data_obs_field,
             verbose=VERBOSE,
@@ -149,13 +154,13 @@ if SHOW_PLOT_OF_INPUT_OBS:
             colorbar=False,
             markersize=0.5,
             linewidth=0,  # effectively turn off lines to only have markers
-            title=("Flight path from observational field to co-locate model "
+            title=("Flight track from observational field to co-locate model "
                    "field onto"),
         )
         cfp.gclose()
         cfp.cscale(CSCALE)  # reset for normal (default-style) plots after
-    else:
-        cfp.gopen(file="obs_track_with_data.png")
+    if PLOT_OF_INPUT_OBS_TRACK_ONLY in (0, 2):
+        cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_with_data.png")
         cfp.traj(
             obs_field,
             verbose=VERBOSE,
@@ -591,7 +596,7 @@ cfp.levs(min=5e-08, max=10e-08, step=0.25e-08)
 # 9.3 Make and open the final plot
 # NOTE: can try 'legend_lines=True' for the lines plotted with average between
 #       the two scatter marker points, if preferable?
-cfp.gopen(file="final_colocated_field.png")
+cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_final_colocated_field.png")
 cfp.traj(
     final_result_field,
     verbose=VERBOSE,
