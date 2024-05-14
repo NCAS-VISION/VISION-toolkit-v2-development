@@ -202,41 +202,19 @@ logger.critical(
     "STATS ON SPATIAL BOUNARING BOX TO US ARE: "
     f"{obs_X.data.stats()}, {obs_Y.data.stats()}"
 )
-# TODO SLB: need to think about possible compications of cyclicity, etc.,
-#           and account for those.
-obs_X_boundaries = (obs_X.data.minimum(), obs_X.data.maximum())
-obs_Y_boundaries = (obs_Y.data.minimum(), obs_Y.data.maximum())
-obs_Z_boundaries = (obs_Z.data.minimum(), obs_Z.data.maximum())
-
-
-# Note: getting some dask arrays out instead of slices, due to Dask laziness.
-# DH to look into.
-#
-# TODO SLB: get the next gridpoint out - +/- 1, use slice methods, like:
-# >>> slice(0, 1)
-# slice(0, 1, None)
-# >>> x = slice(0, 1)
-# >>> x.start
-# 0
-# >>> x.stop
-# 1
-# >>> x.step
-# >>> slice(x.start - 1, x.stop, x.step)
-# slice(-1, 1, None)
-# >>> slice(x.start - 1, x.stop, x.step)
-#
-# For now, until DH halo code in, add/subtract res. for grid step as per time
-# code (expand min and max by the gridsteps relevant distance), then covered.
 
 # 3.2 Perform the spatial 3D X-Y-Z subspace to spatially bound to those values
 
 # Note: this requires a 'halo' config. feature introduced in cf-ython 3.16.2.
+# TODO SLB: need to think about possible compications of cyclicity, etc.,
+#           and account for those.
+# Note: getting some dask arrays out instead of slices, due to Dask laziness.
+# DH to look into.
 model_field_sbb = model_field.subspace(
-    "compress",
-    1,
-    X=cf.wi(*obs_X_boundaries),
-    Y=cf.wi(*obs_Y_boundaries),
-    Z=cf.wi(*obs_Z_boundaries)
+    1,  # the halo size that extends the bounding box by 1 in index-space
+    X=cf.wi(obs_X.data.minimum(), obs_X.data.maximum()),
+    Y=cf.wi(obs_Y.data.minimum(), obs_Y.data.maximum()),
+    Z=cf.wi(obs_Z.data.minimum(), obs_Z.data.maximum())
 )
 
 spat_bb_endtime = time.time()
@@ -307,28 +285,16 @@ logger.critical(
 # NOTE: need the datetime array in order to do arithmetic with a TimeDuration
 #
 # NOTE: use max and min to account for any missing data even at endpoints
-# TODO SLB
 obs_earliest_dayhour = obs_times.data.minimum().datetime_array[0]
 obs_latest_dayhour = obs_times.data.maximum().datetime_array[0]
 logger.critical(
     f"EARLIEST AND LATEST ARE: {obs_earliest_dayhour}, {obs_latest_dayhour}"
 )
 
-# 4.4 Add an extra hour before the earliest, and after the latest to form the
-#     time bounding box
-#
-# TODO: if model data comes in less than hourly, need to adapt this to segment
-# size, etc.
-# TODO: it is the start of the hour we need to consider e.g. 11.00-12.00
-# for 11.15 start, etc., so convert this to rounding to the nearest hour
-# before (earliest) and after (latest), rather than using a whole hour
-# for the worst case scenario
-obs_earliest_dayhour -= cf.TimeDuration(1, "hour")
-obs_latest_dayhour += cf.TimeDuration(1, "hour")
-
-# 4.5 Finally, perform the subspace to crop field to the bounding box of time
+# 4.4 Finally, perform the subspace to crop field to the bounding box of time
 model_field_bb = model_field_sbb.subspace(
-    T=cf.wi(obs_earliest_dayhour, obs_latest_dayhour)
+    1,  # the halo size that extends the bounding box by 1 in index-space
+    T=cf.wi(obs_earliest_dayhour, obs_latest_dayhour),
 )
 logger.critical(
     f"TIME BOUNDING BOX CALC'D, MODEL DATA FIELD AFTER BB IS: {model_field_bb}"
