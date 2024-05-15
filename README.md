@@ -28,8 +28,9 @@ detail.*
       * https://ncas-cms.github.io/cf-python/installation.html
       * https://ncas-cms.github.io/cf-plot/build/download.html#to-install-cf-plot
 
-   3. We should use the latest version of cf-plot, but we need to apply a
-      patch (note `main` is still called `master` on this repo), so:
+   3. You need the latest version of cf-plot, but also have to apply a
+      patch (note `main` is still called `master` on this repo) on top
+      of that to tweak some functionality, so:
 
       * `git clone` the cf-plot repo: https://github.com/NCAS-CMS/cf-plot
       * apply the following `diff` to apply the patch via
@@ -123,14 +124,45 @@ detail.*
 
         ```
 
-3. You will need to point to the right data location in the script.
-   The input data will need to be made
-   CF-compliant to work to run, and there is a script that does that
-   for datasets which aren't yet compliant. Please see the `twine-vision`
-   Slack channel for details of such a script, provided by Maria.
-
-   The paths to your data should be specified at the top of the script in:
-   https://github.com/NCAS-VISION/vision-project-resources/blob/fa96207705032e1cf7683a3087b2593376043a59/cf-scripts/cf-vision-flight-e2e.py#L25-L29
+See below for instructions on specifying data inputs.
 
 Please make a note of any issues you experience, and let us know.
 
+
+### Inputs to the cf-python end-to-end co-location script
+
+You will need to point to the right data location in the script.
+
+The input data will need to be made
+CF-compliant to work to run, and there is a script that does that
+for datasets which aren't yet compliant. Please see the `twine-vision`
+Slack channel for details of such a script, provided by Maria.
+
+The paths to your data should be specified at the top of the script in:
+https://github.com/NCAS-VISION/vision-project-resources/blob/a40bdbf4c9162c883efdeaa20061e162e7ff3141/cf-scripts/cf-vision-flight-e2e.py#L31-L39
+
+
+### Outputs from the cf-python end-to-end co-location script
+
+Outputs are generated from the script (if it runs successfully), to
+the directory set in the `OUTPUTS_DIR` variable:
+
+* XY plots of the flight track (across any Z) for:
+  * the input obervational field and/or only its track, if the relevant
+    flags are set to `True`, namely
+    namely `SHOW_PLOT_OF_INPUT_OBS` and `PLOT_OF_INPUT_OBS_TRACK_ONLY`);
+  * the output co-located field.
+* the final output co-located field netCDF file, written-out at the
+  end of the script, in `cf-script-outputs/cf_vision_result_field.nc`.
+
+Furthermore, when the `VERBOSE` flag is `True`, lots of information is
+output to STDOUT and this can be saved and stored with the following
+command from a script run:
+
+```console
+$ python cf-vision-flight-e2e.py >out 2>&1
+```
+
+with the STDOUT captured for the runs which generated the plots
+added to this repo also stored in this way, in the text file
+`cf-script-outputs/cf-vision-flight-e2e-stdout.txt`, for illustration.
