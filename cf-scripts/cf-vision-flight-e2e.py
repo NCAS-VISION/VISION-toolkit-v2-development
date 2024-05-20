@@ -23,7 +23,7 @@ import numpy as np
 import sys
 import time
 
-from pprint import pformat
+from pprint import pformat, pprint
 
 import cfplot as cfp
 import cf
@@ -78,6 +78,30 @@ CSCALE = "plasma"  # "parula" also works well, as alternative for dev.
 SHOW_PLOT_OF_INPUT_OBS = True
 PLOT_OF_INPUT_OBS_TRACK_ONLY = 2  # for dev. purposes, == 2 then shows both
 
+CLI_CONFIG = {
+    # Input data locations
+    "DATA_DIR_LOC": DATA_DIR_LOC,
+    "OBS_DATA_DIR": OBS_DATA_DIR,
+    "MODEL_DATA_DIR": MODEL_DATA_DIR,
+    # Output configuration e.g. write names and location, history stamp to add
+    "OUTPUTS_DIR": OUTPUTS_DIR,
+    "OUTPUT_FILE_NAME": OUTPUT_FILE_NAME,
+    "PLOTNAME_START": PLOTNAME_START,
+    "HISTORY_MESSAGE": HISTORY_MESSAGE,
+    # Regridding options, to configure the 4D interpolation
+    "REGRID_METHOD": REGRID_METHOD,
+    "REGRID_Z_COORD": REGRID_Z_COORD,
+    # Plotting: what to plot and how to minimally configure it
+    "SHOW_PLOT_OF_INPUT_OBS": SHOW_PLOT_OF_INPUT_OBS,
+    "PLOT_OF_INPUT_OBS_TRACK_ONLY": PLOT_OF_INPUT_OBS_TRACK_ONLY,
+    "CSCALE": CSCALE,
+    # Verbosity of this script
+    "VERBOSE": VERBOSE,
+}
+# TODO: eventually will want to add option to override and/or have as an
+# alternative, the specification of config with a config. file, not just CLI
+# so just below we can have code to read in a valid config file in a standard
+# format such as YAML or JSON and apply anything set there to the config.
 
 # TODO: for whole script, consider what is useful to persist (Dask-wise)
 # for efficiency.
@@ -94,6 +118,10 @@ if VERBOSE:
     logger.setLevel(logging.CRITICAL)
 else:
     logger.setLevel(logging.CRITICAL + 1)  # prevents even critical log messages
+
+if VERBOSE:
+    logger.critical("Configuration of script is:")
+    pprint(CLI_CONFIG)
 
 obs_data_loc = f"{DATA_DIR_LOC}/{OBS_DATA_DIR}"
 model_data_loc = f"{DATA_DIR_LOC}/{MODEL_DATA_DIR}"
