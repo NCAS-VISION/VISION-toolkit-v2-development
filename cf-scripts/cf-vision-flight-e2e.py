@@ -34,9 +34,13 @@ import cf
 #
 # TODO: document assumptions about data that we use that the input data need
 # to abide by, for it to work (input data quality requirements).
-DATA_DIR_LOC = "data/main-workwith-test-ISO-simulator"
-OBS_DATA_DIR = "../compliant-data/core_faam_20170703_c016_STANCO_CF.nc"
-MODEL_DATA_DIR = "Model_Input"
+#
+# Note the values given here assume we run the script from the repo root
+# i.e. via 'python cf-scripts/cf-vision-flight-e2e.py'
+# where the data has been placed under a 'data' directory as follows:
+DATA_DIR_LOC = "data"
+OBS_DATA_DIR = "compliant-data/core_faam_20170703_c016_STANCO_CF.nc"
+MODEL_DATA_DIR = "main-workwith-test-ISO-simulator/Model_Input"
 
 # Set output information
 OUTPUT_FILE_NAME = "cf_vision_result_field.nc"
@@ -45,11 +49,15 @@ HISTORY_MESSAGE = (  # gets added to the 'history' property on the output file
     "model data to the observational flight data spatio-temporal location."
 )
 # Default to current directory to output. A given directory must exist already.
-OUTPUTS_DIR = "."  
+OUTPUTS_DIR = "cf-script-outputs"
 PLOTNAME_START = "vision_toolkit"
 
 # Regridding config.
 REGRID_METHOD = "linear"
+# Note this option except in rare cases won't be required, as should almost
+# always be able to determine what z-coordinate want given it must be present
+# in both the model and the observational data, so match those. Only if both
+# data have more than one of identical z-coord do we need to ask for this info.
 REGRID_Z_COORD = "air_pressure"
 
 # Configure messaging to STDOUT, which is very verbose if INFO=True, else
@@ -382,11 +390,14 @@ logger.critical(
 # 6.1 Setup ready for iteration...
 # ...6.1.1 Constructs
 m = spatially_colocated_field.copy()
-aux_time_key = m.auxiliary_coordinate("T", key=True)
-dim_time_key = m.dimension_coordinate("T", key=True)
+# Observations, if DSG, will always be the auxiliary coordinate time
+obs_time_key = m.auxiliary_coordinate("T", key=True)
+# Model data time must always be a dimension coordinate
+model_time_key = m.dimension_coordinate("T", key=True)
 logger.critical(m.constructs())
-logger.critical(f"Aux coor time key is: {aux_time_key}")
-logger.critical(f"Dim coor time key is: {dim_time_key}")
+logger.critical(f"Observational (aux) coord. time key is: {obs_time_key}")
+logger.critical(f"Model (dim) time key is: {model_time_key}")
+
 # ...6.1.2 Empty objects ready to populate
 datetime_segments = []
 fieldlist_subspaces_by_segment = cf.FieldList()
@@ -416,22 +427,19 @@ for index, (t1, t2) in enumerate(itertools.pairwise(model_times.datetime_array))
     #
     # NOTE: without the earlier bounding box step, this will fail due to
     #       not being able to find the subspace at irrelevant times.
-    logger.critical({
-            aux_time_key: q,
-            dim_time_key: [index],
-        })
-    s0 = m.subspace(
-        **{
-            aux_time_key: q,
-            dim_time_key: [index],
-        }
-    )
-    s1 = m.subspace(
-        **{
-            aux_time_key: q,
-            dim_time_key: [index + 1],
-        }
-    )
+    s0_subspace_args = {
+        obs_time_key: q,
+        model_time_key: [index],
+    }
+    logger.critical(s0_subspace_args)
+    s0 = m.subspace(**s0_subspace_args)
+
+    s1_subspace_args = {
+        obs_time_key: q,
+        model_time_key: [index + 1],
+    }
+    logger.critical(s1_subspace_args)
+    s1 = m.subspace(**s1_subspace_args)
 
     # 6.3.4 Squeeze here to remove size 1 dim ready for calculations to come,
     #       i.e. to unpack from '[[ ]]' shape(1, N) structure.
@@ -448,9 +456,10 @@ for index, (t1, t2) in enumerate(itertools.pairwise(model_times.datetime_array))
     #       between different fields, so may need to re-determine these at
     #       different steps, else (ideally) find a robust way not using keys
     #       to pick out the relevant time constructs.
-    # NOTE: All calc variables are arrays, except this first one,
+    # NOTE: All calc. variables are arrays, except this first one,
     #       a scalar (constant whatever the obs time)
-    distance_01 = (s1.dimension_coordinate("T") - s0.dimension_coordinate("T")).data
+    distance_01 = (
+        s1.dimension_coordinate("T") - s0.dimension_coordinate("T")).data
     distances_0 = (
         s0.auxiliary_coordinate("T")[index] - s0.dimension_coordinate("T")
     ).data
@@ -558,7 +567,7 @@ logger.critical(f"Time taken to do time interpolation: {time_interp_totaltime}")
 
 write_starttime = time.time()
 
-# 8.1 Write straight out to file on-disk
+# 8.1 Write final field result out to file on-disk
 cf.write(final_result_field, OUTPUT_FILE_NAME)
 
 write_endtime = time.time()
