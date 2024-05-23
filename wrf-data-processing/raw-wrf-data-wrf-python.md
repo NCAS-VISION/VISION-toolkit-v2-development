@@ -1,21 +1,25 @@
 # Using 'wrf-python' and `xarray` to process WRF data towards compliance
 
-## 0. Basis
+## 1. Basis
 
 To process all datasets using netCDF4 (as used by wrf-python), list all file
-names in the directory ready to add them to a list in Dataset form:
+names in the directory ready to add them to a list in Dataset form (note: use the
+setup indicated in `raw-wrf-data-cf-aggregate.md` for the directory location and
+Python environment, else get a similar environment).
 
+```python
 >>> import os
 >>> import sys
 >>> datadir = os.listdir(".")
 >>> datadir
 ['all_d01_aggregate.nc', 'core_faam_20230711.nc', 'test-sadie.nc', 'wrfout_d01_2023-07-10_12:00:00', 'wrfout_d01_2023-07-10_13:00:00', 'wrfout_d01_2023-07-10_14:00:00', 'wrfout_d01_2023-07-10_15:00:00', 'wrfout_d01_2023-07-10_16:00:00', 'wrfout_d01_2023-07-10_17:00:00', 'wrfout_d01_2023-07-10_18:00:00', 'wrfout_d01_2023-07-10_19:00:00', 'wrfout_d01_2023-07-10_20:00:00', 'wrfout_d01_2023-07-10_21:00:00', 'wrfout_d01_2023-07-10_22:00:00', 'wrfout_d01_2023-07-10_23:00:00', 'wrfout_d01_2023-07-11_00:00:00', 'wrfout_d01_2023-07-11_01:00:00', 'wrfout_d01_2023-07-11_02:00:00', 'wrfout_d01_2023-07-11_03:00:00', 'wrfout_d01_2023-07-11_04:00:00', 'wrfout_d01_2023-07-11_05:00:00', 'wrfout_d01_2023-07-11_06:00:00', 'wrfout_d01_2023-07-11_07:00:00', 'wrfout_d01_2023-07-11_08:00:00', 'wrfout_d01_2023-07-11_09:00:00', 'wrfout_d01_2023-07-11_10:00:00', 'wrfout_d01_2023-07-11_11:00:00', 'wrfout_d01_2023-07-11_12:00:00', 'wrfout_d01_2023-07-11_13:00:00', 'wrfout_d01_2023-07-11_14:00:00', 'wrfout_d01_2023-07-11_15:00:00', 'wrfout_d01_2023-07-11_16:00:00', 'wrfout_d01_2023-07-11_17:00:00', 'wrfout_d01_2023-07-11_18:00:00', 'wrfout_d01_2023-07-11_19:00:00', 'wrfout_d01_2023-07-11_20:00:00', 'wrfout_d01_2023-07-11_21:00:00', 'wrfout_d01_2023-07-11_22:00:00', 'wrfout_d01_2023-07-11_23:00:00', 'wrfout_d01_2023-07-12_00:00:00', 'wrfout_d01_2023-07-12_01:00:00', 'wrfout_d01_2023-07-12_02:00:00', 'wrfout_d01_2023-07-12_03:00:00', 'wrfout_d01_2023-07-12_04:00:00', 'wrfout_d01_2023-07-12_05:00:00', 'wrfout_d01_2023-07-12_06:00:00', 'wrfout_d01_2023-07-12_07:00:00', 'wrfout_d01_2023-07-12_08:00:00', 'wrfout_d01_2023-07-12_09:00:00', 'wrfout_d01_2023-07-12_10:00:00', 'wrfout_d01_2023-07-12_11:00:00', 'wrfout_d01_2023-07-12_12:00:00', 'wrfout_d01_2023-07-12_13:00:00', 'wrfout_d01_2023-07-12_14:00:00', 'wrfout_d01_2023-07-12_15:00:00', 'wrfout_d01_2023-07-12_16:00:00', 'wrfout_d01_2023-07-12_17:00:00', 'wrfout_d01_2023-07-12_18:00:00', 'wrfout_d01_2023-07-12_19:00:00', 'wrfout_d01_2023-07-12_20:00:00', 'wrfout_d01_2023-07-12_21:00:00', 'wrfout_d01_2023-07-12_22:00:00', 'wrfout_d01_2023-07-12_23:00:00', 'wrfout_d01_2023-07-13_00:00:00', 'wrfout_d02_2023-07-10_12:00:00', 'wrfout_d02_2023-07-10_13:00:00', 'wrfout_d02_2023-07-10_14:00:00', 'wrfout_d02_2023-07-10_15:00:00', 'wrfout_d02_2023-07-10_16:00:00', 'wrfout_d02_2023-07-10_17:00:00', 'wrfout_d02_2023-07-10_18:00:00', 'wrfout_d02_2023-07-10_19:00:00', 'wrfout_d02_2023-07-10_20:00:00', 'wrfout_d02_2023-07-10_21:00:00', 'wrfout_d02_2023-07-10_22:00:00', 'wrfout_d02_2023-07-10_23:00:00', 'wrfout_d02_2023-07-11_00:00:00', 'wrfout_d02_2023-07-11_01:00:00', 'wrfout_d02_2023-07-11_02:00:00', 'wrfout_d02_2023-07-11_03:00:00', 'wrfout_d02_2023-07-11_04:00:00', 'wrfout_d02_2023-07-11_05:00:00', 'wrfout_d02_2023-07-11_06:00:00', 'wrfout_d02_2023-07-11_07:00:00', 'wrfout_d02_2023-07-11_08:00:00', 'wrfout_d02_2023-07-11_09:00:00', 'wrfout_d02_2023-07-11_10:00:00', 'wrfout_d02_2023-07-11_11:00:00', 'wrfout_d02_2023-07-11_12:00:00', 'wrfout_d02_2023-07-11_13:00:00', 'wrfout_d02_2023-07-11_14:00:00', 'wrfout_d02_2023-07-11_15:00:00', 'wrfout_d02_2023-07-11_16:00:00', 'wrfout_d02_2023-07-11_17:00:00', 'wrfout_d02_2023-07-11_18:00:00', 'wrfout_d02_2023-07-11_19:00:00', 'wrfout_d02_2023-07-11_20:00:00', 'wrfout_d02_2023-07-11_21:00:00', 'wrfout_d02_2023-07-11_22:00:00', 'wrfout_d02_2023-07-11_23:00:00', 'wrfout_d02_2023-07-12_00:00:00', 'wrfout_d02_2023-07-12_01:00:00', 'wrfout_d02_2023-07-12_02:00:00', 'wrfout_d02_2023-07-12_03:00:00', 'wrfout_d02_2023-07-12_04:00:00', 'wrfout_d02_2023-07-12_05:00:00', 'wrfout_d02_2023-07-12_06:00:00', 'wrfout_d02_2023-07-12_07:00:00', 'wrfout_d02_2023-07-12_08:00:00', 'wrfout_d02_2023-07-12_09:00:00', 'wrfout_d02_2023-07-12_10:00:00', 'wrfout_d02_2023-07-12_11:00:00', 'wrfout_d02_2023-07-12_12:00:00', 'wrfout_d02_2023-07-12_13:00:00', 'wrfout_d02_2023-07-12_14:00:00', 'wrfout_d02_2023-07-12_15:00:00', 'wrfout_d02_2023-07-12_16:00:00', 'wrfout_d02_2023-07-12_17:00:00', 'wrfout_d02_2023-07-12_18:00:00', 'wrfout_d02_2023-07-12_19:00:00', 'wrfout_d02_2023-07-12_20:00:00', 'wrfout_d02_2023-07-12_21:00:00', 'wrfout_d02_2023-07-12_22:00:00', 'wrfout_d02_2023-07-12_23:00:00', 'wrfout_d02_2023-07-13_00:00:00', 'wrfout_d03_2023-07-10_12:00:00', 'wrfout_d03_2023-07-10_13:00:00', 'wrfout_d03_2023-07-10_14:00:00', 'wrfout_d03_2023-07-10_15:00:00', 'wrfout_d03_2023-07-10_16:00:00', 'wrfout_d03_2023-07-10_17:00:00', 'wrfout_d03_2023-07-10_18:00:00', 'wrfout_d03_2023-07-10_19:00:00', 'wrfout_d03_2023-07-10_20:00:00', 'wrfout_d03_2023-07-10_21:00:00', 'wrfout_d03_2023-07-10_22:00:00', 'wrfout_d03_2023-07-10_23:00:00', 'wrfout_d03_2023-07-11_00:00:00', 'wrfout_d03_2023-07-11_01:00:00', 'wrfout_d03_2023-07-11_02:00:00', 'wrfout_d03_2023-07-11_03:00:00', 'wrfout_d03_2023-07-11_04:00:00', 'wrfout_d03_2023-07-11_05:00:00', 'wrfout_d03_2023-07-11_06:00:00', 'wrfout_d03_2023-07-11_07:00:00', 'wrfout_d03_2023-07-11_08:00:00', 'wrfout_d03_2023-07-11_09:00:00', 'wrfout_d03_2023-07-11_10:00:00', 'wrfout_d03_2023-07-11_11:00:00', 'wrfout_d03_2023-07-11_12:00:00', 'wrfout_d03_2023-07-11_13:00:00', 'wrfout_d03_2023-07-11_14:00:00', 'wrfout_d03_2023-07-11_15:00:00', 'wrfout_d03_2023-07-11_16:00:00', 'wrfout_d03_2023-07-11_17:00:00', 'wrfout_d03_2023-07-11_18:00:00', 'wrfout_d03_2023-07-11_19:00:00', 'wrfout_d03_2023-07-11_20:00:00', 'wrfout_d03_2023-07-11_21:00:00', 'wrfout_d03_2023-07-11_22:00:00', 'wrfout_d03_2023-07-11_23:00:00', 'wrfout_d03_2023-07-12_00:00:00', 'wrfout_d03_2023-07-12_01:00:00', 'wrfout_d03_2023-07-12_02:00:00', 'wrfout_d03_2023-07-12_03:00:00', 'wrfout_d03_2023-07-12_04:00:00', 'wrfout_d03_2023-07-12_05:00:00', 'wrfout_d03_2023-07-12_06:00:00', 'wrfout_d03_2023-07-12_07:00:00', 'wrfout_d03_2023-07-12_08:00:00', 'wrfout_d03_2023-07-12_09:00:00', 'wrfout_d03_2023-07-12_10:00:00', 'wrfout_d03_2023-07-12_11:00:00', 'wrfout_d03_2023-07-12_12:00:00', 'wrfout_d03_2023-07-12_13:00:00', 'wrfout_d03_2023-07-12_14:00:00', 'wrfout_d03_2023-07-12_15:00:00', 'wrfout_d03_2023-07-12_16:00:00', 'wrfout_d03_2023-07-12_17:00:00', 'wrfout_d03_2023-07-12_18:00:00', 'wrfout_d03_2023-07-12_19:00:00', 'wrfout_d03_2023-07-12_20:00:00', 'wrfout_d03_2023-07-12_21:00:00', 'wrfout_d03_2023-07-12_22:00:00', 'wrfout_d03_2023-07-12_23:00:00', 'wrfout_d03_2023-07-13_00:00:00']
+```
 
+## 2. Using wrf-python and xarray to attempt to extract some vertical coordinates
 
-## 1. Using wrf-python and xarray to attempt to extract some vertical coordinates
+Do the following for all three domains:
 
-# Do this for all three domains:
-
+```python
 >>> VAR_OF_INTEREST = "z"
 >>> wrflist_1 = [netCDF4.Dataset(file) for file in datadir if file.startswith("wrfout_d01")]
 >>> var_cat = getvar(wrflist_1, VAR_OF_INTEREST, timeidx=wrf.ALL_TIMES, method="cat")
@@ -92,6 +96,11 @@ Coordinates:
 Dimensions without coordinates: south_north, west_east, bottom_top
 Data variables:
     z_cat     (Time, bottom_top, south_north, west_east) float32 304MB 25.72 ...
+```
+
+Now note an issue, which https://github.com/pydata/xarray/issues/2252 covers with a suggested (but not ideal - for a workaround at least let's use it for now):
+
+```python
 >>> ds.to_netcdf(VAR_OF_INTEREST + "_cat_1.nc")
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
@@ -110,8 +119,11 @@ TypeError: Invalid value for attr 'projection': LambertConformal(stand_lon=-2.5,
 >>> del ds[VAR_OF_INTEREST + "_cat"].attrs['projection']
 >>> # Optionally can also do: ds_cf = xr.decode_cf(ds) but not sure it has any effect here
 >>> ds_cf.to_netcdf(VAR_OF_INTEREST + "_cat_d01.nc")
+```
 
 THe last line writes this out to netCDF which can go on to inspect with cf-python.
+
+TODO add to report findings from reading this in with cf-python.
 
 
 ### TODO: do for next three domains
