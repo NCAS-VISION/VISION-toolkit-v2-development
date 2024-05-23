@@ -1,5 +1,7 @@
-[slb93@sci4 ~]$ cd /gws/nopw/j04/vision/WRF_testdata/c345
-[slb93@sci4 c345]$ ls
+
+```console
+$ cd /gws/nopw/j04/vision/WRF_testdata/c345
+$ ls
 all_d01_aggregate.nc            wrfout_d02_2023-07-11_17:00:00
 core_faam_20230711.nc           wrfout_d02_2023-07-11_18:00:00
 test-sadie.nc                   wrfout_d02_2023-07-11_19:00:00
@@ -93,17 +95,16 @@ wrfout_d02_2023-07-11_13:00:00  wrfout_d03_2023-07-12_21:00:00
 wrfout_d02_2023-07-11_14:00:00  wrfout_d03_2023-07-12_22:00:00
 wrfout_d02_2023-07-11_15:00:00  wrfout_d03_2023-07-12_23:00:00
 wrfout_d02_2023-07-11_16:00:00  wrfout_d03_2023-07-13_00:00:00
-[slb93@sci4 c345]$ module load jaspy/3.11/r20240508
-[slb93@sci4 c345]$ import cf
-import: unable to open X server `' @ error/import.c/ImportImageCommand/348.
-[slb93@sci4 c345]$ python
+$ module load jaspy/3.11/r20240508
+$ python
 Python 3.11.9 | packaged by conda-forge | (main, Apr 19 2024, 18:36:13) [GCC 12.3.0] on linux
 Type "help", "copyright", "credits" or "license" for more information.
+```
+
+where the interactive Python session was:
+
+```python
 >>> import cf
->>> from __future__ import print_function
->>> 
->>> from netCDF4 import Dataset
->>> from wrf import getvar
 >>> 
 >>> # cf work
 >>> f1 = cf.read("wrfout_d01*")
@@ -113,7 +114,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> len(g1)
 3705
 >>> g1
-
+```
 
 ### TODO: do for next three domains
 
