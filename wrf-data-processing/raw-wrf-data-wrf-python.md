@@ -308,10 +308,8 @@ Traceback (most recent call last):
   File "<stdin>", line 16, in write_xarray_to_netcdf
 KeyError: 'coordinates'
 >>> 
->>> 
 >>> # Seems like the only option w/ xarray at the moment to write out is
 >>> # as advised in https://github.com/pydata/xarray/issues/2252
->>> 
 >>> del ds_1_cf["z_cat_1"].attrs["projection"]
 >>> del ds_2_cf["z_cat_2"].attrs["projection"]
 >>> del ds_3_cf["z_cat_3"].attrs["projection"]
@@ -321,11 +319,32 @@ KeyError: 'coordinates'
 >>> ds_3_cf.to_netcdf("z_cat_d03_cf.nc")
 ```
 
-The last line writes this out to netCDF which can go on to inspect with cf-python.
+The last three lines write these out to netCDF which can go on to inspect with cf-python.
 
-TODO add to report findings from reading this in with cf-python.
-
-
-### TODO: do for next three domains
-
-TODO
+```python
+>>> # Now interpret the above datasets with cf to compare
+>>> f = cf.read("z_cat_*_cf.nc")
+>>> f
+[<CF Field: ncvar%datetime(ncdim%Time(61)) hours since 2023-07-10 12:00:00 proleptic_gregorian>,
+ <CF Field: ncvar%datetime(ncdim%Time(61)) hours since 2023-07-10 12:00:00 proleptic_gregorian>,
+ <CF Field: ncvar%datetime(ncdim%Time(61)) hours since 2023-07-10 12:00:00 proleptic_gregorian>,
+ <CF Field: ncvar%z_cat_1(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139)) m>,
+ <CF Field: ncvar%z_cat_2(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(300), ncdim%west_east(250)) m>,
+ <CF Field: ncvar%z_cat_3(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(300), ncdim%west_east(425)) m>]
+>>> As an example from the more useful half of these (the second half), we have:
+>>> print(f[-1])
+Field: ncvar%z_cat_3 (ncvar%z_cat_3)
+------------------------------------
+Data            : ncvar%z_cat_3(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(300), ncdim%west_east(425)) m
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLONG(ncdim%south_north(300), ncdim%west_east(425)) = [[-5.862396240234375, ..., -1.062896728515625]]
+                : ncvar%XLAT(ncdim%south_north(300), ncdim%west_east(425)) = [[49.825931549072266, ..., 52.0231819152832]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+>>> # Fields f[3] to f[5] are OK forms for the z/vertical coordinate, but
+>>> # still not what we need because the XTIME coordinates are just
+>>> # context-less values, with the time in the separate fields f[0] to
+>>> # f[2], and the grid mapping information from the original file is
+>>> # in a weird format that xarray and cf can't properly interpret.
+>>> 
+>>> exit()
+```
