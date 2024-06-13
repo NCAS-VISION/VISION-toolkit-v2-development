@@ -1,3 +1,9 @@
+# Extract WRF variables. 
+This script will take a standard WRF output file and extract the user defined variables. 
+It will then write create a new netcdf 4 file with level 1 compression. 
+
+The script makes use of ncks, which is part of the [NetCDF operators (NCOs)](https://nco.sourceforge.net/) software for file manipulation and simple calculations. This software can be installed with conda. 
+
 ## Setting up the environment
 Included in the folder is an environment file which contains all the dependencies for both NCO and CF-python these tools are 
 
@@ -10,3 +16,5 @@ The script will find any wrf out files in the current working directory and subs
 
 ```python
 python extract-wrf-variables.py VAR1 VAR2
+
+
