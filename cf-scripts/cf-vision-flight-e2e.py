@@ -349,74 +349,84 @@ def main():
     ensure_unit_calendar_consistency(obs_times, model_times)
 
 
-    # ----------------------------------------------------------------------------
-    # STAGE 4: BOUNDING BOX, IN TIME AND SPACE: FIND THIS FOR THE FLIGHT PATH AND
-    #          'CROP' MODEL DATA TO IGNORE IRRELEVENT DATA OUTSIDE THE BOUNDARIES.
-    # ----------------------------------------------------------------------------
+    def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
+        """Extract only relevant data in the model field via a 4D subspace.
 
-    # TODO: ensure this works for flights that take off on one day and end on
-    # another e.g. 11 pm - 3 am flight.
+        TODO: DETAILED DOCS
+        """        
+        # ----------------------------------------------------------------------------
+        # STAGE 4: BOUNDING BOX, IN TIME AND SPACE: FIND THIS FOR THE FLIGHT PATH AND
+        #          'CROP' MODEL DATA TO IGNORE IRRELEVENT DATA OUTSIDE THE BOUNDARIES.
+        # ----------------------------------------------------------------------------
 
-    bb_starttime = time()
+        # TODO: ensure this works for flights that take off on one day and end on
+        # another e.g. 11 pm - 3 am flight.
 
-    # 3.1: prep. towards the BB component subspace.
-    # Find the spatial obs. path X-Y-Z boundaries to crop the model field to.
-    #     Note: avoid calling these 'bounds' since that has meaning in CF, so to
-    #           prevent potential ambiguity/confusion.
+        bb_starttime = time()
 
-    # For a DSG, the spatial coordinates will always be auxiliary:
-    obs_X = obs_field.auxiliary_coordinate("X")
-    obs_Y = obs_field.auxiliary_coordinate("Y")
-    obs_Z = obs_field.auxiliary_coordinate("Z")
+        # 3.1: prep. towards the BB component subspace.
+        # Find the spatial obs. path X-Y-Z boundaries to crop the model field to.
+        #     Note: avoid calling these 'bounds' since that has meaning in CF, so to
+        #           prevent potential ambiguity/confusion.
 
-    logger.critical(
-        "STATS ON SPATIAL BOUNARING BOX TO US ARE: "
-        f"{obs_X.data.stats()}, {obs_Y.data.stats()}"
-    )
+        # For a DSG, the spatial coordinates will always be auxiliary:
+        obs_X = obs_field.auxiliary_coordinate("X")
+        obs_Y = obs_field.auxiliary_coordinate("Y")
+        obs_Z = obs_field.auxiliary_coordinate("Z")
 
-    # 3.2: prep. towards the temporal BB component.
-    # TODO: are we assuming the model and obs data are strictly increasing, as we
-    # might be assuming for some of this. - > trajectories should be inc'ing with
-    # time with indices getting higher. Otherwise might need to use .sort() etc.
-    #
-    # NOTE: use max and min to account for any missing data even at endpoints,
-    #       as opposed to taking the values at first and last position/index.
-    logger.critical(
-        "EARLIEST AND LATEST TIMES ARE: "
-        f"{obs_times.data.minimum()}, {obs_times.data.maximum()}"
-    )
+        logger.critical(
+            "STATS ON SPATIAL BOUNARING BOX TO US ARE: "
+            f"{obs_X.data.stats()}, {obs_Y.data.stats()}"
+        )
 
-    # 3.3 Perform the 4D spatio-temporal bounding box to reduce the model data down
-    #     to only that which is relevant for the calculations on the observational
-    #     data path in 4D space, that is:
-    #     * a spatial 3D X-Y-Z subspace to spatially bound to those values; plus
-    #     * a time 1D T subspace to bound it in time i.e. cover only relevant times
+        # 3.2: prep. towards the temporal BB component.
+        # TODO: are we assuming the model and obs data are strictly increasing, as we
+        # might be assuming for some of this. - > trajectories should be inc'ing with
+        # time with indices getting higher. Otherwise might need to use .sort() etc.
+        #
+        # NOTE: use max and min to account for any missing data even at endpoints,
+        #       as opposed to taking the values at first and last position/index.
+        logger.critical(
+            "EARLIEST AND LATEST TIMES ARE: "
+            f"{obs_times.data.minimum()}, {obs_times.data.maximum()}"
+        )
 
-    # Note: this requires a 'halo' config. feature introduced in cf-ython 3.16.2.
-    # TODO SLB: need to think about possible compications of cyclicity, etc.,
-    #           and account for those.
-    # Note: getting some dask arrays out instead of slices, due to Dask laziness.
-    # DH to look into.
+        # 3.3 Perform the 4D spatio-temporal bounding box to reduce the model data down
+        #     to only that which is relevant for the calculations on the observational
+        #     data path in 4D space, that is:
+        #     * a spatial 3D X-Y-Z subspace to spatially bound to those values; plus
+        #     * a time 1D T subspace to bound it in time i.e. cover only relevant times
 
-    # Note: can do the spatial and the temporal subspacing separately, and if
-    # want to do this make the call twice for each coordinate arg. Reasons we may
-    # want to do this include having separate halo sizes for each coordinate, etc.
-    model_field_bb = model_field.subspace(
-        1,  # the halo size that extends the bounding box by 1 in index space
-        X=cf.wi(obs_X.data.minimum(), obs_X.data.maximum()),
-        Y=cf.wi(obs_Y.data.minimum(), obs_Y.data.maximum()),
-        Z=cf.wi(obs_Z.data.minimum(), obs_Z.data.maximum()),
-        T=cf.wi(obs_times.data.minimum(), obs_times.data.maximum()),
-    )
+        # Note: this requires a 'halo' config. feature introduced in cf-ython 3.16.2.
+        # TODO SLB: need to think about possible compications of cyclicity, etc.,
+        #           and account for those.
+        # Note: getting some dask arrays out instead of slices, due to Dask laziness.
+        # DH to look into.
 
-    bb_endtime = time()
-    bb_totaltime = bb_endtime - bb_starttime
+        # Note: can do the spatial and the temporal subspacing separately, and if
+        # want to do this make the call twice for each coordinate arg. Reasons we may
+        # want to do this include having separate halo sizes for each coordinate, etc.
+        model_field_bb = model_field.subspace(
+            1,  # the halo size that extends the bounding box by 1 in index space
+            X=cf.wi(obs_X.data.minimum(), obs_X.data.maximum()),
+            Y=cf.wi(obs_Y.data.minimum(), obs_Y.data.maximum()),
+            Z=cf.wi(obs_Z.data.minimum(), obs_Z.data.maximum()),
+            T=cf.wi(obs_times.data.minimum(), obs_times.data.maximum()),
+        )
 
-    logger.critical(
-        "4D bounding box calculated. Model data with BB applied is: "
-        f"{model_field_bb}"
-    )
-    logger.critical(f"Time taken to create bounding box: {bb_totaltime}")
+        bb_endtime = time()
+        bb_totaltime = bb_endtime - bb_starttime
+
+        logger.critical(
+            "4D bounding box calculated. Model data with BB applied is: "
+            f"{model_field_bb}"
+        )
+        logger.critical(f"Time taken to create bounding box: {bb_totaltime}")
+
+        return model_field_bb
+
+    model_field_bb = subspace_to_spatiotemporal_bounding_box(
+        obs_field, model_field)
 
     # ----------------------------------------------------------------------------
     # STAGE 5: FULL XYZ/SPATIAL INTERPORLATION, I.E. INTERPOLATE THE
