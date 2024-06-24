@@ -288,47 +288,65 @@ def main():
         # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT BY DH
         pass
 
-    # ----------------------------------------------------------------------------
-    # STAGE 3: UNITS AND CALENDAR CONSISTENCY CONSIDERATIONS
-    #
-    # ----------------------------------------------------------------------------
-    # 3.1 Pre-process to get relevant constructs
-    obs_times = obs_field.auxiliary_coordinate("T")
+    def get_time_coords(obs_field, model_field):
+        """Return the relevant time coordinates from the fields.
 
-    model_times_key, model_times = model_field.dimension_coordinate("T", item=True)
+        TODO: DETAILED DOCS
+        """
+        # 3.1 Pre-process to get relevant constructs
+        obs_times = obs_field.auxiliary_coordinate("T")
 
-    # 3.2 Ensure the units of the obs and model datetimes are consistent - conform
-    #     them if they differ (if they don't, Units setting operation is harmless).
-    # NOTE: Change the units on the model (not obs) times since there are fewer
-    # data points on those, meaning less converting work.
-    obs_times_units = obs_times.Units
-    model_times_units = model_times.Units
-    model_times.Units = obs_times.Units
+        model_times_key, model_times = model_field.dimension_coordinate("T", item=True)
 
-    logger.critical(f"UNIT-CONFORMED MODEL FIELD IS: {model_field}")
-    same_units = (
-        model_field.dimension_coordinate("T").data.Units
-        == obs_field.auxiliary_coordinate("T").data.Units,
-    )
-    logger.critical(
-        f"CONFIRMING: THE UNITS ON OBS AND MODEL DATETIMES ARE THE SAME: "
-        f"{same_units};\n"
-    )
+        return obs_times, model_times
 
-    # 3.3 Ensure calendars are consistent, if not convert to equivalent.
-    # TODO what to do if calendar conversion means missing days when need them?
-    #      look at Maria's code as to how it is dealt with (e.g. in CIS)
-    #
-    # NOTE: in this case, they are the same (gregorian and standard are the same).
-    # TODO IGNORE FOR NOW (consistent in this case, but will need to generalise
-    # for when they are not).
-    model_calendar = model_times.calendar
-    obs_calendar = obs_times.calendar
-    logger.critical(
-        f"Calendars for relevant times are:\n"
-        f"MODEL: {model_calendar},\n"
-        f"OBSERVATIONS: {obs_calendar}."
-    )
+    obs_times, model_times = get_time_coords(obs_field, model_field)
+
+
+    def ensure_unit_calendar_consistency(obs_times, model_times):
+        """Ensure the chosen fields have consistent units and calendars.
+
+        TODO: DETAILED DOCS
+        """
+        # ----------------------------------------------------------------------------
+        # STAGE 3: UNITS AND CALENDAR CONSISTENCY CONSIDERATIONS
+        #
+        # ----------------------------------------------------------------------------
+
+        # 3.2 Ensure the units of the obs and model datetimes are consistent - conform
+        #     them if they differ (if they don't, Units setting operation is harmless).
+        # NOTE: Change the units on the model (not obs) times since there are fewer
+        # data points on those, meaning less converting work.
+        obs_times_units = obs_times.Units
+        model_times_units = model_times.Units
+        model_times.Units = obs_times.Units
+
+        logger.critical(f"UNIT-CONFORMED MODEL FIELD IS: {model_field}")
+        same_units = (
+            model_field.dimension_coordinate("T").data.Units
+            == obs_field.auxiliary_coordinate("T").data.Units,
+        )
+        logger.critical(
+            f"CONFIRMING: THE UNITS ON OBS AND MODEL DATETIMES ARE THE SAME: "
+            f"{same_units};\n"
+        )
+
+        # 3.3 Ensure calendars are consistent, if not convert to equivalent.
+        # TODO what to do if calendar conversion means missing days when need them?
+        #      look at Maria's code as to how it is dealt with (e.g. in CIS)
+        #
+        # NOTE: in this case, they are the same (gregorian and standard are the same).
+        # TODO IGNORE FOR NOW (consistent in this case, but will need to generalise
+        # for when they are not).
+        model_calendar = model_times.calendar
+        obs_calendar = obs_times.calendar
+        logger.critical(
+            f"Calendars for relevant times are:\n"
+            f"MODEL: {model_calendar},\n"
+            f"OBSERVATIONS: {obs_calendar}."
+        )
+
+    ensure_unit_calendar_consistency(obs_times, model_times)
 
 
     # ----------------------------------------------------------------------------
