@@ -428,242 +428,261 @@ def main():
     model_field_bb = subspace_to_spatiotemporal_bounding_box(
         obs_field, model_field)
 
-    # ----------------------------------------------------------------------------
-    # STAGE 5: FULL XYZ/SPATIAL INTERPORLATION, I.E. INTERPOLATE THE
-    #          FLIGHT PATH LOCATIONS SPATIALLY, FOR THE XY HORIZONTAL AND THE Z
-    #          VERTICAL COORDINATES,
-    #          WITHIN THE MODEL DATA AND SAVE THESE FOR LATER (GET SPATIAL COORS).
 
-    #          WE DO THIS WITH ESMF LOCSTREAM, SEE:
-    #          https://xesmf.readthedocs.io/en/latest/notebooks/Using_LocStream.html
+    def spatial_interpolation(obs_field, model_field_bb):
+        """Interpolate the flight path spatially (for X-Y and vertical Z).
 
-    # ----------------------------------------------------------------------------
+        TODO: DETAILED DOCS
+        """         
+        # ----------------------------------------------------------------------------
+        # STAGE 5: FULL XYZ/SPATIAL INTERPORLATION, I.E. INTERPOLATE THE
+        #          FLIGHT PATH LOCATIONS SPATIALLY, FOR THE XY HORIZONTAL AND THE Z
+        #          VERTICAL COORDINATES,
+        #          WITHIN THE MODEL DATA AND SAVE THESE FOR LATER (GET SPATIAL COORS).
 
-    # TODO: UGRID grids might need some extra steps/work for this.
+        #          WE DO THIS WITH ESMF LOCSTREAM, SEE:
+        #          https://xesmf.readthedocs.io/en/latest/notebooks/Using_LocStream.html
 
-    logger.critical(f"Starting spatial interpolation (regridding) step...")
-    spat_regrid_starttime = time()
+        # ----------------------------------------------------------------------------
 
-    # 5.0: Creating the spatial bounding box may have made some of the spatial
-    # dimensions singular, which would lead to an error or:
-    #     ValueError: Neither the X nor Y dimensions of the source field <field>
-    #     can be of size 1 for spherical 'linear' regridding.
-    # so we have to account for this.
+        # TODO: UGRID grids might need some extra steps/work for this.
 
-    # 5.1 Perform the spherical regrid which does the spatial interpolation
-    # NOTE: this requires recently-added support for ESMF LocStream
-    # functionality, hence cf-python version >= 3.16.1 to work.
-    #
-    # TODO: If there is a size 0 axes, the spatial bounding box could have
-    # collapsed axes down to a size 0, and halo-ing will get to size 1(???, or
-    # not, have nothing to work with) but
-    # regrids method can't work with a size-1.
-    # Can we use 'contains' or (better?) 'cellwi' method to do this?
-    spatially_colocated_field = model_field_bb.regrids(
-        obs_field,
-        method=REGRID_METHOD,
-        z=REGRID_Z_COORD,
-        ln_z=True,
-    )
-    post_spatregrid_cyclic = model_field_bb.cyclic()
-    spat_regrid_endtime = time()
-    spat_regrid_totaltime = spat_regrid_endtime - spat_regrid_starttime
+        logger.critical(f"Starting spatial interpolation (regridding) step...")
+        spat_regrid_starttime = time()
 
-    logger.critical(f"Time taken to spatially regrid was: {spat_regrid_totaltime}")
-    logger.critical(f"XYZ-colocated data is:\n {spatially_colocated_field}")
-    logger.critical(spatially_colocated_field.dump(display=False))
+        # 5.0: Creating the spatial bounding box may have made some of the spatial
+        # dimensions singular, which would lead to an error or:
+        #     ValueError: Neither the X nor Y dimensions of the source field <field>
+        #     can be of size 1 for spherical 'linear' regridding.
+        # so we have to account for this.
 
-    # TODO: consider whether or not to persist the regridded / spatial interp
-    # before the next stage, or to do in a fully lazy way.
-
-    # ----------------------------------------------------------------------------
-    # STAGE 6: TIME INTERPOLATION: INTERPOLATE BETWEEN MODEL DATA TIME POINTS.
-
-    #          WE DO THIS USING A CONVOLUTION-BASED 'MERGE' OF RELEVANT
-    #          SEGMENTS OF THE FLIGHT PATHS FOR THE MODEL DATA X-Y COLOCATED
-    #          ONTO THE FLIGHT PATH FROM THE PREVIOUS STAGE.
-    #
-    # ----------------------------------------------------------------------------
-
-    logger.critical("\n\n\nStarting time interpolation step...\n\n\n")
-    time_interp_starttime = time()
-
-    # In our field after spatial interpolation, the Dimension Coord has the model
-    # time data and the Aux Coord has the observational time data
-    # NOTE: keep these calls in, desite earlier ones probably in-place.
-    model_times = spatially_colocated_field.dimension_coordinate("T")
-    obs_times = spatially_colocated_field.auxiliary_coordinate("T")
-    model_times_len = len(model_times.data)
-    obs_times_len = len(obs_times.data)
-
-    logger.critical(
-        f"Number of model time data points: {model_times_len}\n"
-        f"Number of observational time sample data points: {obs_times_len}"
-    )
-
-    # 6.1 Setup ready for iteration...
-    # ...6.1.1 Constructs
-    m = spatially_colocated_field.copy()
-    # Observations, if DSG, will always be the auxiliary coordinate time
-    obs_time_key = m.auxiliary_coordinate("T", key=True)
-    # Model data time must always be a dimension coordinate
-    model_time_key = m.dimension_coordinate("T", key=True)
-    logger.critical(m.constructs())
-    logger.critical(f"Observational (aux) coord. time key is: {obs_time_key}")
-    logger.critical(f"Model (dim) time key is: {model_time_key}")
-
-    # ...6.1.2 Empty objects ready to populate
-    datetime_segments = []
-    fieldlist_subspaces_by_segment = cf.FieldList()
-    pairwise_segments = {}
-    v_w = []
-
-    # 6.2 Find final index to skip in some cases later to avoid double counting
-    final_index = len(list(pairwise(model_times.datetime_array)))
-
-    # 6.3 Iterate over pairs of adjacent model datetimes, defining 'segments'.
-    #     Chop the flight path up into these *segments* and do a weighted merge
-    #     of data from segments adjacent in the model times to form the final
-    #     time-interpolated value.
-    for index, (t1, t2) in enumerate(pairwise(model_times.datetime_array)):
-        # 6.3.1 Define the pairwise segment datetime endpoints
-        logger.critical(f"\n\nTimes for segments are\n\n: {t1}, {t2}.")
-        datetime_segments.append((t1, t2))
-
-        # 6.3.2 Define a query which will find any datetimes within these times
-        #       to map all observational times to the appropriate segment, later.
-        q = cf.wi(cf.dt(t1), cf.dt(t2), open_upper=True)  # TODO is cf.dt wrapping necessary?
-        logger.critical(f"Querying on query: {q} with field: {m}")
-
-        # 6.3.3 Subspace the observational times to match the segments above,
-        #       namely using the query created above.
-        #       Use a direct subspace method, which works generally.
+        # 5.1 Perform the spherical regrid which does the spatial interpolation
+        # NOTE: this requires recently-added support for ESMF LocStream
+        # functionality, hence cf-python version >= 3.16.1 to work.
         #
-        # NOTE: without the earlier bounding box step, this will fail due to
-        #       not being able to find the subspace at irrelevant times.
-        s0_subspace_args = {
-            obs_time_key: q,
-            model_time_key: [index],
-        }
-        logger.critical(s0_subspace_args)
-        s0 = m.subspace(**s0_subspace_args)
+        # TODO: If there is a size 0 axes, the spatial bounding box could have
+        # collapsed axes down to a size 0, and halo-ing will get to size 1(???, or
+        # not, have nothing to work with) but
+        # regrids method can't work with a size-1.
+        # Can we use 'contains' or (better?) 'cellwi' method to do this?
+        spatially_colocated_field = model_field_bb.regrids(
+            obs_field,
+            method=REGRID_METHOD,
+            z=REGRID_Z_COORD,
+            ln_z=True,
+        )
+        post_spatregrid_cyclic = model_field_bb.cyclic()
+        spat_regrid_endtime = time()
+        spat_regrid_totaltime = spat_regrid_endtime - spat_regrid_starttime
 
-        s1_subspace_args = {
-            obs_time_key: q,
-            model_time_key: [index + 1],
-        }
-        logger.critical(s1_subspace_args)
-        s1 = m.subspace(**s1_subspace_args)
+        logger.critical(f"Time taken to spatially regrid was: {spat_regrid_totaltime}")
+        logger.critical(f"XYZ-colocated data is:\n {spatially_colocated_field}")
+        logger.critical(spatially_colocated_field.dump(display=False))
 
-        # 6.3.4 Squeeze here to remove size 1 dim ready for calculations to come,
-        #       i.e. to unpack from '[[ ]]' shape(1, N) structure.
-        # NOTE: a=0 and b=1 from old/whiteboard schematic and notes).
-        values_0 = s0.data.squeeze()
-        values_1 = s1.data.squeeze()
+        # TODO: consider whether or not to persist the regridded / spatial interp
+        # before the next stage, or to do in a fully lazy way.
+        return spatially_colocated_field
 
-        # 6.3.6 Calculate the arrays to be used in the weighting calculation.
-        # All arithmetic done numpy-array wise, so no need to iterate over values.
+    spatially_colocated_field = spatial_interpolation(obs_field, model_field_bb)
+
+
+    def time_interpolation(obs_times, model_times, spatially_colocated_field):
+        """Interpolate the flight path temporally (in time T).
+
+        TODO: DETAILED DOCS
+        """  
+        # ----------------------------------------------------------------------------
+        # STAGE 6: TIME INTERPOLATION: INTERPOLATE BETWEEN MODEL DATA TIME POINTS.
+
+        #          WE DO THIS USING A CONVOLUTION-BASED 'MERGE' OF RELEVANT
+        #          SEGMENTS OF THE FLIGHT PATHS FOR THE MODEL DATA X-Y COLOCATED
+        #          ONTO THE FLIGHT PATH FROM THE PREVIOUS STAGE.
         #
-        # NOTE: converted to data to get data array not dim coord as output for
-        #       weighted values.
-        # TODO: take care using keys! We can't rely on keys being consistent
-        #       between different fields, so may need to re-determine these at
-        #       different steps, else (ideally) find a robust way not using keys
-        #       to pick out the relevant time constructs.
-        # NOTE: All calc. variables are arrays, except this first one,
-        #       a scalar (constant whatever the obs time)
-        distance_01 = (
-            s1.dimension_coordinate("T") - s0.dimension_coordinate("T")).data
-        distances_0 = (
-            s0.auxiliary_coordinate("T")[index] - s0.dimension_coordinate("T")
-        ).data
+        # ----------------------------------------------------------------------------
 
-        # 6.3.7 Calculate the datetime 'distances' to be used for the weighting
-        distances_1 = distance_01 - distances_0
-        weights_0 = distances_1 / distance_01
-        weights_1 = distances_0 / distance_01
+        logger.critical("\n\n\nStarting time interpolation step...\n\n\n")
+        time_interp_starttime = time()
+
+        # In our field after spatial interpolation, the Dimension Coord has the model
+        # time data and the Aux Coord has the observational time data
+        # NOTE: keep these calls in, desite earlier ones probably in-place.
+        model_times = spatially_colocated_field.dimension_coordinate("T")
+        obs_times = spatially_colocated_field.auxiliary_coordinate("T")
+        model_times_len = len(model_times.data)
+        obs_times_len = len(obs_times.data)
 
         logger.critical(
-            "MASKED VALUE COUNTS ARE:\n"
-            f"FOR DISTANCES (0, 1): {distances_0.count()}, {distances_1.count()}\n"
-            f"FOR WEIGHTS (0, 1): {weights_0.count()}, {weights_1.count()}\n"
-            f"FOR VALUES (0, 1): {values_0.count()}, {values_1.count()}"
+            f"Number of model time data points: {model_times_len}\n"
+            f"Number of observational time sample data points: {obs_times_len}"
         )
 
-        # 6.3.8 Calculate the final weighted values using a basic weighting
-        # formulae.
-        # NOTE: by the maths, the sum of the two weights should be 1, so there
-        #       is no need to divide by that, though confirm with a print-out
-        logger.critical(f"WEIGHTS TOTAL IS: {weights_0 + weights_1}")
+        # 6.1 Setup ready for iteration...
+        # ...6.1.1 Constructs
+        m = spatially_colocated_field.copy()
+        # Observations, if DSG, will always be the auxiliary coordinate time
+        obs_time_key = m.auxiliary_coordinate("T", key=True)
+        # Model data time must always be a dimension coordinate
+        model_time_key = m.dimension_coordinate("T", key=True)
+        logger.critical(m.constructs())
+        logger.critical(f"Observational (aux) coord. time key is: {obs_time_key}")
+        logger.critical(f"Model (dim) time key is: {model_time_key}")
 
-        values_weighted = weights_0 * values_0 + weights_1 * values_1
-        v_w.append(values_weighted)
+        # ...6.1.2 Empty objects ready to populate
+        datetime_segments = []
+        fieldlist_subspaces_by_segment = cf.FieldList()
+        pairwise_segments = {}
+        v_w = []
+
+        # 6.2 Find final index to skip in some cases later to avoid double counting
+        final_index = len(list(pairwise(model_times.datetime_array)))
+
+        # 6.3 Iterate over pairs of adjacent model datetimes, defining 'segments'.
+        #     Chop the flight path up into these *segments* and do a weighted merge
+        #     of data from segments adjacent in the model times to form the final
+        #     time-interpolated value.
+        for index, (t1, t2) in enumerate(pairwise(model_times.datetime_array)):
+            # 6.3.1 Define the pairwise segment datetime endpoints
+            logger.critical(f"\n\nTimes for segments are\n\n: {t1}, {t2}.")
+            datetime_segments.append((t1, t2))
+
+            # 6.3.2 Define a query which will find any datetimes within these times
+            #       to map all observational times to the appropriate segment, later.
+            q = cf.wi(cf.dt(t1), cf.dt(t2), open_upper=True)  # TODO is cf.dt wrapping necessary?
+            logger.critical(f"Querying on query: {q} with field: {m}")
+
+            # 6.3.3 Subspace the observational times to match the segments above,
+            #       namely using the query created above.
+            #       Use a direct subspace method, which works generally.
+            #
+            # NOTE: without the earlier bounding box step, this will fail due to
+            #       not being able to find the subspace at irrelevant times.
+            s0_subspace_args = {
+                obs_time_key: q,
+                model_time_key: [index],
+            }
+            logger.critical(s0_subspace_args)
+            s0 = m.subspace(**s0_subspace_args)
+
+            s1_subspace_args = {
+                obs_time_key: q,
+                model_time_key: [index + 1],
+            }
+            logger.critical(s1_subspace_args)
+            s1 = m.subspace(**s1_subspace_args)
+
+            # 6.3.4 Squeeze here to remove size 1 dim ready for calculations to come,
+            #       i.e. to unpack from '[[ ]]' shape(1, N) structure.
+            # NOTE: a=0 and b=1 from old/whiteboard schematic and notes).
+            values_0 = s0.data.squeeze()
+            values_1 = s1.data.squeeze()
+
+            # 6.3.6 Calculate the arrays to be used in the weighting calculation.
+            # All arithmetic done numpy-array wise, so no need to iterate over values.
+            #
+            # NOTE: converted to data to get data array not dim coord as output for
+            #       weighted values.
+            # TODO: take care using keys! We can't rely on keys being consistent
+            #       between different fields, so may need to re-determine these at
+            #       different steps, else (ideally) find a robust way not using keys
+            #       to pick out the relevant time constructs.
+            # NOTE: All calc. variables are arrays, except this first one,
+            #       a scalar (constant whatever the obs time)
+            distance_01 = (
+                s1.dimension_coordinate("T") - s0.dimension_coordinate("T")).data
+            distances_0 = (
+                s0.auxiliary_coordinate("T")[index] - s0.dimension_coordinate("T")
+            ).data
+
+            # 6.3.7 Calculate the datetime 'distances' to be used for the weighting
+            distances_1 = distance_01 - distances_0
+            weights_0 = distances_1 / distance_01
+            weights_1 = distances_0 / distance_01
+
+            logger.critical(
+                "MASKED VALUE COUNTS ARE:\n"
+                f"FOR DISTANCES (0, 1): {distances_0.count()}, {distances_1.count()}\n"
+                f"FOR WEIGHTS (0, 1): {weights_0.count()}, {weights_1.count()}\n"
+                f"FOR VALUES (0, 1): {values_0.count()}, {values_1.count()}"
+            )
+
+            # 6.3.8 Calculate the final weighted values using a basic weighting
+            # formulae.
+            # NOTE: by the maths, the sum of the two weights should be 1, so there
+            #       is no need to divide by that, though confirm with a print-out
+            logger.critical(f"WEIGHTS TOTAL IS: {weights_0 + weights_1}")
+
+            values_weighted = weights_0 * values_0 + weights_1 * values_1
+            v_w.append(values_weighted)
 
 
-    # NOTE: masked values are mostly/all to do with the pressure being below
-    #       when flight lands and takes off etc. on runway and close, cases
-    #       relating to the Heaviside function. So it is all good and expected
-    #       to have masked values in the data, at the end and/or start.
-    #       Eventually we will add an extrapolation option whereby user can choose
-    #       to extrapolate as well as interpolate, and therefore assign values to
-    #       the masked ones.
+        # NOTE: masked values are mostly/all to do with the pressure being below
+        #       when flight lands and takes off etc. on runway and close, cases
+        #       relating to the Heaviside function. So it is all good and expected
+        #       to have masked values in the data, at the end and/or start.
+        #       Eventually we will add an extrapolation option whereby user can choose
+        #       to extrapolate as well as interpolate, and therefore assign values to
+        #       the masked ones.
 
-    logger.critical("FINAL WEIGHTED VALUES ARE:")
-    logger.critical(pformat(v_w))
-    for v in v_w:
-        logger.critical(f"GETTING: {v} WITH LEN {len(v)} AND NON-MASKED COUNT {v.count()}")
+        logger.critical("FINAL WEIGHTED VALUES ARE:")
+        logger.critical(pformat(v_w))
+        for v in v_w:
+            logger.critical(f"GETTING: {v} WITH LEN {len(v)} AND NON-MASKED COUNT {v.count()}")
 
-    # 6.4 Concatenate the data values found above from each segment, to finally
-    #     get the full set of model-to-obs co-located data.
-    concatenated_weighted_values = cf.Data.concatenate(v_w)
-    logger.critical(
-        f"WEIGHTED VALS ARE: {concatenated_weighted_values}, WITH LEN: "
-        f"{len(concatenated_weighted_values)}"
-    )
-    logger.critical(
-        "NUMBER OF NON-MASKED VALUES IN THIS ARE:\n"
-        f"{concatenated_weighted_values.count()} VS MASKED:\n"
-        f"{len(concatenated_weighted_values) - concatenated_weighted_values.count()}"
-    )
+        # 6.4 Concatenate the data values found above from each segment, to finally
+        #     get the full set of model-to-obs co-located data.
+        concatenated_weighted_values = cf.Data.concatenate(v_w)
+        logger.critical(
+            f"WEIGHTED VALS ARE: {concatenated_weighted_values}, WITH LEN: "
+            f"{len(concatenated_weighted_values)}"
+        )
+        logger.critical(
+            "NUMBER OF NON-MASKED VALUES IN THIS ARE:\n"
+            f"{concatenated_weighted_values.count()} VS MASKED:\n"
+            f"{len(concatenated_weighted_values) - concatenated_weighted_values.count()}"
+        )
 
-    # 6.5 Finally, reattach that data to (a copy of) the obs field to get final
-    #     values on the right domain, though we still need to adapt the metadata to
-    #     reflect the new context so that the field with data set is contextually
-    #     correct.
-    final_result_field = obs_field.copy()
-    final_result_field.set_data(concatenated_weighted_values)
-    logger.critical(
-        "FINAL RESULT FIELD AFTER DATA SETTING, PRE-METADATA PROPERTY EDIT: "
-        f"{final_result_field}\n AND IN FULL DETAIL:"
-    )
-    logger.critical(final_result_field.dump(display=False))
+        # 6.5 Finally, reattach that data to (a copy of) the obs field to get final
+        #     values on the right domain, though we still need to adapt the metadata to
+        #     reflect the new context so that the field with data set is contextually
+        #     correct.
+        final_result_field = obs_field.copy()
+        final_result_field.set_data(concatenated_weighted_values)
+        logger.critical(
+            "FINAL RESULT FIELD AFTER DATA SETTING, PRE-METADATA PROPERTY EDIT: "
+            f"{final_result_field}\n AND IN FULL DETAIL:"
+        )
+        logger.critical(final_result_field.dump(display=False))
 
-    # 6.6 Finally, re-set the properties on the final result field so it has model
-    # data properties not obs preoprties.
-    # 6.6.1: general properties
-    final_result_field.clear_properties()
-    final_result_field.set_properties(model_field.properties())
-    # 6.6.2 Add new, or append to if already exists, 'history' property
-    #       details to say that we colocated etc. with VISION / cf.
-    history_details = final_result_field.get_property("history")
-    history_details += " ~ " + HISTORY_MESSAGE  # include divider to previous info
-    final_result_field.set_property("history", history_details)
+        # 6.6 Finally, re-set the properties on the final result field so it has model
+        # data properties not obs preoprties.
+        # 6.6.1: general properties
+        final_result_field.clear_properties()
+        final_result_field.set_properties(model_field.properties())
+        # 6.6.2 Add new, or append to if already exists, 'history' property
+        #       details to say that we colocated etc. with VISION / cf.
+        history_details = final_result_field.get_property("history")
+        history_details += " ~ " + HISTORY_MESSAGE  # include divider to previous info
+        final_result_field.set_property("history", history_details)
 
-    logger.critical(
-        f"Final resultant field after data co-location is: {final_result_field}")
-    logger.critical(final_result_field.dump(display=False))
-    logger.critical(
-        "The final result field has data statistics of:\n"
-    )
-    logger.critical(pformat(final_result_field.data.stats()))
+        logger.critical(
+            f"Final resultant field after data co-location is: {final_result_field}")
+        logger.critical(final_result_field.dump(display=False))
+        logger.critical(
+            "The final result field has data statistics of:\n"
+        )
+        logger.critical(pformat(final_result_field.data.stats()))
 
-    # TODO: consider whether or not to persist the regridded / time interp.
-    # before the next stage, or to do in a fully lazy way.
+        # TODO: consider whether or not to persist the regridded / time interp.
+        # before the next stage, or to do in a fully lazy way.
 
-    time_interp_endtime = time()
-    time_interp_totaltime = time_interp_endtime - time_interp_starttime
-    logger.critical("Time interpolation done.")
-    logger.critical(f"Time taken to do time interpolation: {time_interp_totaltime}")
+        time_interp_endtime = time()
+        time_interp_totaltime = time_interp_endtime - time_interp_starttime
+        logger.critical("Time interpolation done.")
+        logger.critical(f"Time taken to do time interpolation: {time_interp_totaltime}")
+
+        return final_result_field
+
+    final_result_field = time_interpolation(obs_times, model_times, spatially_colocated_field)
 
     # ----------------------------------------------------------------------------
     # STAGE 7: CREATE OUTPUTS AS A CONCATENATED CONTIGUOUS RAGGED ARRAY OF ALL
