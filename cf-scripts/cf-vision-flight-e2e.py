@@ -211,69 +211,82 @@ def main():
 
     obs_field, model_field = get_input_fields_of_interest(obs_data, model_data)
 
-    # 1.4 Plots, if requested. First configure general settings for plot:
-    # a) Change the viewpoint to be over the UK only, with high-res map outline
-    cfp.mapset(lonmin=-2, lonmax=2, latmin=50, latmax=54, resolution="10m")
-    # b) Colour scale that better shows detail for typical flights
-    cfp.cscale(CSCALE)
-    if SHOW_PLOT_OF_INPUT_OBS:
-        # Plot the *input* observational data for a preview, before doing any work
-        # Min, max as determined using final_result_field.min(), .max():
-        cfp.levs(min=-5, max=55, step=5)
-        if PLOT_OF_INPUT_OBS_TRACK_ONLY in (1, 2):
-            # Use the same field but set all data to zero so can plot the whole
-            # track in the same colour to just display the path, not orig. data
-            equal_data_obs_field = obs_field.copy()
-            new_data = np.zeros(len(equal_data_obs_field.data))  # 0 -> force red
-            equal_data_obs_field.set_data(new_data, inplace=True)
-            cfp.cscale("scale28")  # has bright red for the lowest values
-            cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_only.png")
-            cfp.traj(
-                equal_data_obs_field,
-                verbose=VERBOSE,
-                legend=True,
-                colorbar=False,
-                markersize=0.5,
-                linewidth=0,  # effectively turn off lines to only have markers
-                title=("Flight track from observational field to co-locate model "
-                       "field onto"),
-            )
-            cfp.gclose()
-            cfp.cscale(CSCALE)  # reset for normal (default-style) plots after
-        if PLOT_OF_INPUT_OBS_TRACK_ONLY in (0, 2):
-            cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_with_data.png")
-            cfp.traj(
-                obs_field,
-                verbose=VERBOSE,
-                legend=True,
-                markersize=5,
-                linewidth=0.4,
-                title=("Observational field input (path, to be used for "
-                       "co-location, with its corresponding data, to be ignored)",
-                       )
-            )
-            cfp.gclose()
+
+    def make_preview_plots(obs_field):
+        """Generate plots of the flight track for a pre-colocation preview.
+
+        TODO: DETAILED DOCS
+        """
+        # 1.4 Plots, if requested. First configure general settings for plot:
+        # a) Change the viewpoint to be over the UK only, with high-res map outline
+        cfp.mapset(lonmin=-2, lonmax=2, latmin=50, latmax=54, resolution="10m")
+        # b) Colour scale that better shows detail for typical flights
+        cfp.cscale(CSCALE)
+        if SHOW_PLOT_OF_INPUT_OBS:
+            # Plot the *input* observational data for a preview, before doing any work
+            # Min, max as determined using final_result_field.min(), .max():
+            cfp.levs(min=-5, max=55, step=5)
+            if PLOT_OF_INPUT_OBS_TRACK_ONLY in (1, 2):
+                # Use the same field but set all data to zero so can plot the whole
+                # track in the same colour to just display the path, not orig. data
+                equal_data_obs_field = obs_field.copy()
+                new_data = np.zeros(len(equal_data_obs_field.data))  # 0 -> force red
+                equal_data_obs_field.set_data(new_data, inplace=True)
+                cfp.cscale("scale28")  # has bright red for the lowest values
+                cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_only.png")
+                cfp.traj(
+                    equal_data_obs_field,
+                    verbose=VERBOSE,
+                    legend=True,
+                    colorbar=False,
+                    markersize=0.5,
+                    linewidth=0,  # effectively turn off lines to only have markers
+                    title=("Flight track from observational field to co-locate model "
+                           "field onto"),
+                )
+                cfp.gclose()
+                cfp.cscale(CSCALE)  # reset for normal (default-style) plots after
+            if PLOT_OF_INPUT_OBS_TRACK_ONLY in (0, 2):
+                cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_with_data.png")
+                cfp.traj(
+                    obs_field,
+                    verbose=VERBOSE,
+                    legend=True,
+                    markersize=5,
+                    linewidth=0.4,
+                    title=("Observational field input (path, to be used for "
+                           "co-location, with its corresponding data, to be ignored)",
+                           )
+                )
+                cfp.gclose()
+
+    make_preview_plots(obs_field)
 
 
-    # ----------------------------------------------------------------------------
-    # STAGE 2: ENSURE CF COMPLIANCE AND CORRECT FORMAT OF DATA READ-IN
-    #
-    #          SOME DATA PROCESSING AND VALIDATION, INCLUDING (ONLY?) ATTACHING
-    #          THE OROGRAPHY -> MANIPULATING THE FIELDS A BIT.
-    #
-    # INCLUDES FOR 'CORRECT FORMAT': E.G.:
-    # * SEE LATER TODO OF: are we assuming the model and obs data are strictly
-    # monotonically increasing, as we might be assuming for some of this ->
-    # since trajectories should be inc'ing this way, by definition.
-    # * VERTICAL COOR STUFF TO MAKE SURE IT IS ENCODED CORRECTLY.
+    def ensure_cf_compliance(obs_field, model_field):
+        """Ensure the chosen fields are CF compliant with the correct format.
 
-    # TODO: check that the obs inputs are compliant in way we need
-    # TODO: we need to make model data compliant and padding etc.
-    # Notes for future when done:
-    # * Get orography data, separate input, as per Maria's dir.
-    # ----------------------------------------------------------------------------
+        TODO: DETAILED DOCS
+        """
+        # ----------------------------------------------------------------------------
+        # STAGE 2: ENSURE CF COMPLIANCE AND CORRECT FORMAT OF DATA READ-IN
+        #
+        #          SOME DATA PROCESSING AND VALIDATION, INCLUDING (ONLY?) ATTACHING
+        #          THE OROGRAPHY -> MANIPULATING THE FIELDS A BIT.
+        #
+        # INCLUDES FOR 'CORRECT FORMAT': E.G.:
+        # * SEE LATER TODO OF: are we assuming the model and obs data are strictly
+        # monotonically increasing, as we might be assuming for some of this ->
+        # since trajectories should be inc'ing this way, by definition.
+        # * VERTICAL COOR STUFF TO MAKE SURE IT IS ENCODED CORRECTLY.
 
-    # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT BY DH
+        # TODO: check that the obs inputs are compliant in way we need
+        # TODO: we need to make model data compliant and padding etc.
+        # Notes for future when done:
+        # * Get orography data, separate input, as per Maria's dir.
+        # ----------------------------------------------------------------------------
+        # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT BY DH
+        pass
 
     # ----------------------------------------------------------------------------
     # STAGE 3: UNITS AND CALENDAR CONSISTENCY CONSIDERATIONS
