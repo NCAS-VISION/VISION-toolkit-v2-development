@@ -16,22 +16,42 @@ script.
 
 """
 
-# NOTE: itertools.pairwise is only available in Python 3.10 plus, so >= v.3.10
-import itertools
+from itertools import pairwise  # requires Python 3.10+
+from pprint import pformat, pprint
+from time import time
+
+import functools
 import logging
 import numpy as np
 import sys
-import time
-
-from pprint import pformat, pprint
 
 import cfplot as cfp
 import cf
 
-# Define all inputs and output choices
+
+def timeit(func):
+    """A decorator to measure and report function execution time."""
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        starttime = time()
+        output = func(*args, **kwargs)
+        endtime = time()
+        totaltime = endtime - starttime
+        print(
+            f"Time taken (in s) for '{repr(func.__name__)}' to run: "
+            f"{round(totaltime, 4)}"
+        )
+        return output
+
+    return wrapper
+
+# ----------------------------------------------------------------------------
+# STAGE -1: DEFINE AND PARSE CONFIGURATION E.G. INPUTS, OUTPUTS.
+# ----------------------------------------------------------------------------
 # TODO eventually these can be set as command-line arguments (w/ manpage, etc.)
 # configured and managed using getopts/getargs, etc.
-#
+
 # TODO: document assumptions about data that we use that the input data need
 # to abide by, for it to work (input data quality requirements).
 #
@@ -139,15 +159,15 @@ logger.critical(
 # 1.1: Read in datasets with cf
 
 # 1.1.1 Observational data (from the FAAM aircraft flights in this case).
-read_obs_starttime = time.time()
+read_obs_starttime = time()
 obs_data = cf.read(obs_data_loc)
-read_obs_endtime = time.time()
+read_obs_endtime = time()
 read_obs_totaltime = read_obs_endtime - read_obs_starttime
 
 # 1.1.2 Model data.
-read_model_starttime = time.time()
+read_model_starttime = time()
 model_data = cf.read(model_data_loc)
-read_model_endtime = time.time()
+read_model_endtime = time()
 read_model_totaltime = read_model_endtime - read_model_starttime
 
 logger.critical("Data successfully read in.")
@@ -281,7 +301,7 @@ logger.critical(
 # TODO: ensure this works for flights that take off on one day and end on
 # another e.g. 11 pm - 3 am flight.
 
-bb_starttime = time.time()
+bb_starttime = time()
 
 # 3.1: prep. towards the BB component subspace.
 # Find the spatial obs. path X-Y-Z boundaries to crop the model field to.
@@ -333,7 +353,7 @@ model_field_bb = model_field.subspace(
     T=cf.wi(obs_times.data.minimum(), obs_times.data.maximum()),
 )
 
-bb_endtime = time.time()
+bb_endtime = time()
 bb_totaltime = bb_endtime - bb_starttime
 
 logger.critical(
@@ -356,7 +376,7 @@ logger.critical(f"Time taken to create bounding box: {bb_totaltime}")
 # TODO: UGRID grids might need some extra steps/work for this.
 
 logger.critical(f"Starting spatial interpolation (regridding) step...")
-spat_regrid_starttime = time.time()
+spat_regrid_starttime = time()
 
 # 5.0: Creating the spatial bounding box may have made some of the spatial
 # dimensions singular, which would lead to an error or:
@@ -380,7 +400,7 @@ spatially_colocated_field = model_field_bb.regrids(
     ln_z=True,
 )
 post_spatregrid_cyclic = model_field_bb.cyclic()
-spat_regrid_endtime = time.time()
+spat_regrid_endtime = time()
 spat_regrid_totaltime = spat_regrid_endtime - spat_regrid_starttime
 
 logger.critical(f"Time taken to spatially regrid was: {spat_regrid_totaltime}")
@@ -400,7 +420,7 @@ logger.critical(spatially_colocated_field.dump(display=False))
 # ----------------------------------------------------------------------------
 
 logger.critical("\n\n\nStarting time interpolation step...\n\n\n")
-time_interp_starttime = time.time()
+time_interp_starttime = time()
 
 # In our field after spatial interpolation, the Dimension Coord has the model
 # time data and the Aux Coord has the observational time data
@@ -433,13 +453,13 @@ pairwise_segments = {}
 v_w = []
 
 # 6.2 Find final index to skip in some cases later to avoid double counting
-final_index = len(list(itertools.pairwise(model_times.datetime_array)))
+final_index = len(list(pairwise(model_times.datetime_array)))
 
 # 6.3 Iterate over pairs of adjacent model datetimes, defining 'segments'.
 #     Chop the flight path up into these *segments* and do a weighted merge
 #     of data from segments adjacent in the model times to form the final
 #     time-interpolated value.
-for index, (t1, t2) in enumerate(itertools.pairwise(model_times.datetime_array)):
+for index, (t1, t2) in enumerate(pairwise(model_times.datetime_array)):
     # 6.3.1 Define the pairwise segment datetime endpoints
     logger.critical(f"\n\nTimes for segments are\n\n: {t1}, {t2}.")
     datetime_segments.append((t1, t2))
@@ -574,7 +594,7 @@ logger.critical(pformat(final_result_field.data.stats()))
 # TODO: consider whether or not to persist the regridded / time interp.
 # before the next stage, or to do in a fully lazy way.
 
-time_interp_endtime = time.time()
+time_interp_endtime = time()
 time_interp_totaltime = time_interp_endtime - time_interp_starttime
 logger.critical("Time interpolation done.")
 logger.critical(f"Time taken to do time interpolation: {time_interp_totaltime}")
@@ -593,12 +613,12 @@ logger.critical(f"Time taken to do time interpolation: {time_interp_totaltime}")
 #          FOR X, Y, Z AND T.
 # ----------------------------------------------------------------------------
 
-write_starttime = time.time()
+write_starttime = time()
 
 # 8.1 Write final field result out to file on-disk
 cf.write(final_result_field, OUTPUT_FILE_NAME)
 
-write_endtime = time.time()
+write_endtime = time()
 write_totaltime = write_endtime - write_starttime
 logger.critical("Writing of output file complete.")
 logger.critical(f"Time taken to write output file: {write_totaltime}")
@@ -607,7 +627,7 @@ logger.critical(f"Time taken to write output file: {write_totaltime}")
 # STAGE 9: VISUALISE OUTPUT AND SHOW THE PLOT
 # ----------------------------------------------------------------------------
 
-vis_starttime = time.time()
+vis_starttime = time()
 
 # 9.0 Upgrade the aux coor to a dim coor, so we can plot the trajectory.
 # TODO: avoid doing this, as is not 'proper', when there is a way to
@@ -644,7 +664,7 @@ cfp.traj(
 )
 cfp.gclose()
 
-vis_endtime = time.time()
+vis_endtime = time()
 vis_totaltime = vis_endtime - vis_starttime
 logger.critical("Plot created.")
 logger.critical(f"Time to create plot: {vis_totaltime}")
