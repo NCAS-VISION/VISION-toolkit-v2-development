@@ -684,76 +684,101 @@ def main():
 
     final_result_field = time_interpolation(obs_times, model_times, spatially_colocated_field)
 
-    # ----------------------------------------------------------------------------
-    # STAGE 7: CREATE OUTPUTS AS A CONCATENATED CONTIGUOUS RAGGED ARRAY OF ALL
-    #          FLIGHT PATH PROJECTIONS FOR THE VARIOUS DAYS.
-    #
-    #          THIS INVOLVES AGGREGATING AND COMPRESSING.
-    # ----------------------------------------------------------------------------
 
-    # TODO IGNORE FOR NOW
+    def create_cra_outputs():
+        """Create an aggregated concatenated contiguous ragged array output.
 
-    # ----------------------------------------------------------------------------
-    # STAGE 8: WRITE OUT FINAL OUTPUT WHICH HAS BEEN CO-LOCATED
-    #          FOR X, Y, Z AND T.
-    # ----------------------------------------------------------------------------
+        TODO: ARGS
+        TODO: DETAILED DOCS
+        """
+        # ----------------------------------------------------------------------------
+        # STAGE 7: CREATE OUTPUTS AS A CONCATENATED CONTIGUOUS RAGGED ARRAY OF ALL
+        #          FLIGHT PATH PROJECTIONS FOR THE VARIOUS DAYS.
+        #
+        #          THIS INVOLVES AGGREGATING AND COMPRESSING.
+        # ----------------------------------------------------------------------------
 
-    write_starttime = time()
+        # TODO IGNORE FOR NOW
+        pass
 
-    # 8.1 Write final field result out to file on-disk
-    cf.write(final_result_field, OUTPUT_FILE_NAME)
+    create_cra_outputs()
 
-    write_endtime = time()
-    write_totaltime = write_endtime - write_starttime
-    logger.critical("Writing of output file complete.")
-    logger.critical(f"Time taken to write output file: {write_totaltime}")
 
-    # ----------------------------------------------------------------------------
-    # STAGE 9: VISUALISE OUTPUT AND SHOW THE PLOT
-    # ----------------------------------------------------------------------------
+    def write_output_data(final_result_field):
+        """Write out all output data.
 
-    vis_starttime = time()
+        TODO: DETAILED DOCS
+        """
+        # ----------------------------------------------------------------------------
+        # STAGE 8: WRITE OUT FINAL OUTPUT WHICH HAS BEEN CO-LOCATED
+        #          FOR X, Y, Z AND T.
+        # ----------------------------------------------------------------------------
 
-    # 9.0 Upgrade the aux coor to a dim coor, so we can plot the trajectory.
-    # TODO: avoid doing this, as is not 'proper', when there is a way to
-    #       just use the aux. coor for cfp.traj: the way to support in a new
-    #       cf-plot version is to check if the input is a featureType, then
-    #       if it is to look for aux coords not dim coords, since if it is one
-    #       there should never be dim coords.
-    # TODO: another cpflot feature that will help here: generalise the
-    #       trajectory function for not just contiguous ragged array, as
-    #       the present docs state, but for any *multidimensional orthogonal
-    #       arrays* e.g. DSGs, as here. Talking about 'ragged arrays' is a
-    #       massive red herring. In which case, generalise it so that the input
-    #       can be a field with a 2D *or* a 1D array to plot. If 1D, it means
-    #       it has a trajectory dimension leading, which can be dropped.
-    aux_coor_t = final_result_field.auxiliary_coordinate("T")
-    dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
-    final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
+        write_starttime = time()
 
-    # 9.2 Set levels for plotting of data in a colourmap
-    # Min, max as determined using final_result_field.min(), .max():
-    cfp.levs(min=5e-08, max=10e-08, step=0.25e-08)
+        # 8.1 Write final field result out to file on-disk
+        cf.write(final_result_field, OUTPUT_FILE_NAME)
 
-    # 9.3 Make and open the final plot
-    # NOTE: can try 'legend_lines=True' for the lines plotted with average between
-    #       the two scatter marker points, if preferable?
-    cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_final_colocated_field.png")
-    cfp.traj(
-        final_result_field,
-        verbose=VERBOSE,
-        legend=True,
-        markersize=5,
-        linewidth=0.4,
-        title="Co-located field, with model data located onto observational path",
-    )
-    cfp.gclose()
+        write_endtime = time()
+        write_totaltime = write_endtime - write_starttime
+        logger.critical("Writing of output file complete.")
+        logger.critical(f"Time taken to write output file: {write_totaltime}")
 
-    vis_endtime = time()
-    vis_totaltime = vis_endtime - vis_starttime
-    logger.critical("Plot created.")
-    logger.critical(f"Time to create plot: {vis_totaltime}")
+    write_output_data(final_result_field)
 
+
+    def make_outputs_plots(final_result_field):
+        """Generate plots of the flight track for a pre-colocation preview.
+
+        TODO: DETAILED DOCS
+        """
+        # ----------------------------------------------------------------------------
+        # STAGE 9: VISUALISE OUTPUT AND SHOW THE PLOT
+        # ----------------------------------------------------------------------------
+
+        vis_starttime = time()
+
+        # 9.0 Upgrade the aux coor to a dim coor, so we can plot the trajectory.
+        # TODO: avoid doing this, as is not 'proper', when there is a way to
+        #       just use the aux. coor for cfp.traj: the way to support in a new
+        #       cf-plot version is to check if the input is a featureType, then
+        #       if it is to look for aux coords not dim coords, since if it is one
+        #       there should never be dim coords.
+        # TODO: another cpflot feature that will help here: generalise the
+        #       trajectory function for not just contiguous ragged array, as
+        #       the present docs state, but for any *multidimensional orthogonal
+        #       arrays* e.g. DSGs, as here. Talking about 'ragged arrays' is a
+        #       massive red herring. In which case, generalise it so that the input
+        #       can be a field with a 2D *or* a 1D array to plot. If 1D, it means
+        #       it has a trajectory dimension leading, which can be dropped.
+        aux_coor_t = final_result_field.auxiliary_coordinate("T")
+        dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
+        final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
+
+        # 9.2 Set levels for plotting of data in a colourmap
+        # Min, max as determined using final_result_field.min(), .max():
+        cfp.levs(min=5e-08, max=10e-08, step=0.25e-08)
+
+        # 9.3 Make and open the final plot
+        # NOTE: can try 'legend_lines=True' for the lines plotted with average between
+        #       the two scatter marker points, if preferable?
+        cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_final_colocated_field.png")
+        cfp.traj(
+            final_result_field,
+            verbose=VERBOSE,
+            legend=True,
+            markersize=5,
+            linewidth=0.4,
+            title="Co-located field, with model data located onto observational path",
+        )
+        cfp.gclose()
+
+        vis_endtime = time()
+        vis_totaltime = vis_endtime - vis_starttime
+        logger.critical("Plot created.")
+        logger.critical(f"Time to create plot: {vis_totaltime}")
+
+    make_outputs_plots(final_result_field)
 
 
 if __name__ == "__main__":
