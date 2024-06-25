@@ -242,55 +242,68 @@ def make_preview_plots(obs_field):
     """
     # First configure general settings for plot:
     # Change the viewpoint to be over the UK only, with high-res map outline
-    cfp.mapset(lonmin=-2, lonmax=2, latmin=50, latmax=54, resolution="10m")
-    # Colour scale that better shows detail for typical flights
+    mapset_config = {
+        "lonmin": -2,
+        "lonmax": 2,
+        "latmin": 50,
+        "latmax": 54,
+        "resolution": "10m",
+    }
+    cfp.mapset(**mapset_config)
     cfp.cscale(CSCALE)
 
     if SHOW_PLOT_OF_INPUT_OBS:
         # Plot *input* observational data for a preview, before doing anything
         # Min, max as determined using final_result_field.min(), .max():
-        cfp.levs(min=-5, max=55, step=5)
+        input_levs_config = {
+            "min": -5,
+            "max": 55,
+            "step": 5,
+        }
+        cfp.levs(**input_levs_config)
         if PLOT_OF_INPUT_OBS_TRACK_ONLY in (1, 2):
             # Use the same field but set all data to zero so can plot the whole
             # track in the same colour to just display the path, not orig. data
             equal_data_obs_field = obs_field.copy()
             new_data = np.zeros(
                 len(equal_data_obs_field.data)
-            )  # 0 -> force red
+            )  # 0 -> force red with colour scheme set later
             equal_data_obs_field.set_data(new_data, inplace=True)
-            cfp.cscale("scale28")  # has bright red for the lowest values
+
+            # Not configurable, always use since it gives red for zero values
+            cfp.cscale("scale28")
             cfp.gopen(
                 file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_only.png"
             )
-            cfp.traj(
-                equal_data_obs_field,
-                verbose=VERBOSE,
-                legend=True,
-                colorbar=False,
-                markersize=0.5,
-                linewidth=0,  # effectively turn off lines to only have markers
-                title=(
+            cfp_input_track_only_config = {
+                "verbose": VERBOSE,
+                "legend": True,
+                "colorbar": False,
+                "markersize": 0.5,
+                "linewidth": 0,  # turn off line plotting to only have markers
+                "title": (
                     "Flight track from observational field to co-locate model "
                     "field onto"
                 ),
-            )
+            }
+            cfp.traj(equal_data_obs_field, **cfp_input_track_only_config)
             cfp.gclose()
             cfp.cscale(CSCALE)  # reset for normal (default-style) plots after
         if PLOT_OF_INPUT_OBS_TRACK_ONLY in (0, 2):
             cfp.gopen(
                 file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_with_data.png"
             )
-            cfp.traj(
-                obs_field,
-                verbose=VERBOSE,
-                legend=True,
-                markersize=5,
-                linewidth=0.4,
-                title=(
+            cfp_input_general_config = {
+                "verbose": VERBOSE,
+                "legend": True,
+                "markersize": 5,
+                "linewidth": 0.4,
+                "title": (
                     "Observational field input (path, to be used for "
                     "co-location, with its corresponding data, to be ignored)"
                 ),
-            )
+            }
+            cfp.traj(obs_field, **cfp_input_general_config)
             cfp.gclose()
 
 
@@ -777,20 +790,26 @@ def make_outputs_plots(final_result_field):
 
     # Set levels for plotting of data in a colourmap
     # Min, max as determined using final_result_field.min(), .max():
-    cfp.levs(min=5e-08, max=10e-08, step=0.25e-08)
+    cfp_output_levs_config = {
+        "min": 5e-08,
+        "max": 10e-08,
+        "step": 0.25e-08,
+    }
+    cfp.levs(**cfp_output_levs_config)
 
     # Make and open the final plot
     # NOTE: can try 'legend_lines=True' for the lines plotted with average
     #       between the two scatter marker points, if preferable?
     cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_final_colocated_field.png")
-    cfp.traj(
-        final_result_field,
-        verbose=VERBOSE,
-        legend=True,
-        markersize=5,
-        linewidth=0.4,
-        title="Co-located result: model co-located onto observational path",
-    )
+
+    cfp_output_general_config ={
+        "verbose": VERBOSE,
+        "legend": True,
+        "markersize": 5,
+        "linewidth": 0.4,
+        "title": "Co-located result: model co-located onto observational path",
+    }
+    cfp.traj(final_result_field, **cfp_output_general_config)
     cfp.gclose()
 
     logger.critical("Plot created.")
