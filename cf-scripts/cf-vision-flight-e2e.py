@@ -48,7 +48,7 @@ def timeit(func):
 
 
 # ----------------------------------------------------------------------------
-# STAGE -1: DEFINE AND PARSE CONFIGURATION E.G. INPUTS, OUTPUTS.
+# Define and parse configuration e.g. inputs, outputs.
 # ----------------------------------------------------------------------------
 # TODO eventually these can be set as command-line arguments (w/ manpage, etc.)
 # configured and managed using getopts/getargs, etc.
@@ -128,7 +128,7 @@ CLI_CONFIG = {
 # for efficiency.
 
 # ----------------------------------------------------------------------------
-# STAGE 0: OPTIONAL DIAGNOSTICS REPORT
+# Optional diagnostics report
 # ----------------------------------------------------------------------------
 # Configure logging level
 
@@ -147,16 +147,16 @@ if VERBOSE:
     pprint(CLI_CONFIG)
 
 
+# ----------------------------------------------------------------------------
+# Main functions
+# ----------------------------------------------------------------------------
+
 def read_input_data():
     """Read in all input data.
 
     TODO: DETAILED DOCS
     """
-    # ----------------------------------------------------------------------------
-    # STAGE 1: READ IN INPUT DATA (format agnostic with cf!)
-    # ----------------------------------------------------------------------------
-
-    # 1.1: Read in datasets with cf
+    # Read in datasets with cf
     obs_data_loc = f"{DATA_DIR_LOC}/{OBS_DATA_DIR}"
     model_data_loc = f"{DATA_DIR_LOC}/{MODEL_DATA_DIR}"
 
@@ -168,13 +168,13 @@ def read_input_data():
         f"Obs data: '{obs_data_loc}'\n"
         f"Model data: '{model_data_loc}'"
     )
-    # 1.1.1 Observational data (from the FAAM aircraft flights in this case).
+    # Observational data (from the FAAM aircraft flights in this case)
     read_obs_starttime = time()
     obs_data = cf.read(obs_data_loc)
     read_obs_endtime = time()
     read_obs_totaltime = read_obs_endtime - read_obs_starttime
 
-    # 1.1.2 Model data.
+    # Model data
     read_model_starttime = time()
     model_data = cf.read(model_data_loc)
     read_model_endtime = time()
@@ -188,7 +188,7 @@ def read_input_data():
         f"Time taken to read model data was: {read_model_totaltime}"
     )
 
-    # 1.2: Inspection of read-in fields
+    # Inspection of read-in fields
     logger.critical(f"Observational (flight) data is:\n {obs_data}")
     logger.critical(f"For example, first obs. field is:\n")
     logger.critical(obs_data[0].dump(display=False))
@@ -204,7 +204,7 @@ def get_input_fields_of_interest(obs_data, model_data):
 
     TODO: DETAILED DOCS
     """
-    # 1.3 Take relevant fields from the list of fields read in
+    # Take only relevant fields from the list of fields read in
     obs_field = obs_data[0]
     model_field = model_data[-2]
 
@@ -216,11 +216,12 @@ def make_preview_plots(obs_field):
 
     TODO: DETAILED DOCS
     """
-    # 1.4 Plots, if requested. First configure general settings for plot:
-    # a) Change the viewpoint to be over the UK only, with high-res map outline
+    # First configure general settings for plot:
+    # Change the viewpoint to be over the UK only, with high-res map outline
     cfp.mapset(lonmin=-2, lonmax=2, latmin=50, latmax=54, resolution="10m")
-    # b) Colour scale that better shows detail for typical flights
+    # Colour scale that better shows detail for typical flights
     cfp.cscale(CSCALE)
+
     if SHOW_PLOT_OF_INPUT_OBS:
         # Plot the *input* observational data for a preview, before doing any work
         # Min, max as determined using final_result_field.min(), .max():
@@ -274,11 +275,8 @@ def ensure_cf_compliance(obs_field, model_field):
 
     TODO: DETAILED DOCS
     """
-    # ----------------------------------------------------------------------------
-    # STAGE 2: ENSURE CF COMPLIANCE AND CORRECT FORMAT OF DATA READ-IN
-    #
-    #          SOME DATA PROCESSING AND VALIDATION, INCLUDING (ONLY?) ATTACHING
-    #          THE OROGRAPHY -> MANIPULATING THE FIELDS A BIT.
+    # SOME DATA PROCESSING AND VALIDATION, INCLUDING (ONLY?) ATTACHING
+    # THE OROGRAPHY -> MANIPULATING THE FIELDS A BIT.
     #
     # INCLUDES FOR 'CORRECT FORMAT': E.G.:
     # * SEE LATER TODO OF: are we assuming the model and obs data are strictly
@@ -290,7 +288,7 @@ def ensure_cf_compliance(obs_field, model_field):
     # TODO: we need to make model data compliant and padding etc.
     # Notes for future when done:
     # * Get orography data, separate input, as per Maria's dir.
-    # ----------------------------------------------------------------------------
+    #
     # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT BY DH
     pass
 
@@ -300,7 +298,7 @@ def get_time_coords(obs_field, model_field):
 
     TODO: DETAILED DOCS
     """
-    # 3.1 Pre-process to get relevant constructs
+    # Pre-process to get relevant constructs
     obs_times = obs_field.auxiliary_coordinate("T")
 
     model_times_key, model_times = model_field.dimension_coordinate(
@@ -315,14 +313,11 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 
     TODO: DETAILED DOCS
     """
-    # ----------------------------------------------------------------------------
-    # STAGE 3: UNITS AND CALENDAR CONSISTENCY CONSIDERATIONS
-    #
-    # ----------------------------------------------------------------------------
     obs_times, model_times = get_time_coords(obs_field, model_field)
 
-    # 3.2 Ensure the units of the obs and model datetimes are consistent - conform
-    #     them if they differ (if they don't, Units setting operation is harmless).
+    # Ensure the units of the obs and model datetimes are consistent - conform
+    # them if they differ (if they don't, Units setting operation is harmless).
+    #
     # NOTE: Change the units on the model (not obs) times since there are fewer
     # data points on those, meaning less converting work.
     obs_times_units = obs_times.Units
@@ -339,7 +334,8 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
         f"{same_units};\n"
     )
 
-    # 3.3 Ensure calendars are consistent, if not convert to equivalent.
+    # Ensure calendars are consistent, if not convert to equivalent.
+    #
     # TODO what to do if calendar conversion means missing days when need them?
     #      look at Maria's code as to how it is dealt with (e.g. in CIS)
     #
@@ -358,20 +354,22 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
     """Extract only relevant data in the model field via a 4D subspace.
 
+    Relevant data is extracted in the form of a field comprising the model
+    field reduced to a 'bounding box' in space and in time, such that data
+    outside the scope of the observational data track, with an extra
+    index-space 'halo' added to include points of relevance to the outer-most
+    points, is removed, because it is not relevant to the colocation.
+
     TODO: DETAILED DOCS
     """
     obs_times, model_times = get_time_coords(obs_field, model_field)
-    # ----------------------------------------------------------------------------
-    # STAGE 4: BOUNDING BOX, IN TIME AND SPACE: FIND THIS FOR THE FLIGHT PATH AND
-    #          'CROP' MODEL DATA TO IGNORE IRRELEVENT DATA OUTSIDE THE BOUNDARIES.
-    # ----------------------------------------------------------------------------
 
     # TODO: ensure this works for flights that take off on one day and end on
     # another e.g. 11 pm - 3 am flight.
 
     bb_starttime = time()
 
-    # 3.1: prep. towards the BB component subspace.
+    # Prep. towards the BB component subspace.
     # Find the spatial obs. path X-Y-Z boundaries to crop the model field to.
     #     Note: avoid calling these 'bounds' since that has meaning in CF, so to
     #           prevent potential ambiguity/confusion.
@@ -386,7 +384,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
         f"{obs_X.data.stats()}, {obs_Y.data.stats()}"
     )
 
-    # 3.2: prep. towards the temporal BB component.
+    # Prep. towards the temporal BB component.
     # TODO: are we assuming the model and obs data are strictly increasing, as we
     # might be assuming for some of this. - > trajectories should be inc'ing with
     # time with indices getting higher. Otherwise might need to use .sort() etc.
@@ -398,9 +396,9 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
         f"{obs_times.data.minimum()}, {obs_times.data.maximum()}"
     )
 
-    # 3.3 Perform the 4D spatio-temporal bounding box to reduce the model data down
-    #     to only that which is relevant for the calculations on the observational
-    #     data path in 4D space, that is:
+    # Perform the 4D spatio-temporal bounding box to reduce the model data down
+    # to only that which is relevant for the calculations on the observational
+    # data path in 4D space, that is:
     #     * a spatial 3D X-Y-Z subspace to spatially bound to those values; plus
     #     * a time 1D T subspace to bound it in time i.e. cover only relevant times
 
@@ -434,33 +432,26 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
 
 
 def spatial_interpolation(obs_field, model_field_bb):
-    """Interpolate the flight path spatially (for X-Y and vertical Z).
+    """Interpolate the flight path spatially (3D for X-Y and vertical Z).
+
+    Horizontal X-Y and vertical Z coordinates are interpolated. This is
+    done under-the-hood in cf-python with the ESMF LocStream feature, see:
+    https://xesmf.readthedocs.io/en/latest/notebooks/Using_LocStream.html
 
     TODO: DETAILED DOCS
     """
-    # ----------------------------------------------------------------------------
-    # STAGE 5: FULL XYZ/SPATIAL INTERPORLATION, I.E. INTERPOLATE THE
-    #          FLIGHT PATH LOCATIONS SPATIALLY, FOR THE XY HORIZONTAL AND THE Z
-    #          VERTICAL COORDINATES,
-    #          WITHIN THE MODEL DATA AND SAVE THESE FOR LATER (GET SPATIAL COORS).
-
-    #          WE DO THIS WITH ESMF LOCSTREAM, SEE:
-    #          https://xesmf.readthedocs.io/en/latest/notebooks/Using_LocStream.html
-
-    # ----------------------------------------------------------------------------
-
     # TODO: UGRID grids might need some extra steps/work for this.
 
     logger.critical(f"Starting spatial interpolation (regridding) step...")
     spat_regrid_starttime = time()
 
-    # 5.0: Creating the spatial bounding box may have made some of the spatial
+    # Creating the spatial bounding box may have made some of the spatial
     # dimensions singular, which would lead to an error or:
     #     ValueError: Neither the X nor Y dimensions of the source field <field>
     #     can be of size 1 for spherical 'linear' regridding.
     # so we have to account for this.
 
-    # 5.1 Perform the spherical regrid which does the spatial interpolation
+    # Perform the spherical regrid which does the spatial interpolation
     # NOTE: this requires recently-added support for ESMF LocStream
     # functionality, hence cf-python version >= 3.16.1 to work.
     #
@@ -495,17 +486,14 @@ def time_interpolation(
 ):
     """Interpolate the flight path temporally (in time T).
 
+    This co-locates between model data time points to match the time
+    coordinate sampling of the flight path and is done using a method that
+    performs a convolution-based merge of relevant segments of the
+    (bouding box subspaced) model field already interpolated spatially onto
+    the flight path.
+
     TODO: DETAILED DOCS
     """
-    # ----------------------------------------------------------------------------
-    # STAGE 6: TIME INTERPOLATION: INTERPOLATE BETWEEN MODEL DATA TIME POINTS.
-
-    #          WE DO THIS USING A CONVOLUTION-BASED 'MERGE' OF RELEVANT
-    #          SEGMENTS OF THE FLIGHT PATHS FOR THE MODEL DATA X-Y COLOCATED
-    #          ONTO THE FLIGHT PATH FROM THE PREVIOUS STAGE.
-    #
-    # ----------------------------------------------------------------------------
-
     logger.critical("\n\n\nStarting time interpolation step...\n\n\n")
     time_interp_starttime = time()
 
@@ -522,8 +510,8 @@ def time_interpolation(
         f"Number of observational time sample data points: {obs_times_len}"
     )
 
-    # 6.1 Setup ready for iteration...
-    # ...6.1.1 Constructs
+    # Setup ready for iteration...
+    # Constructs
     m = spatially_colocated_field.copy()
     # Observations, if DSG, will always be the auxiliary coordinate time
     obs_time_key = m.auxiliary_coordinate("T", key=True)
@@ -533,34 +521,34 @@ def time_interpolation(
     logger.critical(f"Observational (aux) coord. time key is: {obs_time_key}")
     logger.critical(f"Model (dim) time key is: {model_time_key}")
 
-    # ...6.1.2 Empty objects ready to populate
+    # Empty objects ready to populate
     datetime_segments = []
     fieldlist_subspaces_by_segment = cf.FieldList()
     pairwise_segments = {}
     v_w = []
 
-    # 6.2 Find final index to skip in some cases later to avoid double counting
+    # Find final index to skip in some cases later to avoid double counting
     final_index = len(list(pairwise(model_times.datetime_array)))
 
-    # 6.3 Iterate over pairs of adjacent model datetimes, defining 'segments'.
-    #     Chop the flight path up into these *segments* and do a weighted merge
-    #     of data from segments adjacent in the model times to form the final
-    #     time-interpolated value.
+    # Iterate over pairs of adjacent model datetimes, defining 'segments'.
+    # Chop the flight path up into these *segments* and do a weighted merge
+    # of data from segments adjacent in the model times to form the final
+    # time-interpolated value.
     for index, (t1, t2) in enumerate(pairwise(model_times.datetime_array)):
-        # 6.3.1 Define the pairwise segment datetime endpoints
+        # Define the pairwise segment datetime endpoints
         logger.critical(f"\n\nTimes for segments are\n\n: {t1}, {t2}.")
         datetime_segments.append((t1, t2))
 
-        # 6.3.2 Define a query which will find any datetimes within these times
-        #       to map all observational times to the appropriate segment, later.
+        # Define a query which will find any datetimes within these times
+        # to map all observational times to the appropriate segment, later.
         q = cf.wi(
             cf.dt(t1), cf.dt(t2), open_upper=True
         )  # TODO is cf.dt wrapping necessary?
         logger.critical(f"Querying on query: {q} with field: {m}")
 
-        # 6.3.3 Subspace the observational times to match the segments above,
-        #       namely using the query created above.
-        #       Use a direct subspace method, which works generally.
+        # Subspace the observational times to match the segments above,
+        # namely using the query created above.
+        # Use a direct subspace method, which works generally.
         #
         # NOTE: without the earlier bounding box step, this will fail due to
         #       not being able to find the subspace at irrelevant times.
@@ -578,13 +566,13 @@ def time_interpolation(
         logger.critical(s1_subspace_args)
         s1 = m.subspace(**s1_subspace_args)
 
-        # 6.3.4 Squeeze here to remove size 1 dim ready for calculations to come,
-        #       i.e. to unpack from '[[ ]]' shape(1, N) structure.
+        # Squeeze here to remove size 1 dim ready for calculations to come,
+        # i.e. to unpack from '[[ ]]' shape(1, N) structure.
         # NOTE: a=0 and b=1 from old/whiteboard schematic and notes).
         values_0 = s0.data.squeeze()
         values_1 = s1.data.squeeze()
 
-        # 6.3.6 Calculate the arrays to be used in the weighting calculation.
+        # Calculate the arrays to be used in the weighting calculation.
         # All arithmetic done numpy-array wise, so no need to iterate over values.
         #
         # NOTE: converted to data to get data array not dim coord as output for
@@ -602,7 +590,7 @@ def time_interpolation(
             s0.auxiliary_coordinate("T")[index] - s0.dimension_coordinate("T")
         ).data
 
-        # 6.3.7 Calculate the datetime 'distances' to be used for the weighting
+        # Calculate the datetime 'distances' to be used for the weighting
         distances_1 = distance_01 - distances_0
         weights_0 = distances_1 / distance_01
         weights_1 = distances_0 / distance_01
@@ -614,7 +602,7 @@ def time_interpolation(
             f"FOR VALUES (0, 1): {values_0.count()}, {values_1.count()}"
         )
 
-        # 6.3.8 Calculate the final weighted values using a basic weighting
+        # Calculate the final weighted values using a basic weighting
         # formulae.
         # NOTE: by the maths, the sum of the two weights should be 1, so there
         #       is no need to divide by that, though confirm with a print-out
@@ -638,8 +626,8 @@ def time_interpolation(
             f"GETTING: {v} WITH LEN {len(v)} AND NON-MASKED COUNT {v.count()}"
         )
 
-    # 6.4 Concatenate the data values found above from each segment, to finally
-    #     get the full set of model-to-obs co-located data.
+    # Concatenate the data values found above from each segment, to finally
+    # get the full set of model-to-obs co-located data.
     concatenated_weighted_values = cf.Data.concatenate(v_w)
     logger.critical(
         f"WEIGHTED VALS ARE: {concatenated_weighted_values}, WITH LEN: "
@@ -651,10 +639,10 @@ def time_interpolation(
         f"{len(concatenated_weighted_values) - concatenated_weighted_values.count()}"
     )
 
-    # 6.5 Finally, reattach that data to (a copy of) the obs field to get final
-    #     values on the right domain, though we still need to adapt the metadata to
-    #     reflect the new context so that the field with data set is contextually
-    #     correct.
+    # Finally, reattach that data to (a copy of) the obs field to get final
+    # values on the right domain, though we still need to adapt the metadata to
+    # reflect the new context so that the field with data set is contextually
+    # correct.
     final_result_field = obs_field.copy()
     final_result_field.set_data(concatenated_weighted_values)
     logger.critical(
@@ -663,13 +651,13 @@ def time_interpolation(
     )
     logger.critical(final_result_field.dump(display=False))
 
-    # 6.6 Finally, re-set the properties on the final result field so it has model
+    # Finally, re-set the properties on the final result field so it has model
     # data properties not obs preoprties.
-    # 6.6.1: general properties
+    # * General properties
     final_result_field.clear_properties()
     final_result_field.set_properties(model_field.properties())
-    # 6.6.2 Add new, or append to if already exists, 'history' property
-    #       details to say that we colocated etc. with VISION / cf.
+    # * Add new, or append to if already exists, 'history' property
+    #   details to say that we colocated etc. with VISION / cf.
     history_details = final_result_field.get_property("history")
     history_details += (
         " ~ " + HISTORY_MESSAGE
@@ -697,35 +685,28 @@ def time_interpolation(
 
 
 def create_cra_outputs():
-    """Create an aggregated concatenated contiguous ragged array output.
+    """Create a compressed contiguous ragged array DSG output.
 
+    Concatenates and aggregates the colocated flight path results across all
+    of the relevant days sepcified, creating a discrete sampling
+    geometry (DSG), specifically a contiguous ragged array, to encompass all
+    of these. This is compressed and returned.
+    
     TODO: ARGS
     TODO: DETAILED DOCS
     """
-    # ----------------------------------------------------------------------------
-    # STAGE 7: CREATE OUTPUTS AS A CONCATENATED CONTIGUOUS RAGGED ARRAY OF ALL
-    #          FLIGHT PATH PROJECTIONS FOR THE VARIOUS DAYS.
-    #
-    #          THIS INVOLVES AGGREGATING AND COMPRESSING.
-    # ----------------------------------------------------------------------------
-
     # TODO IGNORE FOR NOW
     pass
 
 
 def write_output_data(final_result_field):
-    """Write out all output data.
+    """Write out the 4D (XYZT) colocated result as output data.
 
     TODO: DETAILED DOCS
     """
-    # ----------------------------------------------------------------------------
-    # STAGE 8: WRITE OUT FINAL OUTPUT WHICH HAS BEEN CO-LOCATED
-    #          FOR X, Y, Z AND T.
-    # ----------------------------------------------------------------------------
-
     write_starttime = time()
 
-    # 8.1 Write final field result out to file on-disk
+    # Write final field result out to file on-disk
     cf.write(final_result_field, OUTPUT_FILE_NAME)
 
     write_endtime = time()
@@ -737,15 +718,14 @@ def write_output_data(final_result_field):
 def make_outputs_plots(final_result_field):
     """Generate plots of the flight track for a pre-colocation preview.
 
+    The plots may optionally be displayed duering script execution, else
+    saved to disk.
+
     TODO: DETAILED DOCS
     """
-    # ----------------------------------------------------------------------------
-    # STAGE 9: VISUALISE OUTPUT AND SHOW THE PLOT
-    # ----------------------------------------------------------------------------
-
     vis_starttime = time()
 
-    # 9.0 Upgrade the aux coor to a dim coor, so we can plot the trajectory.
+    # Upgrade the aux coor to a dim coor, so we can plot the trajectory.
     # TODO: avoid doing this, as is not 'proper', when there is a way to
     #       just use the aux. coor for cfp.traj: the way to support in a new
     #       cf-plot version is to check if the input is a featureType, then
@@ -762,11 +742,11 @@ def make_outputs_plots(final_result_field):
     dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
     final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
 
-    # 9.2 Set levels for plotting of data in a colourmap
+    # Set levels for plotting of data in a colourmap
     # Min, max as determined using final_result_field.min(), .max():
     cfp.levs(min=5e-08, max=10e-08, step=0.25e-08)
 
-    # 9.3 Make and open the final plot
+    # Make and open the final plot
     # NOTE: can try 'legend_lines=True' for the lines plotted with average between
     #       the two scatter marker points, if preferable?
     cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_final_colocated_field.png")
