@@ -151,6 +151,7 @@ if VERBOSE:
 # Main functions
 # ----------------------------------------------------------------------------
 
+
 def read_input_data():
     """Read in all input data.
 
@@ -223,7 +224,7 @@ def make_preview_plots(obs_field):
     cfp.cscale(CSCALE)
 
     if SHOW_PLOT_OF_INPUT_OBS:
-        # Plot the *input* observational data for a preview, before doing any work
+        # Plot *input* observational data for a preview, before doing anything
         # Min, max as determined using final_result_field.min(), .max():
         cfp.levs(min=-5, max=55, step=5)
         if PLOT_OF_INPUT_OBS_TRACK_ONLY in (1, 2):
@@ -264,7 +265,7 @@ def make_preview_plots(obs_field):
                 linewidth=0.4,
                 title=(
                     "Observational field input (path, to be used for "
-                    "co-location, with its corresponding data, to be ignored)",
+                    "co-location, with its corresponding data, to be ignored)"
                 ),
             )
             cfp.gclose()
@@ -339,7 +340,8 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     # TODO what to do if calendar conversion means missing days when need them?
     #      look at Maria's code as to how it is dealt with (e.g. in CIS)
     #
-    # NOTE: in this case, they are the same (gregorian and standard are the same).
+    # NOTE: in this case, they are the same (gregorian and standard are the
+    # same).
     # TODO IGNORE FOR NOW (consistent in this case, but will need to generalise
     # for when they are not).
     model_calendar = model_times.calendar
@@ -371,8 +373,8 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
 
     # Prep. towards the BB component subspace.
     # Find the spatial obs. path X-Y-Z boundaries to crop the model field to.
-    #     Note: avoid calling these 'bounds' since that has meaning in CF, so to
-    #           prevent potential ambiguity/confusion.
+    #     Note: avoid calling these 'bounds' since that has meaning in CF, so
+    #           to prevent potential ambiguity/confusion.
 
     # For a DSG, the spatial coordinates will always be auxiliary:
     obs_X = obs_field.auxiliary_coordinate("X")
@@ -385,9 +387,10 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
     )
 
     # Prep. towards the temporal BB component.
-    # TODO: are we assuming the model and obs data are strictly increasing, as we
-    # might be assuming for some of this. - > trajectories should be inc'ing with
-    # time with indices getting higher. Otherwise might need to use .sort() etc.
+    # TODO: are we assuming the model and obs data are strictly increasing, as
+    # we might be assuming for some of this. - > trajectories should be
+    # including with time with indices getting higher. Otherwise might need
+    # to use .sort() etc.
     #
     # NOTE: use max and min to account for any missing data even at endpoints,
     #       as opposed to taking the values at first and last position/index.
@@ -399,18 +402,21 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
     # Perform the 4D spatio-temporal bounding box to reduce the model data down
     # to only that which is relevant for the calculations on the observational
     # data path in 4D space, that is:
-    #     * a spatial 3D X-Y-Z subspace to spatially bound to those values; plus
-    #     * a time 1D T subspace to bound it in time i.e. cover only relevant times
+    #     * a spatial 3D X-Y-Z subspace to spatially bound to those values;
+    #     * a time 1D T subspace to bound it in time i.e. cover only
+    #       relevant times
 
-    # Note: this requires a 'halo' config. feature introduced in cf-ython 3.16.2.
+    # Note: this requires a 'halo' config. feature introduced in
+    #       cf-python 3.16.2.
     # TODO SLB: need to think about possible compications of cyclicity, etc.,
     #           and account for those.
-    # Note: getting some dask arrays out instead of slices, due to Dask laziness.
-    # DH to look into.
+    # Note: getting some dask arrays out instead of slices, due to Dask
+    # laziness. DH to look into.
 
     # Note: can do the spatial and the temporal subspacing separately, and if
-    # want to do this make the call twice for each coordinate arg. Reasons we may
-    # want to do this include having separate halo sizes for each coordinate, etc.
+    # want to do this make the call twice for each coordinate arg. Reasons we
+    # may want to do this include having separate halo sizes for each
+    # coordinate, etc.
     model_field_bb = model_field.subspace(
         1,  # the halo size that extends the bounding box by 1 in index space
         X=cf.wi(obs_X.data.minimum(), obs_X.data.maximum()),
@@ -447,8 +453,8 @@ def spatial_interpolation(obs_field, model_field_bb):
 
     # Creating the spatial bounding box may have made some of the spatial
     # dimensions singular, which would lead to an error or:
-    #     ValueError: Neither the X nor Y dimensions of the source field <field>
-    #     can be of size 1 for spherical 'linear' regridding.
+    #     ValueError: Neither the X nor Y dimensions of the source field
+    #     <field> can be of size 1 for spherical 'linear' regridding.
     # so we have to account for this.
 
     # Perform the spherical regrid which does the spatial interpolation
@@ -497,8 +503,8 @@ def time_interpolation(
     logger.critical("\n\n\nStarting time interpolation step...\n\n\n")
     time_interp_starttime = time()
 
-    # In our field after spatial interpolation, the Dimension Coord has the model
-    # time data and the Aux Coord has the observational time data
+    # In our field after spatial interpolation, the Dimension Coord has the
+    # model time data and the Aux Coord has the observational time data
     # NOTE: keep these calls in, desite earlier ones probably in-place.
     model_times = spatially_colocated_field.dimension_coordinate("T")
     obs_times = spatially_colocated_field.auxiliary_coordinate("T")
@@ -572,15 +578,15 @@ def time_interpolation(
         values_0 = s0.data.squeeze()
         values_1 = s1.data.squeeze()
 
-        # Calculate the arrays to be used in the weighting calculation.
-        # All arithmetic done numpy-array wise, so no need to iterate over values.
+        # Calculate the arrays to be used in the weighting calculation. All
+        # arithmetic done numpy-array wise, so no need to iterate over values.
         #
         # NOTE: converted to data to get data array not dim coord as output for
         #       weighted values.
         # TODO: take care using keys! We can't rely on keys being consistent
         #       between different fields, so may need to re-determine these at
-        #       different steps, else (ideally) find a robust way not using keys
-        #       to pick out the relevant time constructs.
+        #       different steps, else (ideally) find a robust way not using
+        #       keys to pick out the relevant time constructs.
         # NOTE: All calc. variables are arrays, except this first one,
         #       a scalar (constant whatever the obs time)
         distance_01 = (
@@ -597,7 +603,8 @@ def time_interpolation(
 
         logger.critical(
             "MASKED VALUE COUNTS ARE:\n"
-            f"FOR DISTANCES (0, 1): {distances_0.count()}, {distances_1.count()}\n"
+            "FOR DISTANCES (0, 1): "
+            f"{distances_0.count()}, {distances_1.count()}\n"
             f"FOR WEIGHTS (0, 1): {weights_0.count()}, {weights_1.count()}\n"
             f"FOR VALUES (0, 1): {values_0.count()}, {values_1.count()}"
         )
@@ -615,9 +622,9 @@ def time_interpolation(
     #       when flight lands and takes off etc. on runway and close, cases
     #       relating to the Heaviside function. So it is all good and expected
     #       to have masked values in the data, at the end and/or start.
-    #       Eventually we will add an extrapolation option whereby user can choose
-    #       to extrapolate as well as interpolate, and therefore assign values to
-    #       the masked ones.
+    #       Eventually we will add an extrapolation option whereby user can
+    #       choose to extrapolate as well as interpolate, and therefore assign
+    #       values to the masked ones.
 
     logger.critical("FINAL WEIGHTED VALUES ARE:")
     logger.critical(pformat(v_w))
@@ -633,10 +640,14 @@ def time_interpolation(
         f"WEIGHTED VALS ARE: {concatenated_weighted_values}, WITH LEN: "
         f"{len(concatenated_weighted_values)}"
     )
+    masked_value_count = (
+        len(concatenated_weighted_values)
+        - concatenated_weighted_values.count()
+    )
     logger.critical(
         "NUMBER OF NON-MASKED VALUES IN THIS ARE:\n"
         f"{concatenated_weighted_values.count()} VS MASKED:\n"
-        f"{len(concatenated_weighted_values) - concatenated_weighted_values.count()}"
+        f"{masked_value_count}"
     )
 
     # Finally, reattach that data to (a copy of) the obs field to get final
@@ -665,7 +676,8 @@ def time_interpolation(
     final_result_field.set_property("history", history_details)
 
     logger.critical(
-        f"Final resultant field after data co-location is: {final_result_field}"
+        "Final resultant field after data co-location is: "
+        f"{final_result_field}"
     )
     logger.critical(final_result_field.dump(display=False))
     logger.critical("The final result field has data statistics of:\n")
@@ -691,7 +703,7 @@ def create_cra_outputs():
     of the relevant days sepcified, creating a discrete sampling
     geometry (DSG), specifically a contiguous ragged array, to encompass all
     of these. This is compressed and returned.
-    
+
     TODO: ARGS
     TODO: DETAILED DOCS
     """
@@ -747,8 +759,8 @@ def make_outputs_plots(final_result_field):
     cfp.levs(min=5e-08, max=10e-08, step=0.25e-08)
 
     # Make and open the final plot
-    # NOTE: can try 'legend_lines=True' for the lines plotted with average between
-    #       the two scatter marker points, if preferable?
+    # NOTE: can try 'legend_lines=True' for the lines plotted with average
+    #       between the two scatter marker points, if preferable?
     cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_final_colocated_field.png")
     cfp.traj(
         final_result_field,
@@ -756,7 +768,7 @@ def make_outputs_plots(final_result_field):
         legend=True,
         markersize=5,
         linewidth=0.4,
-        title="Co-located field, with model data located onto observational path",
+        title="Co-located result: model co-located onto observational path",
     )
     cfp.gclose()
 
