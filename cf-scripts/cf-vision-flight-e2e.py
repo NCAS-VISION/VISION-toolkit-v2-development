@@ -390,8 +390,6 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
     # TODO: ensure this works for flights that take off on one day and end on
     # another e.g. 11 pm - 3 am flight.
 
-    bb_starttime = time()
-
     # Prep. towards the BB component subspace.
     # Find the spatial obs. path X-Y-Z boundaries to crop the model field to.
     #     Note: avoid calling these 'bounds' since that has meaning in CF, so
@@ -446,14 +444,10 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
         T=cf.wi(obs_times.data.minimum(), obs_times.data.maximum()),
     )
 
-    bb_endtime = time()
-    bb_totaltime = bb_endtime - bb_starttime
-
     logger.critical(
         "4D bounding box calculated. Model data with BB applied is: "
         f"{model_field_bb}"
     )
-    logger.critical(f"Time taken to create bounding box: {bb_totaltime}")
 
     return model_field_bb
 
@@ -471,7 +465,6 @@ def spatial_interpolation(obs_field, model_field_bb):
     # TODO: UGRID grids might need some extra steps/work for this.
 
     logger.critical(f"Starting spatial interpolation (regridding) step...")
-    spat_regrid_starttime = time()
 
     # Creating the spatial bounding box may have made some of the spatial
     # dimensions singular, which would lead to an error or:
@@ -495,12 +488,7 @@ def spatial_interpolation(obs_field, model_field_bb):
         ln_z=True,
     )
     post_spatregrid_cyclic = model_field_bb.cyclic()
-    spat_regrid_endtime = time()
-    spat_regrid_totaltime = spat_regrid_endtime - spat_regrid_starttime
 
-    logger.critical(
-        f"Time taken to spatially regrid was: {spat_regrid_totaltime}"
-    )
     logger.critical(f"XYZ-colocated data is:\n {spatially_colocated_field}")
     logger.critical(spatially_colocated_field.dump(display=False))
 
@@ -524,7 +512,6 @@ def time_interpolation(
     TODO: DETAILED DOCS
     """
     logger.critical("\n\n\nStarting time interpolation step...\n\n\n")
-    time_interp_starttime = time()
 
     # In our field after spatial interpolation, the Dimension Coord has the
     # model time data and the Aux Coord has the observational time data
@@ -709,12 +696,7 @@ def time_interpolation(
     # TODO: consider whether or not to persist the regridded / time interp.
     # before the next stage, or to do in a fully lazy way.
 
-    time_interp_endtime = time()
-    time_interp_totaltime = time_interp_endtime - time_interp_starttime
     logger.critical("Time interpolation done.")
-    logger.critical(
-        f"Time taken to do time interpolation: {time_interp_totaltime}"
-    )
 
     return final_result_field
 
@@ -741,15 +723,11 @@ def write_output_data(final_result_field):
 
     TODO: DETAILED DOCS
     """
-    write_starttime = time()
 
     # Write final field result out to file on-disk
     cf.write(final_result_field, OUTPUT_FILE_NAME)
 
-    write_endtime = time()
-    write_totaltime = write_endtime - write_starttime
     logger.critical("Writing of output file complete.")
-    logger.critical(f"Time taken to write output file: {write_totaltime}")
 
 
 @timeit
@@ -761,7 +739,6 @@ def make_outputs_plots(final_result_field):
 
     TODO: DETAILED DOCS
     """
-    vis_starttime = time()
 
     # Upgrade the aux coor to a dim coor, so we can plot the trajectory.
     # TODO: avoid doing this, as is not 'proper', when there is a way to
@@ -798,10 +775,7 @@ def make_outputs_plots(final_result_field):
     )
     cfp.gclose()
 
-    vis_endtime = time()
-    vis_totaltime = vis_endtime - vis_starttime
     logger.critical("Plot created.")
-    logger.critical(f"Time to create plot: {vis_totaltime}")
 
 
 @timeit
