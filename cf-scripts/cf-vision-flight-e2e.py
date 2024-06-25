@@ -194,11 +194,11 @@ def report_about_input_data(obs_data, model_data):
     TODO: DETAILED DOCS
     """
     logger.critical(f"Observational data is:\n {obs_data}")
-    logger.critical(f"For example, first obs. field is:\n")
+    logger.critical("For example, first obs. field is:\n")
     logger.critical(obs_data[0].dump(display=False))
 
     logger.critical(f"Model data is:\n {model_data}")
-    logger.critical(f"For example, first model field is:\n")
+    logger.critical("For example, first model field is:\n")
     logger.critical(model_data[0].dump(display=False))
 
 
@@ -326,12 +326,9 @@ def get_time_coords(obs_field, model_field):
 
     TODO: DETAILED DOCS
     """
-    # Pre-process to get relevant constructs
+    # Observational data is a DSG so should always have T as an aux. coord.
     obs_times = obs_field.auxiliary_coordinate("T")
-
-    model_times_key, model_times = model_field.dimension_coordinate(
-        "T", item=True
-    )
+    model_times = model_field.dimension_coordinate("T")
 
     return obs_times, model_times
 
@@ -346,12 +343,14 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 
     # Ensure the units of the obs and model datetimes are consistent - conform
     # them if they differ (if they don't, Units setting operation is harmless).
-    #
-    # NOTE: Change the units on the model (not obs) times since there are fewer
-    # data points on those, meaning less converting work.
     obs_times_units = obs_times.Units
+    logger.critical(f"Units on obs. time coordinate are: {obs_times_units}")
     model_times_units = model_times.Units
-    model_times.Units = obs_times.Units
+    logger.critical(f"Units on model time coordinate are: {model_times_units}")
+
+    # Change the units on the model (not obs) times since there are fewer
+    # data points on those, meaning less converting work.
+    model_times.Units = obs_times_units
 
     logger.critical(f"UNIT-CONFORMED MODEL FIELD IS: {model_field}")
     same_units = (
@@ -472,7 +471,7 @@ def spatial_interpolation(obs_field, model_field_bb):
     """
     # TODO: UGRID grids might need some extra steps/work for this.
 
-    logger.critical(f"Starting spatial interpolation (regridding) step...")
+    logger.critical("Starting spatial interpolation (regridding) step...")
 
     # Creating the spatial bounding box may have made some of the spatial
     # dimensions singular, which would lead to an error or:
@@ -495,7 +494,6 @@ def spatial_interpolation(obs_field, model_field_bb):
         z=REGRID_Z_COORD,
         ln_z=True,
     )
-    post_spatregrid_cyclic = model_field_bb.cyclic()
 
     logger.critical(f"XYZ-colocated data is:\n {spatially_colocated_field}")
     logger.critical(spatially_colocated_field.dump(display=False))
@@ -545,14 +543,9 @@ def time_interpolation(
     logger.critical(f"Observational (aux) coord. time key is: {obs_time_key}")
     logger.critical(f"Model (dim) time key is: {model_time_key}")
 
-    # Empty objects ready to populate
+    # Empty objects ready to populate - TODO make these FieldLists if approp.?
     datetime_segments = []
-    fieldlist_subspaces_by_segment = cf.FieldList()
-    pairwise_segments = {}
     v_w = []
-
-    # Find final index to skip in some cases later to avoid double counting
-    final_index = len(list(pairwise(model_times.datetime_array)))
 
     # Iterate over pairs of adjacent model datetimes, defining 'segments'.
     # Chop the flight path up into these *segments* and do a weighted merge
