@@ -138,7 +138,9 @@ logger = logging.getLogger(__name__)
 if VERBOSE:
     logger.setLevel(logging.CRITICAL)
 else:
-    logger.setLevel(logging.CRITICAL + 1)  # prevents even critical log messages
+    logger.setLevel(
+        logging.CRITICAL + 1
+    )  # prevents even critical log messages
 
 if VERBOSE:
     logger.critical("Configuration of script is:")
@@ -159,7 +161,8 @@ def read_input_data():
     model_data_loc = f"{DATA_DIR_LOC}/{MODEL_DATA_DIR}"
 
     logger.critical(
-        f"Using Python and CF environment of: {cf.environment(display=False)}")
+        f"Using Python and CF environment of: {cf.environment(display=False)}"
+    )
     logger.critical(
         f"Using data locations of:\n"
         f"Obs data: '{obs_data_loc}'\n"
@@ -179,9 +182,11 @@ def read_input_data():
 
     logger.critical("Data successfully read in.")
     logger.critical(
-        f"Time taken to read observational data was: {read_obs_totaltime}")
+        f"Time taken to read observational data was: {read_obs_totaltime}"
+    )
     logger.critical(
-        f"Time taken to read model data was: {read_model_totaltime}")
+        f"Time taken to read model data was: {read_model_totaltime}"
+    )
 
     # 1.2: Inspection of read-in fields
     logger.critical(f"Observational (flight) data is:\n {obs_data}")
@@ -224,10 +229,14 @@ def make_preview_plots(obs_field):
             # Use the same field but set all data to zero so can plot the whole
             # track in the same colour to just display the path, not orig. data
             equal_data_obs_field = obs_field.copy()
-            new_data = np.zeros(len(equal_data_obs_field.data))  # 0 -> force red
+            new_data = np.zeros(
+                len(equal_data_obs_field.data)
+            )  # 0 -> force red
             equal_data_obs_field.set_data(new_data, inplace=True)
             cfp.cscale("scale28")  # has bright red for the lowest values
-            cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_only.png")
+            cfp.gopen(
+                file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_only.png"
+            )
             cfp.traj(
                 equal_data_obs_field,
                 verbose=VERBOSE,
@@ -235,22 +244,27 @@ def make_preview_plots(obs_field):
                 colorbar=False,
                 markersize=0.5,
                 linewidth=0,  # effectively turn off lines to only have markers
-                title=("Flight track from observational field to co-locate model "
-                       "field onto"),
+                title=(
+                    "Flight track from observational field to co-locate model "
+                    "field onto"
+                ),
             )
             cfp.gclose()
             cfp.cscale(CSCALE)  # reset for normal (default-style) plots after
         if PLOT_OF_INPUT_OBS_TRACK_ONLY in (0, 2):
-            cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_with_data.png")
+            cfp.gopen(
+                file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_with_data.png"
+            )
             cfp.traj(
                 obs_field,
                 verbose=VERBOSE,
                 legend=True,
                 markersize=5,
                 linewidth=0.4,
-                title=("Observational field input (path, to be used for "
-                       "co-location, with its corresponding data, to be ignored)",
-                       )
+                title=(
+                    "Observational field input (path, to be used for "
+                    "co-location, with its corresponding data, to be ignored)",
+                ),
             )
             cfp.gclose()
 
@@ -289,7 +303,9 @@ def get_time_coords(obs_field, model_field):
     # 3.1 Pre-process to get relevant constructs
     obs_times = obs_field.auxiliary_coordinate("T")
 
-    model_times_key, model_times = model_field.dimension_coordinate("T", item=True)
+    model_times_key, model_times = model_field.dimension_coordinate(
+        "T", item=True
+    )
 
     return obs_times, model_times
 
@@ -339,8 +355,7 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     )
 
 
-def subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field):
+def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
     """Extract only relevant data in the model field via a 4D subspace.
 
     TODO: DETAILED DOCS
@@ -464,7 +479,9 @@ def spatial_interpolation(obs_field, model_field_bb):
     spat_regrid_endtime = time()
     spat_regrid_totaltime = spat_regrid_endtime - spat_regrid_starttime
 
-    logger.critical(f"Time taken to spatially regrid was: {spat_regrid_totaltime}")
+    logger.critical(
+        f"Time taken to spatially regrid was: {spat_regrid_totaltime}"
+    )
     logger.critical(f"XYZ-colocated data is:\n {spatially_colocated_field}")
     logger.critical(spatially_colocated_field.dump(display=False))
 
@@ -474,8 +491,7 @@ def spatial_interpolation(obs_field, model_field_bb):
 
 
 def time_interpolation(
-        obs_times, model_times, obs_field, model_field,
-        spatially_colocated_field
+    obs_times, model_times, obs_field, model_field, spatially_colocated_field
 ):
     """Interpolate the flight path temporally (in time T).
 
@@ -537,7 +553,9 @@ def time_interpolation(
 
         # 6.3.2 Define a query which will find any datetimes within these times
         #       to map all observational times to the appropriate segment, later.
-        q = cf.wi(cf.dt(t1), cf.dt(t2), open_upper=True)  # TODO is cf.dt wrapping necessary?
+        q = cf.wi(
+            cf.dt(t1), cf.dt(t2), open_upper=True
+        )  # TODO is cf.dt wrapping necessary?
         logger.critical(f"Querying on query: {q} with field: {m}")
 
         # 6.3.3 Subspace the observational times to match the segments above,
@@ -578,7 +596,8 @@ def time_interpolation(
         # NOTE: All calc. variables are arrays, except this first one,
         #       a scalar (constant whatever the obs time)
         distance_01 = (
-            s1.dimension_coordinate("T") - s0.dimension_coordinate("T")).data
+            s1.dimension_coordinate("T") - s0.dimension_coordinate("T")
+        ).data
         distances_0 = (
             s0.auxiliary_coordinate("T")[index] - s0.dimension_coordinate("T")
         ).data
@@ -604,7 +623,6 @@ def time_interpolation(
         values_weighted = weights_0 * values_0 + weights_1 * values_1
         v_w.append(values_weighted)
 
-
     # NOTE: masked values are mostly/all to do with the pressure being below
     #       when flight lands and takes off etc. on runway and close, cases
     #       relating to the Heaviside function. So it is all good and expected
@@ -616,7 +634,9 @@ def time_interpolation(
     logger.critical("FINAL WEIGHTED VALUES ARE:")
     logger.critical(pformat(v_w))
     for v in v_w:
-        logger.critical(f"GETTING: {v} WITH LEN {len(v)} AND NON-MASKED COUNT {v.count()}")
+        logger.critical(
+            f"GETTING: {v} WITH LEN {len(v)} AND NON-MASKED COUNT {v.count()}"
+        )
 
     # 6.4 Concatenate the data values found above from each segment, to finally
     #     get the full set of model-to-obs co-located data.
@@ -651,15 +671,16 @@ def time_interpolation(
     # 6.6.2 Add new, or append to if already exists, 'history' property
     #       details to say that we colocated etc. with VISION / cf.
     history_details = final_result_field.get_property("history")
-    history_details += " ~ " + HISTORY_MESSAGE  # include divider to previous info
+    history_details += (
+        " ~ " + HISTORY_MESSAGE
+    )  # include divider to previous info
     final_result_field.set_property("history", history_details)
 
     logger.critical(
-        f"Final resultant field after data co-location is: {final_result_field}")
-    logger.critical(final_result_field.dump(display=False))
-    logger.critical(
-        "The final result field has data statistics of:\n"
+        f"Final resultant field after data co-location is: {final_result_field}"
     )
+    logger.critical(final_result_field.dump(display=False))
+    logger.critical("The final result field has data statistics of:\n")
     logger.critical(pformat(final_result_field.data.stats()))
 
     # TODO: consider whether or not to persist the regridded / time interp.
@@ -668,7 +689,9 @@ def time_interpolation(
     time_interp_endtime = time()
     time_interp_totaltime = time_interp_endtime - time_interp_starttime
     logger.critical("Time interpolation done.")
-    logger.critical(f"Time taken to do time interpolation: {time_interp_totaltime}")
+    logger.critical(
+        f"Time taken to do time interpolation: {time_interp_totaltime}"
+    )
 
     return final_result_field
 
@@ -777,14 +800,19 @@ def main():
 
     # Subspacing to remove irrelavant information, pre-colocation
     model_field_bb = subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field)
+        obs_field, model_field
+    )
 
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
-        obs_field, model_field_bb)
+        obs_field, model_field_bb
+    )
     final_result_field = time_interpolation(
-        obs_times, model_times, obs_field, model_field,
-        spatially_colocated_field
+        obs_times,
+        model_times,
+        obs_field,
+        model_field,
+        spatially_colocated_field,
     )
 
     # Create and process outputs
