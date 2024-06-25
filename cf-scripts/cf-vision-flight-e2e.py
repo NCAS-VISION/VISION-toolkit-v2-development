@@ -39,8 +39,8 @@ def timeit(func):
         endtime = time()
         totaltime = endtime - starttime
         print(
-            f"Time taken (in s) for '{repr(func.__name__)}' to run: "
-            f"{round(totaltime, 4)}"
+            f"\n_____ Time taken (in s) for {func.__name__!r} to run: "
+            f"{round(totaltime, 4)} _____\n"
         )
         return output
 
@@ -150,6 +150,48 @@ if VERBOSE:
 # ----------------------------------------------------------------------------
 # Main functions
 # ----------------------------------------------------------------------------
+def get_env_and_diagnostics_report():
+    """Provide an optional report of environment and diagnostics.
+
+    TODO: DETAILED DOCS
+    """
+    logger.critical(
+        f"Using Python and CF environment of: {cf.environment(display=False)}"
+    )
+
+
+@timeit
+def read_obs_input_data():
+    """Read in all observational input data.
+
+    TODO: DETAILED DOCS
+    """
+    obs_data_loc = f"{DATA_DIR_LOC}/{OBS_DATA_DIR}"
+    return cf.read(obs_data_loc), obs_data_loc
+
+
+@timeit
+def read_model_input_data():
+    """Read in all model input data.
+
+    TODO: DETAILED DOCS
+    """
+    model_data_loc = f"{DATA_DIR_LOC}/{MODEL_DATA_DIR}"
+    return cf.read(model_data_loc), model_data_loc
+
+
+def report_about_input_data(obs_data, model_data):
+    """Read in all input data.
+
+    TODO: DETAILED DOCS
+    """
+    logger.critical(f"Observational data is:\n {obs_data}")
+    logger.critical(f"For example, first obs. field is:\n")
+    logger.critical(obs_data[0].dump(display=False))
+
+    logger.critical(f"Model data is:\n {model_data}")
+    logger.critical(f"For example, first model field is:\n")
+    logger.critical(model_data[0].dump(display=False))
 
 
 def read_input_data():
@@ -157,49 +199,23 @@ def read_input_data():
 
     TODO: DETAILED DOCS
     """
-    # Read in datasets with cf
-    obs_data_loc = f"{DATA_DIR_LOC}/{OBS_DATA_DIR}"
-    model_data_loc = f"{DATA_DIR_LOC}/{MODEL_DATA_DIR}"
+    get_env_and_diagnostics_report()
+    obs_data, obs_data_loc = read_obs_input_data()
+    model_data, model_data_loc = read_model_input_data()
 
+    # Reporting
+    logger.critical("All input data successfully read in.")
     logger.critical(
-        f"Using Python and CF environment of: {cf.environment(display=False)}"
-    )
-    logger.critical(
-        f"Using data locations of:\n"
+        f"Input data locations are:\n"
         f"Obs data: '{obs_data_loc}'\n"
         f"Model data: '{model_data_loc}'"
     )
-    # Observational data (from the FAAM aircraft flights in this case)
-    read_obs_starttime = time()
-    obs_data = cf.read(obs_data_loc)
-    read_obs_endtime = time()
-    read_obs_totaltime = read_obs_endtime - read_obs_starttime
-
-    # Model data
-    read_model_starttime = time()
-    model_data = cf.read(model_data_loc)
-    read_model_endtime = time()
-    read_model_totaltime = read_model_endtime - read_model_starttime
-
-    logger.critical("Data successfully read in.")
-    logger.critical(
-        f"Time taken to read observational data was: {read_obs_totaltime}"
-    )
-    logger.critical(
-        f"Time taken to read model data was: {read_model_totaltime}"
-    )
-
-    # Inspection of read-in fields
-    logger.critical(f"Observational (flight) data is:\n {obs_data}")
-    logger.critical(f"For example, first obs. field is:\n")
-    logger.critical(obs_data[0].dump(display=False))
-    logger.critical(f"Model data is:\n {model_data}")
-    logger.critical(f"For example, model field we use is:\n")
-    logger.critical(model_data[-2].dump(display=False))
+    report_about_input_data(obs_data, model_data)
 
     return obs_data, model_data
 
 
+@timeit
 def get_input_fields_of_interest(obs_data, model_data):
     """Return fields of interest from input datasets.
 
@@ -212,6 +228,7 @@ def get_input_fields_of_interest(obs_data, model_data):
     return obs_field, model_field
 
 
+@timeit
 def make_preview_plots(obs_field):
     """Generate plots of the flight track for a pre-colocation preview.
 
@@ -271,6 +288,7 @@ def make_preview_plots(obs_field):
             cfp.gclose()
 
 
+@timeit
 def ensure_cf_compliance(obs_field, model_field):
     """Ensure the chosen fields are CF compliant with the correct format.
 
@@ -294,6 +312,7 @@ def ensure_cf_compliance(obs_field, model_field):
     pass
 
 
+@timeit
 def get_time_coords(obs_field, model_field):
     """Return the relevant time coordinates from the fields.
 
@@ -309,6 +328,7 @@ def get_time_coords(obs_field, model_field):
     return obs_times, model_times
 
 
+@timeit
 def ensure_unit_calendar_consistency(obs_field, model_field):
     """Ensure the chosen fields have consistent units and calendars.
 
@@ -353,6 +373,7 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     )
 
 
+@timeit
 def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
     """Extract only relevant data in the model field via a 4D subspace.
 
@@ -437,6 +458,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
     return model_field_bb
 
 
+@timeit
 def spatial_interpolation(obs_field, model_field_bb):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
 
@@ -487,6 +509,7 @@ def spatial_interpolation(obs_field, model_field_bb):
     return spatially_colocated_field
 
 
+@timeit
 def time_interpolation(
     obs_times, model_times, obs_field, model_field, spatially_colocated_field
 ):
@@ -696,6 +719,7 @@ def time_interpolation(
     return final_result_field
 
 
+@timeit
 def create_cra_outputs():
     """Create a compressed contiguous ragged array DSG output.
 
@@ -711,6 +735,7 @@ def create_cra_outputs():
     pass
 
 
+@timeit
 def write_output_data(final_result_field):
     """Write out the 4D (XYZT) colocated result as output data.
 
@@ -727,6 +752,7 @@ def write_output_data(final_result_field):
     logger.critical(f"Time taken to write output file: {write_totaltime}")
 
 
+@timeit
 def make_outputs_plots(final_result_field):
     """Generate plots of the flight track for a pre-colocation preview.
 
@@ -778,6 +804,7 @@ def make_outputs_plots(final_result_field):
     logger.critical(f"Time to create plot: {vis_totaltime}")
 
 
+@timeit
 def main():
     """Perform end-to-end model-to-observational co-location."""
     # Process and validate inputs, including optional flight track preview plot
