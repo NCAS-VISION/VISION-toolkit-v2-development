@@ -94,7 +94,43 @@ REGRID_Z_COORD = "air_pressure"
 VERBOSE = True
 
 # Plotting general config.
-CSCALE = "plasma"  # "parula" also works well, as alternative for dev.
+CFP_CSCALE = "plasma"  # "parula" also works well, as alternative for dev.
+CFP_MAPSET_CONFIG = {
+    "lonmin": -2,
+    "lonmax": 2,
+    "latmin": 50,
+    "latmax": 54,
+    "resolution": "10m",
+}
+CFP_INPUT_LEVS_CONFIG = {
+    "min": -5,
+    "max": 55,
+    "step": 5,
+}
+CFP_INPUT_TRACK_ONLY_CONFIG = {
+    "verbose": VERBOSE,
+    "legend": True,
+    "colorbar": False,
+    "markersize": 0.5,
+    "linewidth": 0,  # turn off line plotting to only have markers
+    "title": (
+        "Flight track from observational field to co-locate model "
+        "field onto"
+    ),
+}
+CFP_OUTPUT_LEVS_CONFIG = {
+    "min": 5e-08,
+    "max": 10e-08,
+    "step": 0.25e-08,
+}
+CFP_OUTPUT_GENERAL_CONFIG = {
+    "verbose": VERBOSE,
+    "legend": True,
+    "markersize": 5,
+    "linewidth": 0.4,
+    "title": "Co-located result: model co-located onto observational path",
+}
+
 
 # Optionally, display plots of the input observational data, or its track
 # only in one colour (if 'PLOT_OF_INPUT_OBS_TRACK_ONLY' is set to True).
@@ -104,6 +140,7 @@ CSCALE = "plasma"  # "parula" also works well, as alternative for dev.
 # to the co-located data to see the differences.
 SHOW_PLOT_OF_INPUT_OBS = True
 PLOT_OF_INPUT_OBS_TRACK_ONLY = 2  # for dev. purposes, == 2 then shows both
+
 
 CLI_CONFIG = {
     # Input data choices
@@ -123,7 +160,12 @@ CLI_CONFIG = {
     # Plotting: what to plot and how to minimally configure it
     "SHOW_PLOT_OF_INPUT_OBS": SHOW_PLOT_OF_INPUT_OBS,
     "PLOT_OF_INPUT_OBS_TRACK_ONLY": PLOT_OF_INPUT_OBS_TRACK_ONLY,
-    "CSCALE": CSCALE,
+    "CFP_CSCALE": CFP_CSCALE,
+    "CFP_MAPSET_CONFIG": CFP_MAPSET_CONFIG,
+    "CFP_INPUT_LEVS_CONFIG": CFP_INPUT_LEVS_CONFIG,
+    "CFP_INPUT_TRACK_ONLY_CONFIG": CFP_INPUT_TRACK_ONLY_CONFIG,
+    "CFP_OUTPUT_LEVS_CONFIG": CFP_OUTPUT_LEVS_CONFIG,
+    "CFP_OUTPUT_GENERAL_CONFIG": CFP_OUTPUT_GENERAL_CONFIG,
     # Verbosity of this script
     "VERBOSE": VERBOSE,
 }
@@ -242,25 +284,13 @@ def make_preview_plots(obs_field):
     """
     # First configure general settings for plot:
     # Change the viewpoint to be over the UK only, with high-res map outline
-    mapset_config = {
-        "lonmin": -2,
-        "lonmax": 2,
-        "latmin": 50,
-        "latmax": 54,
-        "resolution": "10m",
-    }
-    cfp.mapset(**mapset_config)
-    cfp.cscale(CSCALE)
+    cfp.mapset(**CFP_MAPSET_CONFIG)
+    cfp.cscale(CFP_CSCALE)
 
     if SHOW_PLOT_OF_INPUT_OBS:
         # Plot *input* observational data for a preview, before doing anything
         # Min, max as determined using final_result_field.min(), .max():
-        input_levs_config = {
-            "min": -5,
-            "max": 55,
-            "step": 5,
-        }
-        cfp.levs(**input_levs_config)
+        cfp.levs(**CFP_INPUT_LEVS_CONFIG)
         if PLOT_OF_INPUT_OBS_TRACK_ONLY in (1, 2):
             # Use the same field but set all data to zero so can plot the whole
             # track in the same colour to just display the path, not orig. data
@@ -275,25 +305,14 @@ def make_preview_plots(obs_field):
             cfp.gopen(
                 file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_only.png"
             )
-            cfp_input_track_only_config = {
-                "verbose": VERBOSE,
-                "legend": True,
-                "colorbar": False,
-                "markersize": 0.5,
-                "linewidth": 0,  # turn off line plotting to only have markers
-                "title": (
-                    "Flight track from observational field to co-locate model "
-                    "field onto"
-                ),
-            }
-            cfp.traj(equal_data_obs_field, **cfp_input_track_only_config)
+            cfp.traj(equal_data_obs_field, **CFP_INPUT_TRACK_ONLY_CONFIG)
             cfp.gclose()
-            cfp.cscale(CSCALE)  # reset for normal (default-style) plots after
+            cfp.cscale(CFP_CSCALE)  # reset for normal (default-style) plots after
         if PLOT_OF_INPUT_OBS_TRACK_ONLY in (0, 2):
             cfp.gopen(
                 file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_with_data.png"
             )
-            cfp_input_general_config = {
+            CFP_INPUT_GENERAL_CONFIG = {
                 "verbose": VERBOSE,
                 "legend": True,
                 "markersize": 5,
@@ -303,7 +322,7 @@ def make_preview_plots(obs_field):
                     "co-location, with its corresponding data, to be ignored)"
                 ),
             }
-            cfp.traj(obs_field, **cfp_input_general_config)
+            cfp.traj(obs_field, **CFP_INPUT_GENERAL_CONFIG)
             cfp.gclose()
 
 
@@ -790,26 +809,14 @@ def make_outputs_plots(final_result_field):
 
     # Set levels for plotting of data in a colourmap
     # Min, max as determined using final_result_field.min(), .max():
-    cfp_output_levs_config = {
-        "min": 5e-08,
-        "max": 10e-08,
-        "step": 0.25e-08,
-    }
-    cfp.levs(**cfp_output_levs_config)
+    cfp.levs(**CFP_OUTPUT_LEVS_CONFIG)
 
     # Make and open the final plot
     # NOTE: can try 'legend_lines=True' for the lines plotted with average
     #       between the two scatter marker points, if preferable?
     cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_final_colocated_field.png")
 
-    cfp_output_general_config ={
-        "verbose": VERBOSE,
-        "legend": True,
-        "markersize": 5,
-        "linewidth": 0.4,
-        "title": "Co-located result: model co-located onto observational path",
-    }
-    cfp.traj(final_result_field, **cfp_output_general_config)
+    cfp.traj(final_result_field, **CFP_OUTPUT_GENERAL_CONFIG)
     cfp.gclose()
 
     logger.critical("Plot created.")
