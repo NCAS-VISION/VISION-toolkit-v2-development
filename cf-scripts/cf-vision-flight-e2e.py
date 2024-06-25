@@ -63,6 +63,12 @@ DATA_DIR_LOC = "data"
 OBS_DATA_DIR = "compliant-data/core_faam_20170703_c016_STANCO_CF.nc"
 MODEL_DATA_DIR = "main-workwith-test-ISO-simulator/Model_Input"
 
+# Extract input fields from input FieldList.
+# If these are set to False, then the whole FieldList will be taken. Otherwise
+# should be set to a valid index or slice, to be taken on the FieldList.
+CHOSEN_OBS_FIELDS = 0
+CHOSEN_MODEL_FIELDS = -2
+
 # Set output information
 OUTPUT_FILE_NAME = "cf_vision_result_field.nc"
 HISTORY_MESSAGE = (  # gets added to the 'history' property on the output file
@@ -100,10 +106,12 @@ SHOW_PLOT_OF_INPUT_OBS = True
 PLOT_OF_INPUT_OBS_TRACK_ONLY = 2  # for dev. purposes, == 2 then shows both
 
 CLI_CONFIG = {
-    # Input data locations
+    # Input data choices
     "DATA_DIR_LOC": DATA_DIR_LOC,
     "OBS_DATA_DIR": OBS_DATA_DIR,
     "MODEL_DATA_DIR": MODEL_DATA_DIR,
+    "CHOSEN_OBS_FIELDS": CHOSEN_OBS_FIELDS,
+    "CHOSEN_MODEL_FIELDS": CHOSEN_MODEL_FIELDS,
     # Output configuration e.g. write names and location, history stamp to add
     "OUTPUTS_DIR": OUTPUTS_DIR,
     "OUTPUT_FILE_NAME": OUTPUT_FILE_NAME,
@@ -222,8 +230,8 @@ def get_input_fields_of_interest(obs_data, model_data):
     TODO: DETAILED DOCS
     """
     # Take only relevant fields from the list of fields read in
-    obs_field = obs_data[0]
-    model_field = model_data[-2]
+    obs_field = obs_data[CHOSEN_OBS_FIELDS]
+    model_field = model_data[CHOSEN_MODEL_FIELDS]
 
     return obs_field, model_field
 
@@ -308,7 +316,7 @@ def ensure_cf_compliance(obs_field, model_field):
     # Notes for future when done:
     # * Get orography data, separate input, as per Maria's dir.
     #
-    # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT BY DH
+    # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT
     pass
 
 
