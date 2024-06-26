@@ -79,7 +79,9 @@ logger = configure_logging()
 # Define and parse configuration e.g. inputs, outputs.
 # ----------------------------------------------------------------------------
 
-CONFIG_CUSTOM_INPUT_FOR_FAAM_STANCO = {
+# TODO this will be input as a config. file external to the script, eventually
+# This, in particular, is the custom config. input for FAAM STANCO data.
+CONFIG_CUSTOM_INPUT = {
     # Note (for dev. using repo) the values given here assume we run the
     # script from the repo root i.e. via
     # 'python cf-scripts/cf-vision-flight-e2e.py'
@@ -193,7 +195,8 @@ def process_config():
     process_config_file(parser)
     args = process_cli_arguments(parser)
 
-    logger.critical(f"Parsed config. arguments are:\n{pformat(args)}\n")
+    logger.critical(
+        f"Parsed configuration arguments are:\n{pformat(args)}\n")
     return args
 
 
@@ -202,8 +205,19 @@ def process_config_file(parser):
 
     TODO: DETAILED DOCS
     """
-    parser.set_defaults(**dict(CONFIG_INPUT))
-    
+    # Overwrite default config. with any custom supplied config., so that
+    # the CONFIG_CUSTOM_INPUT replaces values for keys in CONFIG_DEFAULTS.
+    config_input = {**CONFIG_DEFAULTS, **CONFIG_CUSTOM_INPUT}
+    logger.critical(
+        "Raw (before argparse processing) input config. comprising custom "
+        f"config. overriding defaults dict is:\n{pformat(config_input)}\n"
+    )
+
+    # Use this dict to update the CLI defaults. For tracing external
+    # config. we use capitalised keys when defining in dicts/json but need
+    # these as lower case for the CLI, hence case conversion.
+    config_cli_input = {k.lower(): v for k, v in config_input.items()}
+    parser.set_defaults(**dict(config_cli_input))
 
 
 def process_cli_arguments(parser):
@@ -214,39 +228,39 @@ def process_cli_arguments(parser):
     # Add arguments with basic type check (string is default, so no need for
     # type=str)
     parser.add_argument(
-        "--data-dir", action="store_false", help="HELP TODO")
+        "--data_dir_loc", action="store", help="HELP TODO")
     parser.add_argument(
-        "--obs_data_dir", action="store_false", help="HELP TODO")
+        "--obs_data_dir", action="store", help="HELP TODO")
     parser.add_argument(
-        "--model_data_dir", action="store_false", help="HELP TODO")
+        "--model_data_dir", action="store", help="HELP TODO")
 
     # Need an index or slice for thes e2, hence integer or slice object, but given
     # argparse isn't degined to handle this, accept as string and parse later.
     parser.add_argument(
-        "--chosen_obs_fields", action="store_false", help="HELP TODO")
+        "--chosen_obs_fields", action="store", help="HELP TODO")
     parser.add_argument(
-        "chosen_model_fields", action="store_false", help="HELP TODO")
+        "--chosen_model_fields", action="store", help="HELP TODO")
 
     parser.add_argument(
-        "--outputs_dir", action="store_false", help="HELP TODO")
+        "--outputs_dir", action="store", help="HELP TODO")
     parser.add_argument(
-        "--output_file_name", action="store_false", help="HELP TODO")
+        "--output_file_name", action="store", help="HELP TODO")
     parser.add_argument(
-        "--history_message", action="store_false", help="HELP TODO")
+        "--history_message", action="store", help="HELP TODO")
     parser.add_argument(
-        "--regrid_method", action="store_false", help="HELP TODO")
+        "--regrid_method", action="store", help="HELP TODO")
     parser.add_argument(
-        "--regrid_z_coord", action="store_false", help="HELP TODO")
+        "--regrid_z_coord", action="store", help="HELP TODO")
     parser.add_argument(
-        "--plotname_start", action="store_false", help="HELP TODO")
+        "--plotname_start", action="store", help="HELP TODO")
     parser.add_argument(
-        "--show_plot_of_input_obs", action="store_false", help="HELP TODO")
+        "--show_plot_of_input_obs", action="store", help="HELP TODO")
     parser.add_argument(
-        "--plot_of_input_obs_track_only", action="store_false",
+        "--plot_of_input_obs_track_only", action="store",
         help="HELP TODO"
     )
     parser.add_argument(
-        "--cfp_cscale", action="store_false", help="HELP TODO")
+        "--cfp_cscale", action="store", help="HELP TODO")
 
     # These config. parameters are compound, and argparse can't handle multiple
     # key-values e.g. dicts well, so use 'json.loads' (or e.g. 'yaml.load') to
@@ -293,8 +307,8 @@ def get_env_and_diagnostics_report():
         f"{cf.environment(display=False)}\n"
     )
     # TODO: UPDATE THIS, OUT OF DATE AS JUST STATIC SCRIPT CONFIG.
-    logger.critical(
-        f"Final processed configuration is:\n{pformat(CONFIG_INPUT)}")
+    #logger.critical(
+    #    f"Final processed configuration is:\n{pformat(CONFIG_INPUT)}")
 
 
 @timeit
