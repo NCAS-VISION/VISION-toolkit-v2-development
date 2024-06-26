@@ -530,7 +530,8 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 
 
 @timeit
-def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
+def subspace_to_spatiotemporal_bounding_box(
+        obs_field, model_field, verbose):
     """Extract only relevant data in the model field via a 4D subspace.
 
     Relevant data is extracted in the form of a field comprising the model
@@ -591,7 +592,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
         f"Z: {z_coord_tight_bounds}\n"
         f"T: {t_coord_tight_bounds}\n"
     )
-    if VERBOSE:  # conditional avoids this calculation twice unless VERBOSE
+    if verbose:  # conditional avoids this calculation twice unless VERBOSE
         model_field_bb_indices = model_field.indices(
             1,  # the halo size that extends the bounding box by 1 in index space
             X=cf.wi(*x_coord_tight_bounds),
@@ -625,7 +626,8 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field):
 
 
 @timeit
-def spatial_interpolation(obs_field, model_field_bb):
+def spatial_interpolation(
+        obs_field, model_field_bb, regrid_method, regrid_z_coord):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
 
     Horizontal X-Y and vertical Z coordinates are interpolated. This is
@@ -655,8 +657,8 @@ def spatial_interpolation(obs_field, model_field_bb):
     # Can we use 'contains' or (better?) 'cellwi' method to do this?
     spatially_colocated_field = model_field_bb.regrids(
         obs_field,
-        method=REGRID_METHOD,
-        z=REGRID_Z_COORD,
+        method=regrid_method,
+        z=regrid_z_coord,
         ln_z=True,
     )
 
@@ -671,7 +673,8 @@ def spatial_interpolation(obs_field, model_field_bb):
 
 @timeit
 def time_interpolation(
-    obs_times, model_times, obs_field, model_field, spatially_colocated_field
+        obs_times, model_times, obs_field, model_field, spatially_colocated_field,
+        history_message,
 ):
     """Interpolate the flight path temporally (in time T).
 
@@ -842,7 +845,7 @@ def time_interpolation(
     #   details to say that we colocated etc. with VISION / cf.
     history_details = final_result_field.get_property("history")
     history_details += (
-        " ~ " + HISTORY_MESSAGE
+        " ~ " + history_message
     )  # include divider to previous info
     final_result_field.set_property("history", history_details)
     logger.critical(
@@ -879,20 +882,23 @@ def create_cra_outputs():
 
 
 @timeit
-def write_output_data(final_result_field):
+def write_output_data(final_result_field, output_file_name):
     """Write out the 4D (XYZT) colocated result as output data.
 
     TODO: DETAILED DOCS
     """
 
     # Write final field result out to file on-disk
-    cf.write(final_result_field, OUTPUT_FILE_NAME)
+    cf.write(final_result_field, output_file_name)
 
     logger.critical("Writing of output file complete.")
 
 
 @timeit
-def make_outputs_plots(final_result_field):
+def make_outputs_plots(
+        final_result_field, cfp_output_levs_config,
+        outputs_dir, plotname_start, cfp_output_general_config,
+):
     """Generate plots of the flight track for a pre-colocation preview.
 
     The plots may optionally be displayed duering script execution, else
@@ -920,14 +926,14 @@ def make_outputs_plots(final_result_field):
 
     # Set levels for plotting of data in a colourmap
     # Min, max as determined using final_result_field.min(), .max():
-    cfp.levs(**CFP_OUTPUT_LEVS_CONFIG)
+    cfp.levs(**cfp_output_levs_config)
 
     # Make and open the final plot
     # NOTE: can try 'legend_lines=True' for the lines plotted with average
     #       between the two scatter marker points, if preferable?
-    cfp.gopen(file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_final_colocated_field.png")
+    cfp.gopen(file=f"{outputs_dir}/{plotname_start}_final_colocated_field.png")
 
-    cfp.traj(final_result_field, **CFP_OUTPUT_GENERAL_CONFIG)
+    cfp.traj(final_result_field, **cfp_output_general_config)
     cfp.gclose()
 
     logger.critical("Plot created.")
@@ -967,7 +973,7 @@ def main():
     obs_field, model_field = get_input_fields_of_interest(
         obs_data, model_data, chosen_obs_fields, chosen_model_fields)
 
-    # TODO: this has too many parametres for one function, separate out
+    # TODO: this has too many parameters for one function, separate out
     make_preview_plots(
         obs_field, show_plot_of_input_obs,
         plot_of_input_obs_track_only,
@@ -984,12 +990,12 @@ def main():
 
     # Subspacing to remove irrelavant information, pre-colocation
     model_field_bb = subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field
+        obs_field, model_field, verbose
     )
 
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
-        obs_field, model_field_bb
+        obs_field, model_field_bb, regrid_method, regrid_z_coord,
     )
     final_result_field = time_interpolation(
         obs_times,
@@ -997,12 +1003,19 @@ def main():
         obs_field,
         model_field,
         spatially_colocated_field,
+        history_message,
     )
 
     # Create and process outputs
     create_cra_outputs()  # TODO currently does nothing
-    write_output_data(final_result_field)
-    make_outputs_plots(final_result_field)
+    write_output_data(final_result_field, output_file_name)
+    make_outputs_plots(
+        final_result_field,
+        cfp_output_levs_config,
+        outputs_dir,
+        plotname_start,
+        cfp_output_general_config
+    )
 
 
 if __name__ == "__main__":
