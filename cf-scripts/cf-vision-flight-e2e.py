@@ -20,7 +20,9 @@ from itertools import pairwise  # requires Python 3.10+
 from pprint import pformat
 from time import time
 
+import argparse
 import functools
+import json
 import logging
 import numpy as np
 import sys
@@ -53,6 +55,12 @@ def timeit(func):
 # TODO eventually these can be set as command-line arguments (w/ manpage, etc.)
 # configured and managed using getopts/getargs, etc.
 
+# Configure messaging to STDOUT, which is very verbose if INFO=True, else
+# as minimal as allows without log control in cf-plot (at present).
+# TODO: Get ESMF logging via cf incoporated into Python logging system,
+#       see Issue #286.
+VERBOSE = True
+
 # TODO: document assumptions about data that we use that the input data need
 # to abide by, for it to work (input data quality requirements).
 #
@@ -70,14 +78,13 @@ CHOSEN_OBS_FIELDS = 0
 CHOSEN_MODEL_FIELDS = -2
 
 # Set output information
+# Default to current directory to output. A given directory must exist already.
+OUTPUTS_DIR = "cf-script-outputs"
 OUTPUT_FILE_NAME = "cf_vision_result_field.nc"
 HISTORY_MESSAGE = (  # gets added to the 'history' property on the output file
     "Processed using the NCAS VISION flight simulator script to colocate from "
     "model data to the observational flight data spatio-temporal location."
 )
-# Default to current directory to output. A given directory must exist already.
-OUTPUTS_DIR = "cf-script-outputs"
-PLOTNAME_START = "vision_toolkit"
 
 # Regridding config.
 REGRID_METHOD = "linear"
@@ -87,13 +94,8 @@ REGRID_METHOD = "linear"
 # data have more than one of identical z-coord do we need to ask for this info.
 REGRID_Z_COORD = "air_pressure"
 
-# Configure messaging to STDOUT, which is very verbose if INFO=True, else
-# as minimal as allows without log control in cf-plot (at present).
-# TODO: Get ESMF logging via cf incoporated into Python logging system,
-#       see Issue #286.
-VERBOSE = True
-
 # Plotting general config.
+PLOTNAME_START = "vision_toolkit"
 CFP_CSCALE = "plasma"  # "parula" also works well, as alternative for dev.
 CFP_MAPSET_CONFIG = {
     "lonmin": -2,
@@ -131,7 +133,6 @@ CFP_OUTPUT_GENERAL_CONFIG = {
     "title": "Co-located result: model co-located onto observational path",
 }
 
-
 # Optionally, display plots of the input observational data, or its track
 # only in one colour (if 'PLOT_OF_INPUT_OBS_TRACK_ONLY' is set to True).
 # This could be useful for previewing the track to be colocated
@@ -141,8 +142,9 @@ CFP_OUTPUT_GENERAL_CONFIG = {
 SHOW_PLOT_OF_INPUT_OBS = True
 PLOT_OF_INPUT_OBS_TRACK_ONLY = 2  # for dev. purposes, == 2 then shows both
 
-
 CLI_CONFIG = {
+    # Verbosity of this script
+    "VERBOSE": VERBOSE,
     # Input data choices
     "DATA_DIR_LOC": DATA_DIR_LOC,
     "OBS_DATA_DIR": OBS_DATA_DIR,
@@ -166,8 +168,6 @@ CLI_CONFIG = {
     "CFP_INPUT_TRACK_ONLY_CONFIG": CFP_INPUT_TRACK_ONLY_CONFIG,
     "CFP_OUTPUT_LEVS_CONFIG": CFP_OUTPUT_LEVS_CONFIG,
     "CFP_OUTPUT_GENERAL_CONFIG": CFP_OUTPUT_GENERAL_CONFIG,
-    # Verbosity of this script
-    "VERBOSE": VERBOSE,
 }
 # TODO: eventually will want to add option to override and/or have as an
 # alternative, the specification of config with a config. file, not just CLI
@@ -176,6 +176,47 @@ CLI_CONFIG = {
 
 # TODO: for whole script, consider what is useful to persist (Dask-wise)
 # for efficiency.
+
+parser = argparse.ArgumentParser()
+
+# Add arguments with basic type check (string is default, so no need for
+# type=str)
+parser.add_argument("DATA_DIR_LOC", help="HELP TODO")
+parser.add_argument("OBS_DATA_DIR", help="HELP TODO")
+parser.add_argument("MODEL_DATA_DIR", help="HELP TODO")
+
+# Need an index or slice for thes e2, hence integer or slice object, but given
+# argparse isn't degined to handle this, accept as string and parse later.
+parser.add_argument("CHOSEN_OBS_FIELDS", help="HELP TODO")
+parser.add_argument("CHOSEN_MODEL_FIELDS", help="HELP TODO")
+
+parser.add_argument("OUTPUTS_DIR", help="HELP TODO")
+parser.add_argument("OUTPUT_FILE_NAME", help="HELP TODO")
+parser.add_argument("HISTORY_MESSAGE", help="HELP TODO")
+parser.add_argument("REGRID_METHOD", help="HELP TODO")
+parser.add_argument("REGRID_Z_COORD", help="HELP TODO")
+parser.add_argument("PLOTNAME_START", help="HELP TODO")
+parser.add_argument("SHOW_PLOT_OF_INPUT_OBS", help="HELP TODO")
+parser.add_argument("PLOT_OF_INPUT_OBS_TRACK_ONLY", help="HELP TODO")
+parser.add_argument("CFP_CSCALE", help="HELP TODO")
+
+# These config. parameters are compound, and argparse can't handle multiple
+# key-values e.g. dicts well, so use 'json.loads' (or e.g. 'yaml.load') to
+# input sub-config. as a working method.
+parser.add_argument("CFP_MAPSET_CONFIG", help="HELP TODO", type=json.loads)
+parser.add_argument("CFP_INPUT_LEVS_CONFIG", help="HELP TODO", type=json.loads)
+parser.add_argument(
+    "CFP_INPUT_TRACK_ONLY_CONFIG", help="HELP TODO", type=json.loads)
+parser.add_argument(
+    "CFP_OUTPUT_LEVS_CONFIG", help="HELP TODO", type=json.loads)
+parser.add_argument(
+    "CFP_OUTPUT_GENERAL_CONFIG", help="HELP TODO", type=json.loads)
+# 'bool() function is not recommended as a type converter, see
+# https://docs.python.org/3/library/argparse.html#argparse-type
+parser.add_argument("VERBOSE", help="HELP TODO")
+
+
+args = parser.parse_args()
 
 # ----------------------------------------------------------------------------
 # Optional diagnostics report
