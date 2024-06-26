@@ -87,28 +87,28 @@ CONFIG_CUSTOM_INPUT = {
     # script from the repo root i.e. via
     # 'python cf-scripts/cf-vision-flight-e2e.py'
     # where the data has been placed under a 'data' directory as follows:
-    "DATA_DIR_LOC": "data",
-    "OBS_DATA_DIR": "compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-    "MODEL_DATA_DIR": "main-workwith-test-ISO-simulator/Model_Input",
-    "CHOSEN_OBS_FIELDS": 0,
-    "CHOSEN_MODEL_FIELDS": -2,
-    "OUTPUTS_DIR": "cf-script-outputs",
-    "OUTPUT_FILE_NAME": "cf_vision_result_field.nc",
-    "REGRID_Z_COORD": "air_pressure",
-    "PLOT_OF_INPUT_OBS_TRACK_ONLY": 2,
-    "CFP_MAPSET_CONFIG": {
+    "data-dir-loc": "data",
+    "obs-data-dir": "compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
+    "model-data-dir": "main-workwith-test-ISO-simulator/Model_Input",
+    "chosen-obs-fields": 0,
+    "chosen-model-fields": -2,
+    "outputs-dir": "cf-script-outputs",
+    "output-file-name": "cf_vision_result_field.nc",
+    "regrid-z-coord": "air_pressure",
+    "plot-of-input-obs-track-only": 2,
+    "cfp-mapset-config": {
         "lonmin": -2,
         "lonmax": 2,
         "latmin": 50,
         "latmax": 54,
         "resolution": "10m",
     },
-    "CFP_INPUT_LEVS_CONFIG": {
+    "cfp-input-levs-config": {
         "min": -5,
         "max": 55,
         "step": 5,
     },
-    "CFP_OUTPUT_LEVS_CONFIG": {
+    "cfp-output-levs-config": {
         "min": 5e-08,
         "max": 10e-08,
         "step": 0.25e-08,
@@ -121,51 +121,51 @@ CONFIG_DEFAULTS = {
     # as minimal as allows without log control in cf-plot (at present).
     # TODO: Get ESMF logging via cf incoporated into Python logging system,
     # see Issue #286.
-    "VERBOSE": True,
+    "verbose": True,
     # *** Input data choices ***
-    "DATA_DIR_LOC": ".",
-    "OBS_DATA_DIR": ".",
-    "MODEL_DATA_DIR": ".",
+    "data-dir-loc": ".",
+    "obs-data-dir": ".",
+    "model-data-dir": ".",
     # Extract input fields from input FieldList.
     # If these are set to False, then the whole FieldList will be taken.
     # Otherwise should be set to a valid index or slice, to be taken on the
     # FieldList.
-    "CHOSEN_OBS_FIELDS": False,
-    "CHOSEN_MODEL_FIELDS": False,
+    "chosen-obs-fields": False,
+    "chosen-model-fields": False,
     # *** Output choices ***
     # A given directory must exist already, if specified.
-    "OUTPUTS_DIR": ".",
-    "OUTPUT_FILE_NAME": "vision_toolkit_result_field.nc",
+    "outputs-dir": ".",
+    "output-file-name": "vision_toolkit_result_field.nc",
     # Gets added to the 'history' property on the output file:
-    "HISTORY_MESSAGE": (
+    "history-message": (
         "Processed using the NCAS VISION Toolkit to "
         "colocate from model data to the observational data "
         "spatio-temporal location."
     ),
     # *** Regridding options, to configure the 4D interpolation ***
-    "REGRID_METHOD": "linear",
+    "regrid-method": "linear",
     # Note this option except in rare cases won't be required, as should almost
     # always be able to determine what z-coordinate want given it must be
     # present in both the model and the observational data, so match those.
     # Only if both data have more than one of identical z-coord do we need
     # to ask for this info.
-    "REGRID_Z_COORD": None,  # default to None given above note
+    "regrid-z-coord": None,  # default to None given above note
     # *** Plotting: what to plot and how to minimally configure it ***
-    "PLOTNAME_START": "vision_toolkit",
+    "plotname-start": "vision_toolkit",
     # Optionally, display plots of the input observational data, or its track
-    # only in one colour (if 'PLOT_OF_INPUT_OBS_TRACK_ONLY' is set to True).
+    # only in one colour (if 'plot-of-input-obs-track-only' is set to True).
     # This could be useful for previewing the track to be colocated
     # onto, to fail early if the user isn't happy with the track,
     # or for demo'ing the code to compare the original observational data
     # to the co-located data to see the differences.
-    "SHOW_PLOT_OF_INPUT_OBS": True,
+    "show-plot-of-input-obs": True,
     # Bool but for dev. purposes, if set to 2 then it shows both plots:
-    "PLOT_OF_INPUT_OBS_TRACK_ONLY": True,
+    "plot-of-input-obs-track-only": True,
     # "parula" also works well, as alternative for dev. work:
-    "CFP_CSCALE": "plasma",
-    "CFP_MAPSET_CONFIG": {},
-    "CFP_INPUT_LEVS_CONFIG": {},
-    "CFP_INPUT_TRACK_ONLY_CONFIG": {
+    "cfp-cscale": "plasma",
+    "cfp-mapset-config": {},
+    "cfp-input-levs-config": {},
+    "cfp-input-track-only-config": {
         ###"verbose": VERBOSE  # TODO: SUB-CONFIG.
         "legend": True,
         "colorbar": False,
@@ -176,7 +176,7 @@ CONFIG_DEFAULTS = {
         "field onto"
         ),
     },
-    "CFP_INPUT_GENERAL_CONFIG": {
+    "cfp-input-general-config": {
         ###"verbose": VERBOSE  # TODO: SUB-CONFIG.
         "legend": True,
         "markersize": 5,
@@ -186,8 +186,8 @@ CONFIG_DEFAULTS = {
             "co-location, with its corresponding data, to be ignored)"
         ),
     },
-    "CFP_OUTPUT_LEVS_CONFIG": {},
-    "CFP_OUTPUT_GENERAL_CONFIG": {
+    "cfp-output-levs-config": {},
+    "cfp-output-general-config": {
         ###"verbose": VERBOSE  # TODO: SUB-CONFIG.
         "legend": True,
         "markersize": 5,
@@ -224,11 +224,12 @@ def process_config_file(parser):
         f"config. overriding defaults dict is:\n{pformat(config_input)}\n"
     )
 
-    # Use this dict to update the CLI defaults. For tracing external
-    # config. we use capitalised keys when defining in dicts/json but need
-    # these as lower case for the CLI, hence case conversion.
-    config_cli_input = {k.lower(): v for k, v in config_input.items()}
-    parser.set_defaults(**dict(config_cli_input))
+    # Want config. file input to have identical key names to the CLI ones,
+    # namely with underscores as word delimiters, but for processing defaults
+    # have to use hyphens since argparse converts to these for valid attr names
+    config_cli_input = {
+        k.replace("-", "_"): v for k, v in config_input.items()}
+    parser.set_defaults(**config_cli_input)
 
 
 def process_cli_arguments(parser):
@@ -239,61 +240,61 @@ def process_cli_arguments(parser):
     # Add arguments with basic type check (string is default, so no need for
     # type=str)
     parser.add_argument(
-        "--data_dir_loc", action="store", help="HELP TODO")
+        "--data-dir-loc", action="store", help="HELP TODO")
     parser.add_argument(
-        "--obs_data_dir", action="store", help="HELP TODO")
+        "--obs-data-dir", action="store", help="HELP TODO")
     parser.add_argument(
-        "--model_data_dir", action="store", help="HELP TODO")
+        "--model-data-dir", action="store", help="HELP TODO")
 
     # Need an index or slice for thes e2, hence integer or slice object, but given
     # argparse isn't degined to handle this, accept as string and parse later.
     parser.add_argument(
-        "--chosen_obs_fields", action="store", help="HELP TODO")
+        "--chosen-obs-fields", action="store", help="HELP TODO")
     parser.add_argument(
-        "--chosen_model_fields", action="store", help="HELP TODO")
+        "--chosen-model-fields", action="store", help="HELP TODO")
 
     parser.add_argument(
-        "--outputs_dir", action="store", help="HELP TODO")
+        "--outputs-dir", action="store", help="HELP TODO")
     parser.add_argument(
-        "--output_file_name", action="store", help="HELP TODO")
+        "--output-file-name", action="store", help="HELP TODO")
     parser.add_argument(
-        "--history_message", action="store", help="HELP TODO")
+        "--history-message", action="store", help="HELP TODO")
     parser.add_argument(
-        "--regrid_method", action="store", help="HELP TODO")
+        "--regrid-method", action="store", help="HELP TODO")
     parser.add_argument(
-        "--regrid_z_coord", action="store", help="HELP TODO")
+        "--regrid-z-coord", action="store", help="HELP TODO")
     parser.add_argument(
-        "--plotname_start", action="store", help="HELP TODO")
+        "--plotname-start", action="store", help="HELP TODO")
     parser.add_argument(
-        "--show_plot_of_input_obs", action="store", help="HELP TODO")
+        "--show-plot-of-input-obs", action="store", help="HELP TODO")
     parser.add_argument(
-        "--plot_of_input_obs_track_only", action="store",
+        "--plot-of-input-obs-track-only", action="store",
         help="HELP TODO"
     )
     parser.add_argument(
-        "--cfp_cscale", action="store", help="HELP TODO")
+        "--cfp-cscale", action="store", help="HELP TODO")
 
     # These config. parameters are compound, and argparse can't handle multiple
     # key-values e.g. dicts well, so use 'json.loads' (or e.g. 'yaml.load') to
     # input sub-config. as a working method.
     parser.add_argument(
-        "--cfp_mapset_config", action="store", help="HELP TODO",
+        "--cfp-mapset-config", action="store", help="HELP TODO",
         type=json.loads
     )
     parser.add_argument(
-        "--cfp_input_levs_config", action="store", help="HELP TODO",
+        "--cfp-input-levs-config", action="store", help="HELP TODO",
         type=json.loads
     )
     parser.add_argument(
-        "--cfp_input_track_only_config", action="store", help="HELP TODO",
+        "--cfp-input-track-only-config", action="store", help="HELP TODO",
         type=json.loads
     )
     parser.add_argument(
-        "--cfp_output_levs_config", action="store", help="HELP TODO",
+        "--cfp-output-levs-config", action="store", help="HELP TODO",
         type=json.loads
     )
     parser.add_argument(
-        "--cfp_output_general_config", action="store", help="HELP TODO",
+        "--cfp-output-general-config", action="store", help="HELP TODO",
         type=json.loads
     )
 
