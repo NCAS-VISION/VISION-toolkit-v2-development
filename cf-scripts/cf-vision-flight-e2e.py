@@ -38,24 +38,6 @@ import cfplot as cfp
 import cf
 
 
-def timeit(func):
-    """A decorator to measure and report function execution time."""
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        starttime = time()
-        output = func(*args, **kwargs)
-        endtime = time()
-        totaltime = endtime - starttime
-        print(
-            f"\n_____ Time taken (in s) for {func.__name__!r} to run: "
-            f"{round(totaltime, 4)} _____\n"
-        )
-        return output
-
-    return wrapper
-
-
 def configure_logging():
     """Configure logging.
 
@@ -73,6 +55,25 @@ def configure_logging():
     return logger
 
 logger = configure_logging()
+
+
+def timeit(func):
+    """A decorator to measure and report function execution time."""
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        starttime = time()
+        output = func(*args, **kwargs)
+        endtime = time()
+        totaltime = endtime - starttime
+        # TODO use logging instead of a direct print
+        print(
+            f"\n_____ Time taken (in s) for {func.__name__!r} to run: "
+            f"{round(totaltime, 4)} _____\n"
+        )
+        return output
+
+    return wrapper
 
 
 # ----------------------------------------------------------------------------
@@ -205,7 +206,6 @@ def process_config():
     process_config_file(parser)
     args = process_cli_arguments(parser)
 
-    print(args.__dir__())
     logger.critical(
         f"Parsed configuration arguments are:\n{pformat(args)}\n")
     return args
@@ -944,43 +944,26 @@ def main():
     """Perform end-to-end model-to-observational co-location."""
     # Manage inputs from CLI and from configuration file, if present.
     args = process_config()
-    # Now set variables so they can be passed only to fucntions that need them
-    data_dir_loc = args.data_dir_loc
-    obs_data_dir = args.obs_data_dir
-    model_data_dir = args.model_data_dir
-    chosen_obs_fields = args.chosen_obs_fields
-    chosen_model_fields = args.chosen_model_fields
+
+    # Set variables in case that multiple functions use a given argument value
     outputs_dir = args.outputs_dir
-    output_file_name = args.output_file_name
-    history_message = args.history_message
-    regrid_method = args.regrid_method
-    regrid_z_coord = args.regrid_z_coord
     plotname_start = args.plotname_start
-    show_plot_of_input_obs = args.show_plot_of_input_obs
-    plot_of_input_obs_track_only = args.plot_of_input_obs_track_only
-    cfp_cscale = args.cfp_cscale
-    cfp_mapset_config = args.cfp_mapset_config
-    cfp_input_levs_config = args.cfp_input_levs_config
-    cfp_input_track_only_config = args.cfp_input_track_only_config
-    cfp_input_general_config = args.cfp_input_general_config
-    cfp_output_levs_config = args.cfp_output_levs_config
-    cfp_output_general_config = args.cfp_output_general_config
     verbose = args.verbose
 
     # Process and validate inputs, including optional flight track preview plot
     obs_data, model_data = read_input_data(
-        data_dir_loc, obs_data_dir, model_data_dir)
+        args.data_dir_loc, args.obs_data_dir, args.model_data_dir)
     obs_field, model_field = get_input_fields_of_interest(
-        obs_data, model_data, chosen_obs_fields, chosen_model_fields)
+        obs_data, model_data, args.chosen_obs_fields, args.chosen_model_fields)
 
     # TODO: this has too many parameters for one function, separate out
     make_preview_plots(
-        obs_field, show_plot_of_input_obs,
-        plot_of_input_obs_track_only,
+        obs_field, args.show_plot_of_input_obs,
+        args.plot_of_input_obs_track_only,
         outputs_dir, plotname_start,
-        cfp_mapset_config, cfp_cscale, cfp_input_levs_config,
-        cfp_input_track_only_config,
-        cfp_input_general_config, verbose
+        args.cfp_mapset_config, args.cfp_cscale, args.cfp_input_levs_config,
+        args.cfp_input_track_only_config,
+        args.cfp_input_general_config, verbose
     )
     ensure_cf_compliance(obs_field, model_field)  # TODO currently does nothing
 
@@ -995,7 +978,7 @@ def main():
 
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
-        obs_field, model_field_bb, regrid_method, regrid_z_coord,
+        obs_field, model_field_bb, args.regrid_method, args.regrid_z_coord,
     )
     final_result_field = time_interpolation(
         obs_times,
@@ -1003,18 +986,18 @@ def main():
         obs_field,
         model_field,
         spatially_colocated_field,
-        history_message,
+        args.history_message,
     )
 
     # Create and process outputs
     create_cra_outputs()  # TODO currently does nothing
-    write_output_data(final_result_field, output_file_name)
+    write_output_data(final_result_field, args.output_file_name)
     make_outputs_plots(
         final_result_field,
-        cfp_output_levs_config,
+        args.cfp_output_levs_config,
         outputs_dir,
         plotname_start,
-        cfp_output_general_config
+        args.cfp_output_general_config
     )
 
 
