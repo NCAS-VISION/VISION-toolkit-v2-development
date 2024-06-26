@@ -79,14 +79,7 @@ logger = configure_logging()
 # Define and parse configuration e.g. inputs, outputs.
 # ----------------------------------------------------------------------------
 
-CONFIG_INPUT = {
-    # *** Script running options ***
-    # Configure messaging to STDOUT, which is very verbose if INFO=True, else
-    # as minimal as allows without log control in cf-plot (at present).
-    # TODO: Get ESMF logging via cf incoporated into Python logging system,
-    # see Issue #286.
-    "VERBOSE": True,
-    # *** Input data choices ***
+CONFIG_CUSTOM_INPUT_FOR_FAAM_STANCO = {
     # Note (for dev. using repo) the values given here assume we run the
     # script from the repo root i.e. via
     # 'python cf-scripts/cf-vision-flight-e2e.py'
@@ -94,44 +87,12 @@ CONFIG_INPUT = {
     "DATA_DIR_LOC": "data",
     "OBS_DATA_DIR": "compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
     "MODEL_DATA_DIR": "main-workwith-test-ISO-simulator/Model_Input",
-    # Extract input fields from input FieldList.
-    # If these are set to False, then the whole FieldList will be taken.
-    # Otherwise should be set to a valid index or slice, to be taken on the
-    # FieldList.
     "CHOSEN_OBS_FIELDS": 0,
     "CHOSEN_MODEL_FIELDS": -2,
-    # *** Output choices ***
-    # A given directory must exist already, if specified.
-    # TODO default to current directory.
     "OUTPUTS_DIR": "cf-script-outputs",
     "OUTPUT_FILE_NAME": "cf_vision_result_field.nc",
-    # Gets added to the 'history' property on the output file:
-    "HISTORY_MESSAGE": (
-        "Processed using the NCAS VISION flight simulator script to "
-        "colocate from model data to the observational flight data "
-        "spatio-temporal location."
-    ),
-    # *** Regridding options, to configure the 4D interpolation ***
-    "REGRID_METHOD": "linear",
-    # Note this option except in rare cases won't be required, as should almost
-    # always be able to determine what z-coordinate want given it must be
-    # present in both the model and the observational data, so match those.
-    # Only if both data have more than one of identical z-coord do we need
-    # to ask for this info.
     "REGRID_Z_COORD": "air_pressure",
-    # *** Plotting: what to plot and how to minimally configure it ***
-    "PLOTNAME_START": "vision_toolkit",
-    # Optionally, display plots of the input observational data, or its track
-    # only in one colour (if 'PLOT_OF_INPUT_OBS_TRACK_ONLY' is set to True).
-    # This could be useful for previewing the track to be colocated
-    # onto, to fail early if the user isn't happy with the track,
-    # or for demo'ing the code to compare the original observational data
-    # to the co-located data to see the differences.
-    "SHOW_PLOT_OF_INPUT_OBS": True,
-    # Bool but for dev. purposes, if set to 2 then it shows both plots:
     "PLOT_OF_INPUT_OBS_TRACK_ONLY": 2,
-    # "parula" also works well, as alternative for dev. work:
-    "CFP_CSCALE": "plasma",
     "CFP_MAPSET_CONFIG": {
         "lonmin": -2,
         "lonmax": 2,
@@ -144,6 +105,63 @@ CONFIG_INPUT = {
         "max": 55,
         "step": 5,
     },
+    "CFP_OUTPUT_LEVS_CONFIG": {
+        "min": 5e-08,
+        "max": 10e-08,
+        "step": 0.25e-08,
+    },
+}
+
+CONFIG_DEFAULTS = {
+    # *** Script running options ***
+    # Configure messaging to STDOUT, which is very verbose if INFO=True, else
+    # as minimal as allows without log control in cf-plot (at present).
+    # TODO: Get ESMF logging via cf incoporated into Python logging system,
+    # see Issue #286.
+    "VERBOSE": True,
+    # *** Input data choices ***
+    "DATA_DIR_LOC": ".",
+    "OBS_DATA_DIR": ".",
+    "MODEL_DATA_DIR": ".",
+    # Extract input fields from input FieldList.
+    # If these are set to False, then the whole FieldList will be taken.
+    # Otherwise should be set to a valid index or slice, to be taken on the
+    # FieldList.
+    "CHOSEN_OBS_FIELDS": False,
+    "CHOSEN_MODEL_FIELDS": False,
+    # *** Output choices ***
+    # A given directory must exist already, if specified.
+    "OUTPUTS_DIR": ".",
+    "OUTPUT_FILE_NAME": "vision_toolkit_result_field.nc",
+    # Gets added to the 'history' property on the output file:
+    "HISTORY_MESSAGE": (
+        "Processed using the NCAS VISION Toolkit to "
+        "colocate from model data to the observational data "
+        "spatio-temporal location."
+    ),
+    # *** Regridding options, to configure the 4D interpolation ***
+    "REGRID_METHOD": "linear",
+    # Note this option except in rare cases won't be required, as should almost
+    # always be able to determine what z-coordinate want given it must be
+    # present in both the model and the observational data, so match those.
+    # Only if both data have more than one of identical z-coord do we need
+    # to ask for this info.
+    "REGRID_Z_COORD": None,  # default to None given above note
+    # *** Plotting: what to plot and how to minimally configure it ***
+    "PLOTNAME_START": "vision_toolkit",
+    # Optionally, display plots of the input observational data, or its track
+    # only in one colour (if 'PLOT_OF_INPUT_OBS_TRACK_ONLY' is set to True).
+    # This could be useful for previewing the track to be colocated
+    # onto, to fail early if the user isn't happy with the track,
+    # or for demo'ing the code to compare the original observational data
+    # to the co-located data to see the differences.
+    "SHOW_PLOT_OF_INPUT_OBS": True,
+    # Bool but for dev. purposes, if set to 2 then it shows both plots:
+    "PLOT_OF_INPUT_OBS_TRACK_ONLY": True,
+    # "parula" also works well, as alternative for dev. work:
+    "CFP_CSCALE": "plasma",
+    "CFP_MAPSET_CONFIG": {},
+    "CFP_INPUT_LEVS_CONFIG": {},
     "CFP_INPUT_TRACK_ONLY_CONFIG": {
         ###"verbose": VERBOSE  # TODO: SUB-CONFIG.
         "legend": True,
@@ -155,11 +173,7 @@ CONFIG_INPUT = {
         "field onto"
         ),
     },
-    "CFP_OUTPUT_LEVS_CONFIG": {
-        "min": 5e-08,
-        "max": 10e-08,
-        "step": 0.25e-08,
-    },
+    "CFP_OUTPUT_LEVS_CONFIG": {},
     "CFP_OUTPUT_GENERAL_CONFIG": {
         ###"verbose": VERBOSE  # TODO: SUB-CONFIG.
         "legend": True,
