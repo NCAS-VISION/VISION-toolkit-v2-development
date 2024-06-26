@@ -177,43 +177,62 @@ CLI_CONFIG = {
 # TODO: for whole script, consider what is useful to persist (Dask-wise)
 # for efficiency.
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(prog="VISION TOOLKIT")
 
 # Add arguments with basic type check (string is default, so no need for
 # type=str)
-parser.add_argument("DATA_DIR_LOC", help="HELP TODO")
-parser.add_argument("OBS_DATA_DIR", help="HELP TODO")
-parser.add_argument("MODEL_DATA_DIR", help="HELP TODO")
+parser.add_argument("--data-dir", action="store_false", help="HELP TODO")
+parser.add_argument("--obs_data_dir", action="store_false", help="HELP TODO")
+parser.add_argument("--model_data_dir", action="store_false", help="HELP TODO")
 
 # Need an index or slice for thes e2, hence integer or slice object, but given
 # argparse isn't degined to handle this, accept as string and parse later.
-parser.add_argument("CHOSEN_OBS_FIELDS", help="HELP TODO")
-parser.add_argument("CHOSEN_MODEL_FIELDS", help="HELP TODO")
+parser.add_argument(
+    "--chosen_obs_fields", action="store_false", help="HELP TODO")
+parser.add_argument(
+    "chosen_model_fields", action="store_false", help="HELP TODO")
 
-parser.add_argument("OUTPUTS_DIR", help="HELP TODO")
-parser.add_argument("OUTPUT_FILE_NAME", help="HELP TODO")
-parser.add_argument("HISTORY_MESSAGE", help="HELP TODO")
-parser.add_argument("REGRID_METHOD", help="HELP TODO")
-parser.add_argument("REGRID_Z_COORD", help="HELP TODO")
-parser.add_argument("PLOTNAME_START", help="HELP TODO")
-parser.add_argument("SHOW_PLOT_OF_INPUT_OBS", help="HELP TODO")
-parser.add_argument("PLOT_OF_INPUT_OBS_TRACK_ONLY", help="HELP TODO")
-parser.add_argument("CFP_CSCALE", help="HELP TODO")
+parser.add_argument("--outputs_dir", action="store_false", help="HELP TODO")
+parser.add_argument(
+    "--output_file_name", action="store_false", help="HELP TODO")
+parser.add_argument("--history_message", action="store_false", help="HELP TODO")
+parser.add_argument("--regrid_method", action="store_false", help="HELP TODO")
+parser.add_argument("--regrid_z_coord", action="store_false", help="HELP TODO")
+parser.add_argument("--plotname_start", action="store_false", help="HELP TODO")
+parser.add_argument(
+    "--show_plot_of_input_obs", action="store_false", help="HELP TODO")
+parser.add_argument(
+    "--plot_of_input_obs_track_only", action="store_false", help="HELP TODO")
+parser.add_argument(
+    "--cfp_cscale", action="store_false", help="HELP TODO")
 
 # These config. parameters are compound, and argparse can't handle multiple
 # key-values e.g. dicts well, so use 'json.loads' (or e.g. 'yaml.load') to
 # input sub-config. as a working method.
-parser.add_argument("CFP_MAPSET_CONFIG", help="HELP TODO", type=json.loads)
-parser.add_argument("CFP_INPUT_LEVS_CONFIG", help="HELP TODO", type=json.loads)
 parser.add_argument(
-    "CFP_INPUT_TRACK_ONLY_CONFIG", help="HELP TODO", type=json.loads)
+    "--cfp_mapset_config", action="store", help="HELP TODO",
+    type=json.loads
+)
 parser.add_argument(
-    "CFP_OUTPUT_LEVS_CONFIG", help="HELP TODO", type=json.loads)
+    "--cfp_input_levs_config", action="store", help="HELP TODO",
+    type=json.loads
+)
 parser.add_argument(
-    "CFP_OUTPUT_GENERAL_CONFIG", help="HELP TODO", type=json.loads)
+    "--cfp_input_track_only_config", action="store", help="HELP TODO",
+    type=json.loads
+)
+parser.add_argument(
+    "--cfp_output_levs_config", action="store", help="HELP TODO",
+    type=json.loads
+)
+parser.add_argument(
+    "--cfp_output_general_config", action="store", help="HELP TODO",
+    type=json.loads
+)
+
 # 'bool() function is not recommended as a type converter, see
 # https://docs.python.org/3/library/argparse.html#argparse-type
-parser.add_argument("VERBOSE", help="HELP TODO")
+parser.add_argument("--verbose", action="store", help="HELP TODO")
 
 
 args = parser.parse_args()
