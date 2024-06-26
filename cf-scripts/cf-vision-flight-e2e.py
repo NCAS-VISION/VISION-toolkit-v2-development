@@ -195,6 +195,7 @@ def process_config():
     process_config_file(parser)
     args = process_cli_arguments(parser)
 
+    print(args.__dir__())
     logger.critical(
         f"Parsed configuration arguments are:\n{pformat(args)}\n")
     return args
@@ -306,29 +307,49 @@ def get_env_and_diagnostics_report():
         "Using Python and CF environment of:\n"
         f"{cf.environment(display=False)}\n"
     )
-    # TODO: UPDATE THIS, OUT OF DATE AS JUST STATIC SCRIPT CONFIG.
-    #logger.critical(
-    #    f"Final processed configuration is:\n{pformat(CONFIG_INPUT)}")
 
 
 @timeit
-def read_obs_input_data():
+def read_obs_input_data(data_dir_loc, obs_data_dir):
     """Read in all observational input data.
 
     TODO: DETAILED DOCS
     """
-    obs_data_loc = f"{DATA_DIR_LOC}/{OBS_DATA_DIR}"
+    obs_data_loc = f"{data_dir_loc}/{obs_data_dir}"
     return cf.read(obs_data_loc), obs_data_loc
 
 
 @timeit
-def read_model_input_data():
+def read_model_input_data(data_dir_loc, model_data_dir):
     """Read in all model input data.
 
     TODO: DETAILED DOCS
     """
-    model_data_loc = f"{DATA_DIR_LOC}/{MODEL_DATA_DIR}"
+    model_data_loc = f"{data_dir_loc}/{model_data_dir}"
     return cf.read(model_data_loc), model_data_loc
+
+
+def read_input_data(data_dir_loc, obs_data_dir, model_data_dir):
+    """Read in all input data.
+
+    TODO: DETAILED DOCS
+    """
+    get_env_and_diagnostics_report()
+    obs_data, obs_data_loc = read_obs_input_data(
+        data_dir_loc, obs_data_dir)
+    model_data, model_data_loc = read_model_input_data(
+        data_dir_loc, model_data_dir)
+
+    # Reporting
+    logger.critical("All input data successfully read in.")
+    logger.critical(
+        f"Input data locations are:\n"
+        f"Observational data: '{obs_data_loc}'\n"
+        f"Model data: '{model_data_loc}'"
+    )
+    report_about_input_data(obs_data, model_data)
+
+    return obs_data, model_data
 
 
 def report_about_input_data(obs_data, model_data):
@@ -345,56 +366,43 @@ def report_about_input_data(obs_data, model_data):
     logger.critical(model_data[0].dump(display=False))
 
 
-def read_input_data():
-    """Read in all input data.
-
-    TODO: DETAILED DOCS
-    """
-    get_env_and_diagnostics_report()
-    obs_data, obs_data_loc = read_obs_input_data()
-    model_data, model_data_loc = read_model_input_data()
-
-    # Reporting
-    logger.critical("All input data successfully read in.")
-    logger.critical(
-        f"Input data locations are:\n"
-        f"Observational data: '{obs_data_loc}'\n"
-        f"Model data: '{model_data_loc}'"
-    )
-    report_about_input_data(obs_data, model_data)
-
-    return obs_data, model_data
-
-
 @timeit
-def get_input_fields_of_interest(obs_data, model_data):
+def get_input_fields_of_interest(
+        obs_data, model_data, chosen_obs_fields, chosen_model_fields):
     """Return fields of interest from input datasets.
 
     TODO: DETAILED DOCS
     """
     # Take only relevant fields from the list of fields read in
-    obs_field = obs_data[CHOSEN_OBS_FIELDS]
-    model_field = model_data[CHOSEN_MODEL_FIELDS]
+    obs_field = obs_data[chosen_obs_fields]
+    model_field = model_data[chosen_model_fields]
 
     return obs_field, model_field
 
 
 @timeit
-def make_preview_plots(obs_field):
+def make_preview_plots(
+    obs_field, show_plot_of_input_obs,
+    plot_of_input_obs_track_only,
+    outputs_dir, plotname_start,
+    cfp_mapset_config, cfp_cscale, cfp_input_levs_config,
+    cfp_input_track_only_config,
+    cfp_input_general_config, verbose
+):
     """Generate plots of the flight track for a pre-colocation preview.
 
     TODO: DETAILED DOCS
     """
     # First configure general settings for plot:
     # Change the viewpoint to be over the UK only, with high-res map outline
-    cfp.mapset(**CFP_MAPSET_CONFIG)
-    cfp.cscale(CFP_CSCALE)
+    cfp.mapset(**cfp_mapset_config)
+    cfp.cscale(cfp_cscale)
 
-    if SHOW_PLOT_OF_INPUT_OBS:
+    if show_plot_of_input_obs:
         # Plot *input* observational data for a preview, before doing anything
         # Min, max as determined using final_result_field.min(), .max():
-        cfp.levs(**CFP_INPUT_LEVS_CONFIG)
-        if PLOT_OF_INPUT_OBS_TRACK_ONLY in (1, 2):
+        cfp.levs(**cfp_input_levs_config)
+        if plot_of_input_obs_track_only in (1, 2):
             # Use the same field but set all data to zero so can plot the whole
             # track in the same colour to just display the path, not orig. data
             equal_data_obs_field = obs_field.copy()
@@ -406,17 +414,17 @@ def make_preview_plots(obs_field):
             # Not configurable, always use since it gives red for zero values
             cfp.cscale("scale28")
             cfp.gopen(
-                file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_only.png"
+                file=f"{outputs_dir}/{plotname_start}_obs_track_only.png"
             )
-            cfp.traj(equal_data_obs_field, **CFP_INPUT_TRACK_ONLY_CONFIG)
+            cfp.traj(equal_data_obs_field, **cfp_input_track_only_config)
             cfp.gclose()
-            cfp.cscale(CFP_CSCALE)  # reset for normal (default-style) plots after
-        if PLOT_OF_INPUT_OBS_TRACK_ONLY in (0, 2):
+            cfp.cscale(cfp_cscale)  # reset for normal (default-style) plots after
+        if plot_of_input_obs_track_only in (0, 2):
             cfp.gopen(
-                file=f"{OUTPUTS_DIR}/{PLOTNAME_START}_obs_track_with_data.png"
+                file=f"{outputs_dir}/{plotname_start}_obs_track_with_data.png"
             )
-            CFP_INPUT_GENERAL_CONFIG = {
-                "verbose": VERBOSE,
+            cfp_input_general_config = {
+                "verbose": verbose,
                 "legend": True,
                 "markersize": 5,
                 "linewidth": 0.4,
@@ -425,7 +433,7 @@ def make_preview_plots(obs_field):
                     "co-location, with its corresponding data, to be ignored)"
                 ),
             }
-            cfp.traj(obs_field, **CFP_INPUT_GENERAL_CONFIG)
+            cfp.traj(obs_field, **cfp_input_general_config)
             cfp.gclose()
 
 
@@ -930,11 +938,43 @@ def main():
     """Perform end-to-end model-to-observational co-location."""
     # Manage inputs from CLI and from configuration file, if present.
     args = process_config()
+    # Now set variables so they can be passed only to fucntions that need them
+    data_dir_loc = args.data_dir_loc
+    obs_data_dir = args.obs_data_dir
+    model_data_dir = args.model_data_dir
+    chosen_obs_fields = args.chosen_obs_fields
+    chosen_model_fields = args.chosen_model_fields
+    outputs_dir = args.outputs_dir
+    output_file_name = args.output_file_name
+    history_message = args.history_message
+    regrid_method = args.regrid_method
+    regrid_z_coord = args.regrid_z_coord
+    plotname_start = args.plotname_start
+    show_plot_of_input_obs = args.show_plot_of_input_obs
+    plot_of_input_obs_track_only = args.plot_of_input_obs_track_only
+    cfp_cscale = args.cfp_cscale
+    cfp_mapset_config = args.cfp_mapset_config
+    cfp_input_levs_config = args.cfp_input_levs_config
+    cfp_input_track_only_config = args.cfp_input_track_only_config
+    cfp_output_levs_config = args.cfp_output_levs_config
+    cfp_output_general_config = args.cfp_output_general_config
+    verbose = args.verbose
 
     # Process and validate inputs, including optional flight track preview plot
-    obs_data, model_data = read_input_data()
-    obs_field, model_field = get_input_fields_of_interest(obs_data, model_data)
-    make_preview_plots(obs_field)
+    obs_data, model_data = read_input_data(
+        data_dir_loc, obs_data_dir, model_data_dir)
+    obs_field, model_field = get_input_fields_of_interest(
+        obs_data, model_data, chosen_obs_fields, chosen_model_fields)
+
+    # TODO: this has too many parametres for one function, separate out
+    make_preview_plots(
+        obs_field, show_plot_of_input_obs,
+        plot_of_input_obs_track_only,
+        outputs_dir, plotname_start,
+        cfp_mapset_config, cfp_cscale, cfp_input_levs_config,
+        cfp_input_track_only_config,
+        cfp_input_general_config, verbose
+    )
     ensure_cf_compliance(obs_field, model_field)  # TODO currently does nothing
 
     # Time coordinate considerations, pre-colocation
