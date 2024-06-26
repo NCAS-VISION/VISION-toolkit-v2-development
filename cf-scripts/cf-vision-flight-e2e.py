@@ -354,9 +354,9 @@ def read_input_data(data_dir_loc, obs_data_dir, model_data_dir):
     # Reporting
     logger.critical("All input data successfully read in.")
     logger.critical(
-        f"Input data locations are:\n"
+        f"\nInput data locations are:\n"
         f"Observational data: '{obs_data_loc}'\n"
-        f"Model data: '{model_data_loc}'"
+        f"Model data: '{model_data_loc}'\n"
     )
     report_about_input_data(obs_data, model_data)
 
@@ -368,11 +368,11 @@ def report_about_input_data(obs_data, model_data):
 
     TODO: DETAILED DOCS
     """
-    logger.critical(f"Observational data is:\n {obs_data}")
+    logger.critical(f"Observational FieldList is:\n {obs_data}")
     logger.critical("For example, first observational field is:\n")
     logger.critical(obs_data[0].dump(display=False))
 
-    logger.critical(f"Model data is:\n {model_data}")
+    logger.critical(f"Model FieldList is:\n {model_data}")
     logger.critical("For example, first model field is:\n")
     logger.critical(model_data[0].dump(display=False))
 
@@ -497,8 +497,8 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     logger.critical(f"Unit-conformed model time coord. is: {model_times}")
     # Get the time coordinates again to ensure/assert conversion on field
     same_units = (
-        get_time_coords(obs_field, model_field)[0].data.Units,
-        get_time_coords(obs_field, model_field)[1].data.Units,
+        get_time_coords(obs_field, model_field)[0].data.Units ==
+        get_time_coords(obs_field, model_field)[1].data.Units
     )
     logger.critical(
         f"Units on observational and model time coords. are the same?: "
@@ -521,8 +521,8 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     logger.critical(f"Calendar on model time coordinate is: {model_calendar}")
 
     same_calendar = (
-        get_time_coords(obs_field, model_field)[0].calendar,
-        get_time_coords(obs_field, model_field)[1].calendar,
+        get_time_coords(obs_field, model_field)[0].calendar ==
+        get_time_coords(obs_field, model_field)[1].calendar
     )
     logger.critical(
         f"Calendars on observational and model time coords. are the same?: "
