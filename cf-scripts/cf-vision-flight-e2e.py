@@ -14,6 +14,13 @@ where other inputs for the VISION project such as satellite data will be
 considered in future later-stage updates only, so will not yet work for this
 script.
 
+TODOS, SCRIPT-WIDE/GENERAL:
+* document assumptions about data that we use that the input data need
+  to abide by, for it to work (input data quality requirements), and quote
+  that documentation here and in the script run CLI initial print-out.
+* for whole script, consider what is useful to persist (Dask-wise)
+  for efficiency.
+
 """
 
 from itertools import pairwise  # requires Python 3.10+
@@ -49,142 +56,147 @@ def timeit(func):
     return wrapper
 
 
+def configure_logging():
+    """Configure logging.
+
+    TODO: DETAILED DOCS
+    """
+    # NOTE we use 'CRITICAL' level to avoid seeing cf log level messaging
+    # which is a bit spammy and hides the output from this script.
+    logger = logging.getLogger(__name__)
+    if True:  ###if VERBOSE:  # TODO: SUB-CONFIG.
+        logger.setLevel(logging.CRITICAL)
+    else:
+        logger.setLevel(
+            logging.CRITICAL + 1
+        )  # prevents even critical log messages
+    return logger
+
+logger = configure_logging()
+
+
 # ----------------------------------------------------------------------------
 # Define and parse configuration e.g. inputs, outputs.
 # ----------------------------------------------------------------------------
 
-# TODO eventually these can be set as command-line arguments (w/ manpage, etc.)
-# configured and managed using getopts/getargs, etc.
-
-# Configure messaging to STDOUT, which is very verbose if INFO=True, else
-# as minimal as allows without log control in cf-plot (at present).
-# TODO: Get ESMF logging via cf incoporated into Python logging system,
-#       see Issue #286.
-VERBOSE = True
-
-# TODO: document assumptions about data that we use that the input data need
-# to abide by, for it to work (input data quality requirements).
-#
-# Note the values given here assume we run the script from the repo root
-# i.e. via 'python cf-scripts/cf-vision-flight-e2e.py'
-# where the data has been placed under a 'data' directory as follows:
-DATA_DIR_LOC = "data"
-OBS_DATA_DIR = "compliant-data/core_faam_20170703_c016_STANCO_CF.nc"
-MODEL_DATA_DIR = "main-workwith-test-ISO-simulator/Model_Input"
-
-# Extract input fields from input FieldList.
-# If these are set to False, then the whole FieldList will be taken. Otherwise
-# should be set to a valid index or slice, to be taken on the FieldList.
-CHOSEN_OBS_FIELDS = 0
-CHOSEN_MODEL_FIELDS = -2
-
-# Set output information
-# Default to current directory to output. A given directory must exist already.
-OUTPUTS_DIR = "cf-script-outputs"
-OUTPUT_FILE_NAME = "cf_vision_result_field.nc"
-HISTORY_MESSAGE = (  # gets added to the 'history' property on the output file
-    "Processed using the NCAS VISION flight simulator script to colocate from "
-    "model data to the observational flight data spatio-temporal location."
-)
-
-# Regridding config.
-REGRID_METHOD = "linear"
-# Note this option except in rare cases won't be required, as should almost
-# always be able to determine what z-coordinate want given it must be present
-# in both the model and the observational data, so match those. Only if both
-# data have more than one of identical z-coord do we need to ask for this info.
-REGRID_Z_COORD = "air_pressure"
-
-# Plotting general config.
-PLOTNAME_START = "vision_toolkit"
-CFP_CSCALE = "plasma"  # "parula" also works well, as alternative for dev.
-CFP_MAPSET_CONFIG = {
-    "lonmin": -2,
-    "lonmax": 2,
-    "latmin": 50,
-    "latmax": 54,
-    "resolution": "10m",
-}
-CFP_INPUT_LEVS_CONFIG = {
-    "min": -5,
-    "max": 55,
-    "step": 5,
-}
-CFP_INPUT_TRACK_ONLY_CONFIG = {
-    "verbose": VERBOSE,
-    "legend": True,
-    "colorbar": False,
-    "markersize": 0.5,
-    "linewidth": 0,  # turn off line plotting to only have markers
-    "title": (
-        "Flight track from observational field to co-locate model "
-        "field onto"
+CONFIG_INPUT = {
+    # *** Script running options ***
+    # Configure messaging to STDOUT, which is very verbose if INFO=True, else
+    # as minimal as allows without log control in cf-plot (at present).
+    # TODO: Get ESMF logging via cf incoporated into Python logging system,
+    # see Issue #286.
+    "VERBOSE": True,
+    # *** Input data choices ***
+    # Note (for dev. using repo) the values given here assume we run the
+    # script from the repo root i.e. via
+    # 'python cf-scripts/cf-vision-flight-e2e.py'
+    # where the data has been placed under a 'data' directory as follows:
+    "DATA_DIR_LOC": "data",
+    "OBS_DATA_DIR": "compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
+    "MODEL_DATA_DIR": "main-workwith-test-ISO-simulator/Model_Input",
+    # Extract input fields from input FieldList.
+    # If these are set to False, then the whole FieldList will be taken.
+    # Otherwise should be set to a valid index or slice, to be taken on the
+    # FieldList.
+    "CHOSEN_OBS_FIELDS": 0,
+    "CHOSEN_MODEL_FIELDS": -2,
+    # *** Output choices ***
+    # A given directory must exist already, if specified.
+    # TODO default to current directory.
+    "OUTPUTS_DIR": "cf-script-outputs",
+    "OUTPUT_FILE_NAME": "cf_vision_result_field.nc",
+    # Gets added to the 'history' property on the output file:
+    "HISTORY_MESSAGE": (
+        "Processed using the NCAS VISION flight simulator script to "
+        "colocate from model data to the observational flight data "
+        "spatio-temporal location."
     ),
-}
-CFP_OUTPUT_LEVS_CONFIG = {
-    "min": 5e-08,
-    "max": 10e-08,
-    "step": 0.25e-08,
-}
-CFP_OUTPUT_GENERAL_CONFIG = {
-    "verbose": VERBOSE,
-    "legend": True,
-    "markersize": 5,
-    "linewidth": 0.4,
-    "title": "Co-located result: model co-located onto observational path",
+    # *** Regridding options, to configure the 4D interpolation ***
+    "REGRID_METHOD": "linear",
+    # Note this option except in rare cases won't be required, as should almost
+    # always be able to determine what z-coordinate want given it must be
+    # present in both the model and the observational data, so match those.
+    # Only if both data have more than one of identical z-coord do we need
+    # to ask for this info.
+    "REGRID_Z_COORD": "air_pressure",
+    # *** Plotting: what to plot and how to minimally configure it ***
+    "PLOTNAME_START": "vision_toolkit",
+    # Optionally, display plots of the input observational data, or its track
+    # only in one colour (if 'PLOT_OF_INPUT_OBS_TRACK_ONLY' is set to True).
+    # This could be useful for previewing the track to be colocated
+    # onto, to fail early if the user isn't happy with the track,
+    # or for demo'ing the code to compare the original observational data
+    # to the co-located data to see the differences.
+    "SHOW_PLOT_OF_INPUT_OBS": True,
+    # Bool but for dev. purposes, if set to 2 then it shows both plots:
+    "PLOT_OF_INPUT_OBS_TRACK_ONLY": 2,
+    # "parula" also works well, as alternative for dev. work:
+    "CFP_CSCALE": "plasma",
+    "CFP_MAPSET_CONFIG": {
+        "lonmin": -2,
+        "lonmax": 2,
+        "latmin": 50,
+        "latmax": 54,
+        "resolution": "10m",
+    },
+    "CFP_INPUT_LEVS_CONFIG": {
+        "min": -5,
+        "max": 55,
+        "step": 5,
+    },
+    "CFP_INPUT_TRACK_ONLY_CONFIG": {
+        ###"verbose": VERBOSE  # TODO: SUB-CONFIG.
+        "legend": True,
+        "colorbar": False,
+        "markersize": 0.5,
+        "linewidth": 0,  # turn off line plotting to only have markers
+        "title": (
+            "Flight track from observational field to co-locate model "
+        "field onto"
+        ),
+    },
+    "CFP_OUTPUT_LEVS_CONFIG": {
+        "min": 5e-08,
+        "max": 10e-08,
+        "step": 0.25e-08,
+    },
+    "CFP_OUTPUT_GENERAL_CONFIG": {
+        ###"verbose": VERBOSE  # TODO: SUB-CONFIG.
+        "legend": True,
+        "markersize": 5,
+        "linewidth": 0.4,
+        "title": "Co-located result: model co-located onto observational path",
+    },
 }
 
-# Optionally, display plots of the input observational data, or its track
-# only in one colour (if 'PLOT_OF_INPUT_OBS_TRACK_ONLY' is set to True).
-# This could be useful for previewing the track to be colocated
-# onto, to fail early if the user isn't happy with the track,
-# or for demo'ing the code to compare the original observational data
-# to the co-located data to see the differences.
-SHOW_PLOT_OF_INPUT_OBS = True
-PLOT_OF_INPUT_OBS_TRACK_ONLY = 2  # for dev. purposes, == 2 then shows both
 
-CLI_CONFIG = {
-    # Verbosity of this script
-    "VERBOSE": VERBOSE,
-    # Input data choices
-    "DATA_DIR_LOC": DATA_DIR_LOC,
-    "OBS_DATA_DIR": OBS_DATA_DIR,
-    "MODEL_DATA_DIR": MODEL_DATA_DIR,
-    "CHOSEN_OBS_FIELDS": CHOSEN_OBS_FIELDS,
-    "CHOSEN_MODEL_FIELDS": CHOSEN_MODEL_FIELDS,
-    # Output configuration e.g. write names and location, history stamp to add
-    "OUTPUTS_DIR": OUTPUTS_DIR,
-    "OUTPUT_FILE_NAME": OUTPUT_FILE_NAME,
-    "PLOTNAME_START": PLOTNAME_START,
-    "HISTORY_MESSAGE": HISTORY_MESSAGE,
-    # Regridding options, to configure the 4D interpolation
-    "REGRID_METHOD": REGRID_METHOD,
-    "REGRID_Z_COORD": REGRID_Z_COORD,
-    # Plotting: what to plot and how to minimally configure it
-    "SHOW_PLOT_OF_INPUT_OBS": SHOW_PLOT_OF_INPUT_OBS,
-    "PLOT_OF_INPUT_OBS_TRACK_ONLY": PLOT_OF_INPUT_OBS_TRACK_ONLY,
-    "CFP_CSCALE": CFP_CSCALE,
-    "CFP_MAPSET_CONFIG": CFP_MAPSET_CONFIG,
-    "CFP_INPUT_LEVS_CONFIG": CFP_INPUT_LEVS_CONFIG,
-    "CFP_INPUT_TRACK_ONLY_CONFIG": CFP_INPUT_TRACK_ONLY_CONFIG,
-    "CFP_OUTPUT_LEVS_CONFIG": CFP_OUTPUT_LEVS_CONFIG,
-    "CFP_OUTPUT_GENERAL_CONFIG": CFP_OUTPUT_GENERAL_CONFIG,
-}
-# TODO: eventually will want to add option to override and/or have as an
-# alternative, the specification of config with a config. file, not just CLI
-# so just below we can have code to read in a valid config file in a standard
-# format such as YAML or JSON and apply anything set there to the config.
+def process_config():
+    """Process a configuration file.
 
-# TODO: for whole script, consider what is useful to persist (Dask-wise)
-# for efficiency.
+    TODO: DETAILED DOCS
+    """
+    parser = argparse.ArgumentParser(prog="VISION TOOLKIT")
+    process_config_file(parser)
+    args = process_cli_arguments(parser)
 
-def process_cli_arguments():
+    logger.critical(f"Parsed config. arguments are:\n{pformat(args)}\n")
+    return args
+
+
+def process_config_file(parser):
+    """Process a configuration file.
+
+    TODO: DETAILED DOCS
+    """
+    parser.set_defaults(**dict(CONFIG_INPUT))
+    
+
+
+def process_cli_arguments(parser):
     """Parse and process all command-line arguments.
 
     TODO: DETAILED DOCS
-    """    
-    parser = argparse.ArgumentParser(prog="VISION TOOLKIT")
-
+    """
     # Add arguments with basic type check (string is default, so no need for
     # type=str)
     parser.add_argument(
@@ -250,28 +262,7 @@ def process_cli_arguments():
     # https://docs.python.org/3/library/argparse.html#argparse-type
     parser.add_argument("--verbose", action="store", help="HELP TODO")
 
-    args = parser.parse_args()
-
-
-def process_config_file():
-    """Process a configuration file.
-
-    TODO: DETAILED DOCS
-    """
-    pass
-
-# ----------------------------------------------------------------------------
-# Configure logging
-# ----------------------------------------------------------------------------
-# NOTE we use 'CRITICAL' level to avoid seeing cf log level messaging which is
-# a bit spammy and hides the output from this script.
-logger = logging.getLogger(__name__)
-if VERBOSE:
-    logger.setLevel(logging.CRITICAL)
-else:
-    logger.setLevel(
-        logging.CRITICAL + 1
-    )  # prevents even critical log messages
+    return parser.parse_args()
 
 
 # ----------------------------------------------------------------------------
@@ -287,7 +278,9 @@ def get_env_and_diagnostics_report():
         "Using Python and CF environment of:\n"
         f"{cf.environment(display=False)}\n"
     )
-    logger.critical(f"Configuration of script is:{pformat(CLI_CONFIG)}")
+    # TODO: UPDATE THIS, OUT OF DATE AS JUST STATIC SCRIPT CONFIG.
+    logger.critical(
+        f"Final processed configuration is:\n{pformat(CONFIG_INPUT)}")
 
 
 @timeit
@@ -908,8 +901,7 @@ def make_outputs_plots(final_result_field):
 def main():
     """Perform end-to-end model-to-observational co-location."""
     # Manage inputs from CLI and from configuration file, if present.
-    process_config_file()
-    process_cli_arguments()
+    args = process_config()
 
     # Process and validate inputs, including optional flight track preview plot
     obs_data, model_data = read_input_data()
