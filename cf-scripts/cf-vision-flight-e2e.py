@@ -175,6 +175,16 @@ CONFIG_DEFAULTS = {
         "field onto"
         ),
     },
+    "CFP_INPUT_GENERAL_CONFIG": {
+        ###"verbose": VERBOSE  # TODO: SUB-CONFIG.
+        "legend": True,
+        "markersize": 5,
+        "linewidth": 0.4,
+        "title": (
+            "Observational field input (path, to be used for "
+            "co-location, with its corresponding data, to be ignored)"
+        ),
+    },
     "CFP_OUTPUT_LEVS_CONFIG": {},
     "CFP_OUTPUT_GENERAL_CONFIG": {
         ###"verbose": VERBOSE  # TODO: SUB-CONFIG.
@@ -423,16 +433,6 @@ def make_preview_plots(
             cfp.gopen(
                 file=f"{outputs_dir}/{plotname_start}_obs_track_with_data.png"
             )
-            cfp_input_general_config = {
-                "verbose": verbose,
-                "legend": True,
-                "markersize": 5,
-                "linewidth": 0.4,
-                "title": (
-                    "Observational field input (path, to be used for "
-                    "co-location, with its corresponding data, to be ignored)"
-                ),
-            }
             cfp.traj(obs_field, **cfp_input_general_config)
             cfp.gclose()
 
@@ -956,6 +956,7 @@ def main():
     cfp_mapset_config = args.cfp_mapset_config
     cfp_input_levs_config = args.cfp_input_levs_config
     cfp_input_track_only_config = args.cfp_input_track_only_config
+    cfp_input_general_config = args.cfp_input_general_config
     cfp_output_levs_config = args.cfp_output_levs_config
     cfp_output_general_config = args.cfp_output_general_config
     verbose = args.verbose
