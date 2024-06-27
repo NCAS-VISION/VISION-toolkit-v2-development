@@ -132,7 +132,6 @@ CONFIG_DEFAULTS = {
     "cfp-mapset-config": {},
     "cfp-input-levs-config": {},
     "cfp-input-track-only-config": {
-        ###"verbose": VERBOSE  # TODO: SUB-CONFIG.
         "legend": True,
         "colorbar": False,
         "markersize": 0.5,
@@ -143,7 +142,6 @@ CONFIG_DEFAULTS = {
         ),
     },
     "cfp-input-general-config": {
-        ###"verbose": VERBOSE  # TODO: SUB-CONFIG.
         "legend": True,
         "markersize": 5,
         "linewidth": 0.4,
@@ -154,7 +152,6 @@ CONFIG_DEFAULTS = {
     },
     "cfp-output-levs-config": {},
     "cfp-output-general-config": {
-        ###"verbose": VERBOSE  # TODO: SUB-CONFIG.
         "legend": True,
         "markersize": 5,
         "linewidth": 0.4,
@@ -458,6 +455,7 @@ def make_preview_plots(
             cfp.gopen(
                 file=f"{outputs_dir}/{plotname_start}_obs_track_only.png"
             )
+            cfp_input_track_only_config.update(verbose=verbose)
             cfp.traj(equal_data_obs_field, **cfp_input_track_only_config)
             cfp.gclose()
             cfp.cscale(cfp_cscale)  # reset for normal (default-style) plots after
@@ -465,6 +463,7 @@ def make_preview_plots(
             cfp.gopen(
                 file=f"{outputs_dir}/{plotname_start}_obs_track_with_data.png"
             )
+            cfp_input_general_config.update(verbose=verbose)
             cfp.traj(obs_field, **cfp_input_general_config)
             cfp.gclose()
 
@@ -929,7 +928,7 @@ def write_output_data(final_result_field, output_file_name):
 @timeit
 def make_outputs_plots(
         final_result_field, cfp_output_levs_config,
-        outputs_dir, plotname_start, cfp_output_general_config,
+        outputs_dir, plotname_start, cfp_output_general_config, verbose
 ):
     """Generate plots of the flight track for a pre-colocation preview.
 
@@ -965,6 +964,7 @@ def make_outputs_plots(
     #       between the two scatter marker points, if preferable?
     cfp.gopen(file=f"{outputs_dir}/{plotname_start}_final_colocated_field.png")
 
+    cfp_output_general_config.update(verbose=verbose)
     cfp.traj(final_result_field, **cfp_output_general_config)
     cfp.gclose()
 
@@ -1031,7 +1031,8 @@ def main():
         args.cfp_output_levs_config,
         outputs_dir,
         plotname_start,
-        args.cfp_output_general_config
+        args.cfp_output_general_config,
+        verbose,
     )
 
 
