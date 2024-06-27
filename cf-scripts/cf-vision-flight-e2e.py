@@ -102,7 +102,6 @@ CONFIG_DEFAULTS = {
     # A given directory must exist already, if specified.
     "outputs-dir": ".",
     "output-file-name": "vision_toolkit_result_field.nc",
-    # Gets added to the 'history' property on the output file:
     "history-message": (
         "Processed using the NCAS VISION Toolkit to "
         "colocate from model data to the observational data "
@@ -132,7 +131,7 @@ CONFIG_DEFAULTS = {
     "cfp-mapset-config": {},
     "cfp-input-levs-config": {},
     "cfp-input-track-only-config": {
-        "legend": True,
+        "legend": True,  # TODO sepaarte into setvars config and plot opts
         "colorbar": False,
         "markersize": 0.5,
         "linewidth": 0,  # turn off line plotting to only have markers
@@ -142,7 +141,7 @@ CONFIG_DEFAULTS = {
         ),
     },
     "cfp-input-general-config": {
-        "legend": True,
+        "legend": True,  # TODO sepaarte into setvars config and plot opts
         "markersize": 5,
         "linewidth": 0.4,
         "title": (
@@ -232,68 +231,152 @@ def process_cli_arguments(parser):
     # Add arguments with basic type check (string is default, so no need for
     # type=str)
     parser.add_argument(
-        "--config-file", action="store", help="HELP TODO")
+        "--config-file", action="store",
+        help=(
+            "configuration file in JSON format to supply configuration, "
+            "which overrides any configuration provided by other "
+            "command-line options, if duplication of input occurs"
+        )
+    )
 
     parser.add_argument(
-        "--data-dir-loc", action="store", help="HELP TODO")
+        "--data-dir-loc", action="store",
+        help="path location of the top-level data directory [TODO CLARIFY]"
+    )
     parser.add_argument(
-        "--obs-data-dir", action="store", help="HELP TODO")
+        "--obs-data-dir", action="store",
+        help="path location of the observational data directory [TODO CLARIFY]"
+    )
     parser.add_argument(
-        "--model-data-dir", action="store", help="HELP TODO")
+        "--model-data-dir", action="store",
+        help="path location of the model data directory [TODO CLARFIY]"
+    )
 
-    # Need an index or slice for thes e2, hence integer or slice object, but given
-    # argparse isn't degined to handle this, accept as string and parse later.
+    # Need an index or slice for these next 2, hence integer or slice object,
+    # but given argparse isn't degined to handle this, accept as string
+    # and validate later.
     parser.add_argument(
-        "--chosen-obs-fields", action="store", help="HELP TODO")
-    parser.add_argument(
-        "--chosen-model-fields", action="store", help="HELP TODO")
-
-    parser.add_argument("--outputs-dir", action="store", help="HELP TODO")
-    parser.add_argument(
-        "--output-file-name", action="store", help="HELP TODO")
-    parser.add_argument(
-        "--history-message", action="store", help="HELP TODO")
-    parser.add_argument(
-        "--regrid-method", action="store", help="HELP TODO")
-    parser.add_argument(
-        "--regrid-z-coord", action="store", help="HELP TODO")
-    parser.add_argument(
-        "--plotname-start", action="store", help="HELP TODO")
-    parser.add_argument(
-        "--show-plot-of-input-obs", action="store", help="HELP TODO")
-    parser.add_argument(
-        "--plot-of-input-obs-track-only", action="store", help="HELP TODO"
+        "--chosen-obs-fields", action="store",
+        help=(
+            "index or slice to select fields from the FieldList "
+            "corresponding to the read-in observational data, else "
+            "the entire FieldList is used"
+        )
     )
     parser.add_argument(
-        "--cfp-cscale", action="store", help="HELP TODO")
-
-    # These config. parameters are compound, and argparse can't handle multiple
-    # key-values e.g. dicts well, so use 'json.loads' (or e.g. 'yaml.load') to
-    # input sub-config. as a working method.
-    parser.add_argument(
-        "--cfp-mapset-config", action="store", help="HELP TODO",
-        type=json.loads
+        "--chosen-model-fields", action="store",
+        help=(
+            "index or slice to select fields from the FieldList "
+            "corresponding to the read-in model data, else "
+            "the entire FieldList is used"
+        )
     )
     parser.add_argument(
-        "--cfp-input-levs-config", action="store", help="HELP TODO",
-        type=json.loads
+        "--outputs-dir", action="store",
+        help="path location of the top-level directory to create outputs in"
     )
     parser.add_argument(
-        "--cfp-input-track-only-config", action="store", help="HELP TODO",
-        type=json.loads
+        "--output-file-name", action="store",
+        help="name including extension to give the result output file"
     )
     parser.add_argument(
-        "--cfp-output-levs-config", action="store", help="HELP TODO",
-        type=json.loads
+        "--history-message", action="store",
+        help=(
+            "message that gets added to the 'history' property on the "
+            "output file"
+        )
     )
     parser.add_argument(
-        "--cfp-output-general-config", action="store", help="HELP TODO",
-        type=json.loads
+        "--regrid-method", action="store",
+        help=(
+            "regridding interpolation method to apply, see 'method' "
+            "parameter to 'cf.regrids' method for options: "
+            "https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html"
+        )
+    )
+    parser.add_argument(
+        "--regrid-z-coord", action="store",
+        help=(
+            "vertical (z) coordinate to use as the vertical component in "
+            "the spatial interpolation step"
+        )
+    )
+    parser.add_argument(
+        "--plotname-start", action="store",
+        help="initial text to use in the names of all plots generated"
+    )
+    parser.add_argument(
+        "--show-plot-of-input-obs", action="store",
+        help=(
+            "boolean flag to indicate whether to show plots of the input "
+            "observational data before the colocation logic begins, as "
+            "a preview"
+        )
+    )
+    parser.add_argument(
+        "--plot-of-input-obs-track-only", action="store",
+        help=(
+            "boolean flag to indicate whether only the track/trajectory "
+            "of the observational data is shown, as opposed to the data "
+            "on the track, for the input observational data preview plots"
+        )
+    )
+    parser.add_argument(
+        "--cfp-cscale", action="store",
+        help=(
+            "cf-plot plotting configuration as a string to set the "
+            "colour scale for the (input preview and) output plots, "
+            "ee: https://ncas-cms.github.io/cf-plot/build/cscale.html#cscale"
+        )
+    )
+    parser.add_argument(
+        "--cfp-mapset-config", type=json.loads, action="store",
+        help=(
+            "cf-plot plotting configuration as a dictionary to set the "
+            "mapping parameters for the (input preview and) output plots, "
+            "see: https://ncas-cms.github.io/cf-plot/build/mapset.html#mapset"
+        ),
+    )
+    parser.add_argument(
+        "--cfp-input-levs-config", type=json.loads, action="store",
+        help=(
+            "cf-plot plotting configuration as a dictionary to set the "
+            "contour levels for the input preview plots, "
+            "see: https://ncas-cms.github.io/cf-plot/build/levs.html#levs"
+        ),
+    )
+    parser.add_argument(
+        "--cfp-input-track-only-config", type=json.loads, action="store",
+        help=(
+            "cf-plot plotting configuration as a dictionary to set the general"
+            " plotting variables for track-only input preview plot, see:"
+            "https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars"
+        ),
+    )
+    parser.add_argument(
+        "--cfp-output-levs-config", type=json.loads, action="store",
+        help=(
+            "cf-plot plotting configuration as a dictionary to set the "
+            "contour levels for the output plots, "
+            "see: https://ncas-cms.github.io/cf-plot/build/levs.html#levs"
+        ),
+    )
+    parser.add_argument(
+        "--cfp-output-general-config", type=json.loads, action="store",
+        help=(
+            "cf-plot plotting configuration as a dictionary to set the "
+            "general plotting variables for the output plots, see:"
+            "https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars"
+            "[TODO CLARIFY/SEPARATE SETVARS AND PLOT CALL CONFIG.]"
+        ),
     )
 
     # 'bool() function is not recommended as a type converter, see
     # https://docs.python.org/3/library/argparse.html#argparse-type
-    parser.add_argument("--verbose", action="store", help="HELP TODO")
+    parser.add_argument(
+        "--verbose", action="store",
+        help="provide detailed output [TODO ENABLE VARIOUS LEVELS VIA LOGGING]"
+    )
 
     return parser.parse_args()
 
