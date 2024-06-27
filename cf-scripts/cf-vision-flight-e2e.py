@@ -28,6 +28,7 @@ from pprint import pformat
 from time import time
 
 import argparse
+import copy
 import functools
 import json
 import logging
@@ -79,41 +80,6 @@ def timeit(func):
 # ----------------------------------------------------------------------------
 # Define and parse configuration e.g. inputs, outputs.
 # ----------------------------------------------------------------------------
-
-# TODO this will be input as a config. file external to the script, eventually
-# This, in particular, is the custom config. input for FAAM STANCO data.
-CONFIG_CUSTOM_INPUT = {
-    # Note (for dev. using repo) the values given here assume we run the
-    # script from the repo root i.e. via
-    # 'python cf-scripts/cf-vision-flight-e2e.py'
-    # where the data has been placed under a 'data' directory as follows:
-    "data-dir-loc": "data",
-    "obs-data-dir": "compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-    "model-data-dir": "main-workwith-test-ISO-simulator/Model_Input",
-    "chosen-obs-fields": 0,
-    "chosen-model-fields": -2,
-    "outputs-dir": "cf-script-outputs",
-    "output-file-name": "cf_vision_result_field.nc",
-    "regrid-z-coord": "air_pressure",
-    "plot-of-input-obs-track-only": 2,
-    "cfp-mapset-config": {
-        "lonmin": -2,
-        "lonmax": 2,
-        "latmin": 50,
-        "latmax": 54,
-        "resolution": "10m",
-    },
-    "cfp-input-levs-config": {
-        "min": -5,
-        "max": 55,
-        "step": 5,
-    },
-    "cfp-output-levs-config": {
-        "min": 5e-08,
-        "max": 10e-08,
-        "step": 0.25e-08,
-    },
-}
 
 CONFIG_DEFAULTS = {
     # *** Script running options ***
@@ -203,33 +169,54 @@ def process_config():
     TODO: DETAILED DOCS
     """
     parser = argparse.ArgumentParser(prog="VISION TOOLKIT")
-    process_config_file(parser)
-    args = process_cli_arguments(parser)
 
-    logger.critical(
-        f"Parsed configuration arguments are:\n{pformat(args)}\n")
-    return args
-
-
-def process_config_file(parser):
-    """Process a configuration file.
-
-    TODO: DETAILED DOCS
-    """
-    # Overwrite default config. with any custom supplied config., so that
-    # the CONFIG_CUSTOM_INPUT replaces values for keys in CONFIG_DEFAULTS.
-    config_input = {**CONFIG_DEFAULTS, **CONFIG_CUSTOM_INPUT}
-    logger.critical(
-        "Raw (before argparse processing) input config. comprising custom "
-        f"config. overriding defaults dict is:\n{pformat(config_input)}\n"
-    )
-
+    # Set CLI defaults for anything not specified via CLI
+    #
     # Want config. file input to have identical key names to the CLI ones,
     # namely with underscores as word delimiters, but for processing defaults
     # have to use hyphens since argparse converts to these for valid attr names
     config_cli_input = {
-        k.replace("-", "_"): v for k, v in config_input.items()}
+        k.replace("-", "_"): v for k, v in CONFIG_DEFAULTS.items()}
+    logger.critical(
+        "Raw (before argparse processing) input config. comprising custom "
+        f"config. overriding defaults dict is:\n{pformat(config_cli_input)}\n"
+    )
     parser.set_defaults(**config_cli_input)
+    args = process_cli_arguments(parser)
+    logger.critical(
+        f"Parsed CLI configuration arguments are:\n{pformat(args)}\n")
+
+    config_file = args.config_file
+    if config_file:
+        config_from_file = process_config_file(config_file)
+
+    # Overwrite config. provided via the CLI with any config. specified by
+    # in the config. file given with --config-file argument:
+    final_config_namespace = copy.copy(args)
+    for key, value in vars(args).items():
+        match_key = key.replace("_", "-")
+        if match_key in config_from_file:
+            setattr(
+                final_config_namespace, key, config_from_file[match_key])
+
+    print("FINAL NAMESPACE IS:", final_config_namespace)
+    return final_config_namespace
+
+
+def process_config_file(config_file):
+    """Process a configuration file.
+
+    TODO: DETAILED DOCS
+    """
+    with open(config_file) as f:
+        try:
+            j = json.load(f)
+        except:
+            raise ValueError("Bad JSON configuration file.")  # TODO better msg
+
+    logger.critical(f"Succesfully read-in JSON config. file at: {config_file}")
+
+    return j
 
 
 def process_cli_arguments(parser):
@@ -239,6 +226,9 @@ def process_cli_arguments(parser):
     """
     # Add arguments with basic type check (string is default, so no need for
     # type=str)
+    parser.add_argument(
+        "--config-file", action="store", help="HELP TODO")
+
     parser.add_argument(
         "--data-dir-loc", action="store", help="HELP TODO")
     parser.add_argument(
@@ -253,8 +243,7 @@ def process_cli_arguments(parser):
     parser.add_argument(
         "--chosen-model-fields", action="store", help="HELP TODO")
 
-    parser.add_argument(
-        "--outputs-dir", action="store", help="HELP TODO")
+    parser.add_argument("--outputs-dir", action="store", help="HELP TODO")
     parser.add_argument(
         "--output-file-name", action="store", help="HELP TODO")
     parser.add_argument(
@@ -268,8 +257,7 @@ def process_cli_arguments(parser):
     parser.add_argument(
         "--show-plot-of-input-obs", action="store", help="HELP TODO")
     parser.add_argument(
-        "--plot-of-input-obs-track-only", action="store",
-        help="HELP TODO"
+        "--plot-of-input-obs-track-only", action="store", help="HELP TODO"
     )
     parser.add_argument(
         "--cfp-cscale", action="store", help="HELP TODO")
