@@ -164,7 +164,13 @@ def process_config():
 
     TODO: DETAILED DOCS
     """
-    parser = argparse.ArgumentParser(prog="VISION TOOLKIT")
+    parser = argparse.ArgumentParser(
+        prog="VISION TOOLKIT",
+        description=(
+            "Virtual Integration of Satellite and In-Situ Observation "
+            "Networks (VISION) toolkit flight simulator"
+        )
+    )
 
     # Set CLI defaults for anything not specified via CLI
     #
@@ -232,6 +238,12 @@ def process_cli_arguments(parser):
     """
     # Add arguments with basic type check (string is default, so no need for
     # type=str)
+    # 'bool() function is not recommended as a type converter, see
+    # https://docs.python.org/3/library/argparse.html#argparse-type
+    parser.add_argument(
+        "-v", "--verbose", action="store_true",
+        help="provide detailed output [TODO ENABLE VARIOUS LEVELS VIA LOGGING]"
+    )
     parser.add_argument(
         "--config-file", action="store",
         help=(
@@ -240,7 +252,6 @@ def process_cli_arguments(parser):
             "command-line options, if duplication of input occurs"
         )
     )
-
     parser.add_argument(
         "--data-dir-loc", action="store",
         help="path location of the top-level data directory [TODO CLARIFY]"
@@ -253,7 +264,6 @@ def process_cli_arguments(parser):
         "--model-data-dir", action="store",
         help="path location of the model data directory [TODO CLARFIY]"
     )
-
     # Need an index or slice for these next 2, hence integer or slice object,
     # but given argparse isn't degined to handle this, accept as string
     # and validate later.
@@ -308,17 +318,17 @@ def process_cli_arguments(parser):
         help="initial text to use in the names of all plots generated"
     )
     parser.add_argument(
-        "--show-plot-of-input-obs", action="store",
+        "--show-plot-of-input-obs", action="store_true",
         help=(
-            "boolean flag to indicate whether to show plots of the input "
+            "flag to indicate whether to show plots of the input "
             "observational data before the colocation logic begins, as "
             "a preview"
         )
     )
     parser.add_argument(
-        "--plot-of-input-obs-track-only", action="store",
+        "--plot-of-input-obs-track-only", action="store_true",
         help=(
-            "boolean flag to indicate whether only the track/trajectory "
+            "flag to indicate whether only the track/trajectory "
             "of the observational data is shown, as opposed to the data "
             "on the track, for the input observational data preview plots"
         )
@@ -371,13 +381,6 @@ def process_cli_arguments(parser):
             "https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars"
             "[TODO CLARIFY/SEPARATE SETVARS AND PLOT CALL CONFIG.]"
         ),
-    )
-
-    # 'bool() function is not recommended as a type converter, see
-    # https://docs.python.org/3/library/argparse.html#argparse-type
-    parser.add_argument(
-        "--verbose", action="store",
-        help="provide detailed output [TODO ENABLE VARIOUS LEVELS VIA LOGGING]"
     )
 
     return parser.parse_args()
