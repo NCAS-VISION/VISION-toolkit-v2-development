@@ -173,12 +173,14 @@ def process_config():
     # have to use hyphens since argparse converts to these for valid attr names
     config_cli_input = {
         k.replace("-", "_"): v for k, v in CONFIG_DEFAULTS.items()}
-    logger.critical(
-        f"Default configuration is:\n{pformat(config_cli_input)}\n"
-    )
     parser.set_defaults(**config_cli_input)
 
     args = process_cli_arguments(parser)
+    # Can't print pre-parsed config. until here, else this logging message
+    # will appear to spam the '--help' option output.
+    logger.critical(
+        f"Default configuration is:\n{pformat(config_cli_input)}\n"
+    )
     logger.critical(
         f"Parsed CLI configuration arguments are:\n{pformat(args)}\n")
 
