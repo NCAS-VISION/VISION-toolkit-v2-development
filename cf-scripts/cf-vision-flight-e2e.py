@@ -178,10 +178,10 @@ def process_config():
     config_cli_input = {
         k.replace("-", "_"): v for k, v in CONFIG_DEFAULTS.items()}
     logger.critical(
-        "Raw (before argparse processing) input config. comprising custom "
-        f"config. overriding defaults dict is:\n{pformat(config_cli_input)}\n"
+        f"Default configuration is:\n{pformat(config_cli_input)}\n"
     )
     parser.set_defaults(**config_cli_input)
+
     args = process_cli_arguments(parser)
     logger.critical(
         f"Parsed CLI configuration arguments are:\n{pformat(args)}\n")
@@ -199,7 +199,12 @@ def process_config():
             setattr(
                 final_config_namespace, key, config_from_file[match_key])
 
-    print("FINAL NAMESPACE IS:", final_config_namespace)
+    logger.critical(
+        "Final input configuration, considering CLI inputs including "
+        "application of config from specified config. file via "
+        "--config-file is:"
+        f"\n{pformat(final_config_namespace)}\n"
+    )
     return final_config_namespace
 
 
@@ -215,6 +220,9 @@ def process_config_file(config_file):
             raise ValueError("Bad JSON configuration file.")  # TODO better msg
 
     logger.critical(f"Succesfully read-in JSON config. file at: {config_file}")
+
+    # TODO validation on keys
+    # TODO allow YAML config. format as well.
 
     return j
 
