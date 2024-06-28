@@ -39,10 +39,10 @@ Default configuration is:
  'cfp_output_levs_config': {},
  'chosen_model_fields': False,
  'chosen_obs_fields': False,
- 'data_dir_loc': '.',
  'history_message': 'Processed using the NCAS VISION Toolkit to colocate from '
                     'model data to the observational data spatio-temporal '
                     'location.',
+ 'input_data_dir_loc': '.',
  'model_data_dir': '.',
  'obs_data_dir': '.',
  'output_file_name': 'vision_toolkit_result_field.nc',
@@ -55,11 +55,11 @@ Default configuration is:
  'verbose': True}
 
 Parsed CLI configuration arguments are:
-Namespace(config_file='faam-stanco-e2e-config.json', data_dir_loc='.', obs_data_dir='.', model_data_dir='.', chosen_obs_fields=False, chosen_model_fields=False, outputs_dir='.', output_file_name='vision_toolkit_result_field.nc', history_message='Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.', regrid_method='linear', regrid_z_coord=None, plotname_start='vision_toolkit', show_plot_of_input_obs=True, plot_of_input_obs_track_only=True, cfp_cscale='plasma', cfp_mapset_config={}, cfp_input_levs_config={}, cfp_input_track_only_config={'legend': True, 'colorbar': False, 'markersize': 0.5, 'linewidth': 0, 'title': 'Flight track from observational field to co-locate model field onto'}, cfp_output_levs_config={}, cfp_output_general_config={'legend': True, 'markersize': 5, 'linewidth': 0.4, 'title': 'Co-located result: model co-located onto observational path'}, verbose=True, cfp_input_general_config={'legend': True, 'markersize': 5, 'linewidth': 0.4, 'title': 'Observational field input (path, to be used for co-location, with its corresponding data, to be ignored)'})
+Namespace(verbose=True, config_file='configurations/faam-stanco-e2e-config.json', input_data_dir_loc='.', obs_data_dir='.', model_data_dir='.', chosen_obs_fields=False, chosen_model_fields=False, outputs_dir='.', output_file_name='vision_toolkit_result_field.nc', history_message='Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.', regrid_method='linear', regrid_z_coord=None, plotname_start='vision_toolkit', show_plot_of_input_obs=True, plot_of_input_obs_track_only=True, cfp_cscale='plasma', cfp_mapset_config={}, cfp_input_levs_config={}, cfp_input_general_config={'legend': True, 'markersize': 5, 'linewidth': 0.4, 'title': 'Observational field input (path, to be used for co-location, with its corresponding data, to be ignored)'}, cfp_input_track_only_config={'legend': True, 'colorbar': False, 'markersize': 0.5, 'linewidth': 0, 'title': 'Flight track from observational field to co-locate model field onto'}, cfp_output_levs_config={}, cfp_output_general_config={'legend': True, 'markersize': 5, 'linewidth': 0.4, 'title': 'Co-located result: model co-located onto observational path'})
 
-Succesfully read-in JSON config. file at: faam-stanco-e2e-config.json
+Succesfully read-in JSON config. file at: configurations/faam-stanco-e2e-config.json
 Final input configuration, considering CLI inputs including application of config from specified config. file via --config-file is:
-Namespace(config_file='faam-stanco-e2e-config.json', data_dir_loc='data', obs_data_dir='compliant-data/core_faam_20170703_c016_STANCO_CF.nc', model_data_dir='main-workwith-test-ISO-simulator/Model_Input', chosen_obs_fields=0, chosen_model_fields=-2, outputs_dir='cf-script-outputs', output_file_name='cf_vision_result_field.nc', history_message='Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.', regrid_method='linear', regrid_z_coord='air_pressure', plotname_start='vision_toolkit', show_plot_of_input_obs=True, plot_of_input_obs_track_only=2, cfp_cscale='plasma', cfp_mapset_config={'lonmin': -2, 'lonmax': 2, 'latmin': 50, 'latmax': 54, 'resolution': '10m'}, cfp_input_levs_config={'min': -5, 'max': 55, 'step': 5}, cfp_input_track_only_config={'legend': True, 'colorbar': False, 'markersize': 0.5, 'linewidth': 0, 'title': 'Flight track from observational field to co-locate model field onto'}, cfp_output_levs_config={'min': 5e-08, 'max': 1e-07, 'step': 2.5e-09}, cfp_output_general_config={'legend': True, 'markersize': 5, 'linewidth': 0.4, 'title': 'Co-located result: model co-located onto observational path'}, verbose=True, cfp_input_general_config={'legend': True, 'markersize': 5, 'linewidth': 0.4, 'title': 'Observational field input (path, to be used for co-location, with its corresponding data, to be ignored)'})
+Namespace(verbose=True, config_file='configurations/faam-stanco-e2e-config.json', input_data_dir_loc='../data', obs_data_dir='compliant-data/core_faam_20170703_c016_STANCO_CF.nc', model_data_dir='main-workwith-test-ISO-simulator/Model_Input', chosen_obs_fields=0, chosen_model_fields=-2, outputs_dir='cf-script-outputs', output_file_name='cf_vision_result_field.nc', history_message='Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.', regrid_method='linear', regrid_z_coord='air_pressure', plotname_start='vision_toolkit', show_plot_of_input_obs=True, plot_of_input_obs_track_only=2, cfp_cscale='plasma', cfp_mapset_config={'lonmin': -2, 'lonmax': 2, 'latmin': 50, 'latmax': 54, 'resolution': '10m'}, cfp_input_levs_config={'min': -5, 'max': 55, 'step': 5}, cfp_input_general_config={'legend': True, 'markersize': 5, 'linewidth': 0.4, 'title': 'Observational field input (path, to be used for co-location, with its corresponding data, to be ignored)'}, cfp_input_track_only_config={'legend': True, 'colorbar': False, 'markersize': 0.5, 'linewidth': 0, 'title': 'Flight track from observational field to co-locate model field onto'}, cfp_output_levs_config={'min': 5e-08, 'max': 1e-07, 'step': 2.5e-09}, cfp_output_general_config={'legend': True, 'markersize': 5, 'linewidth': 0.4, 'title': 'Co-located result: model co-located onto observational path'})
 
 Using Python and CF environment of:
 Platform: Linux-6.5.13-7-MANJARO-x86_64-with-glibc2.39 
@@ -67,7 +67,7 @@ HDF5 library: 1.14.3
 netcdf library: 4.9.2 
 udunits2 library: /home/slb93/miniconda3/envs/cf-env-312/lib/libudunits2.so.0 
 esmpy/ESMF: 8.6.1 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/esmpy/__init__.py
-Python: 3.12.2 /home/slb93/miniconda3/envs/cf-env-312/bin/python
+Python: 3.12.2 /home/slb93/miniconda3/envs/cf-env-312/bin/python3.12
 dask: 2024.3.1 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/dask/__init__.py
 netCDF4: 1.7.1 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/netCDF4/__init__.py
 psutil: 5.9.5 /home/slb93/miniconda3/envs/cf-env-312/lib/python3.12/site-packages/psutil/__init__.py
@@ -82,16 +82,16 @@ cfdm: 1.11.1.0 /home/slb93/git-repos/cfdm/cfdm/__init__.py
 cf: 3.16.2 /home/slb93/git-repos/cf-python/cf/__init__.py
 
 
-_____ Time taken (in s) for 'read_obs_input_data' to run: 0.0128 _____
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.0231 _____
 
 
-_____ Time taken (in s) for 'read_model_input_data' to run: 1.2871 _____
+_____ Time taken (in s) for 'read_model_input_data' to run: 2.4118 _____
 
 All input data successfully read in.
 
 Input data locations are:
-Observational data: 'data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc'
-Model data: 'data/main-workwith-test-ISO-simulator/Model_Input'
+Observational data: '../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc'
+Model data: '../data/main-workwith-test-ISO-simulator/Model_Input'
 
 Observational FieldList is:
  [<CF Field: mole_fraction_of_ozone_in_air(ncdim%obs(11160)) ppb>]
@@ -277,6 +277,7 @@ _____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
 traj - making a trajectory plot
 traj - plotting different colour markers based on a user set of levels
 con - adding cylindrical axes
+HOLA
 traj - making a trajectory plot
 traj - plotting different colour markers based on a user set of levels
 plotting lines
@@ -284,7 +285,7 @@ plotting markers
 con - adding cylindrical axes
 con - adding a colour bar
 
-_____ Time taken (in s) for 'make_preview_plots' to run: 1.5951 _____
+_____ Time taken (in s) for 'make_preview_plots' to run: 2.9538 _____
 
 
 _____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.0 _____
@@ -299,7 +300,7 @@ Calendar on model time coordinate is: standard
 Calendars on observational and model time coords. are the same?: True
 
 
-_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0015 _____
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0027 _____
 
 Set to create 4D bounding box onto model field, based on obs. field tight boundaries of (4D: X, Y, Z, T):
 X: (<CF Data(1): [-1.297370195388794] degree_east>, <CF Data(1): [1.9447091817855835] degree_east>)
@@ -319,7 +320,7 @@ Dimension coords: time(5) = [2017-07-03 11:00:00, ..., 2017-07-03 15:00:00] stan
                 : latitude(3) = [50.625, 51.875, 53.125] degrees_north
                 : longitude(4) = [-2.8125, ..., 2.8125] degrees_east
 
-_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.1851 _____
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.3804 _____
 
 Starting spatial interpolation (regridding) step...
 
@@ -337,7 +338,7 @@ Auxiliary coords: time(ncdim%obs(11160)) = [2017-07-03 11:15:07, ..., 2017-07-03
                 : latitude(ncdim%obs(11160)) = [52.56147766113281, ..., 52.0729866027832] degree_north
                 : longitude(ncdim%obs(11160)) = [0.3171832859516144, ..., -0.6249311566352844] degree_east
 
-_____ Time taken (in s) for 'spatial_interpolation' to run: 0.2772 _____
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.5442 _____
 
 Starting time interpolation step.
 
@@ -484,13 +485,13 @@ The final result field has data statistics of:
 
 Time interpolation complete.
 
-_____ Time taken (in s) for 'time_interpolation' to run: 1.1462 _____
+_____ Time taken (in s) for 'time_interpolation' to run: 2.6259 _____
 
 
 _____ Time taken (in s) for 'create_cra_outputs' to run: 0.0 _____
 
 
-_____ Time taken (in s) for 'write_output_data' to run: 0.1936 _____
+_____ Time taken (in s) for 'write_output_data' to run: 0.3915 _____
 
 traj - making a trajectory plot
 traj - plotting different colour markers based on a user set of levels
@@ -499,8 +500,8 @@ plotting markers
 con - adding cylindrical axes
 con - adding a colour bar
 
-_____ Time taken (in s) for 'make_outputs_plots' to run: 0.3333 _____
+_____ Time taken (in s) for 'make_outputs_plots' to run: 0.6998 _____
 
 
-_____ Time taken (in s) for 'main' to run: 5.0671 _____
+_____ Time taken (in s) for 'main' to run: 10.1179 _____
 
