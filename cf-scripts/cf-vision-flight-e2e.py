@@ -89,7 +89,7 @@ CONFIG_DEFAULTS = {
     # see Issue #286.
     "verbose": True,
     # *** Input data choices ***
-    "data-dir-loc": ".",
+    "input-data-dir-loc": ".",
     "obs-data-dir": ".",
     "model-data-dir": ".",
     # Extract input fields from input FieldList.
@@ -245,7 +245,7 @@ def process_cli_arguments(parser):
         help="provide detailed output [TODO ENABLE VARIOUS LEVELS VIA LOGGING]"
     )
     parser.add_argument(
-        "--config-file", action="store",
+        "-c", "--config-file", action="store",
         help=(
             "configuration file in JSON format to supply configuration, "
             "which overrides any configuration provided by other "
@@ -253,15 +253,15 @@ def process_cli_arguments(parser):
         )
     )
     parser.add_argument(
-        "--data-dir-loc", action="store",
+        "-i", "--input-data-dir-loc", action="store",
         help="path location of the top-level data directory [TODO CLARIFY]"
     )
     parser.add_argument(
-        "--obs-data-dir", action="store",
+        "-o", "--obs-data-dir", action="store",
         help="path location of the observational data directory [TODO CLARIFY]"
     )
     parser.add_argument(
-        "--model-data-dir", action="store",
+        "-m", "--model-data-dir", action="store",
         help="path location of the model data directory [TODO CLARFIY]"
     )
     # Need an index or slice for these next 2, hence integer or slice object,
@@ -284,11 +284,11 @@ def process_cli_arguments(parser):
         )
     )
     parser.add_argument(
-        "--outputs-dir", action="store",
+        "-d", "--outputs-dir", action="store",
         help="path location of the top-level directory to create outputs in"
     )
     parser.add_argument(
-        "--output-file-name", action="store",
+        "-f", "--output-file-name", action="store",
         help="name including extension to give the result output file"
     )
     parser.add_argument(
@@ -299,7 +299,7 @@ def process_cli_arguments(parser):
         )
     )
     parser.add_argument(
-        "--regrid-method", action="store",
+        "-r", "--regrid-method", action="store",
         help=(
             "regridding interpolation method to apply, see 'method' "
             "parameter to 'cf.regrids' method for options: "
@@ -307,7 +307,7 @@ def process_cli_arguments(parser):
         )
     )
     parser.add_argument(
-        "--regrid-z-coord", action="store",
+        "-z", "--regrid-z-coord", action="store",
         help=(
             "vertical (z) coordinate to use as the vertical component in "
             "the spatial interpolation step"
@@ -318,7 +318,7 @@ def process_cli_arguments(parser):
         help="initial text to use in the names of all plots generated"
     )
     parser.add_argument(
-        "--show-plot-of-input-obs", action="store_true",
+        "-p", "--show-plot-of-input-obs", action="store_true",
         help=(
             "flag to indicate whether to show plots of the input "
             "observational data before the colocation logic begins, as "
@@ -326,7 +326,7 @@ def process_cli_arguments(parser):
         )
     )
     parser.add_argument(
-        "--plot-of-input-obs-track-only", action="store_true",
+        "-t", "--plot-of-input-obs-track-only", action="store_true",
         help=(
             "flag to indicate whether only the track/trajectory "
             "of the observational data is shown, as opposed to the data "
@@ -437,35 +437,35 @@ def get_env_and_diagnostics_report():
 
 
 @timeit
-def read_obs_input_data(data_dir_loc, obs_data_dir):
+def read_obs_input_data(input_data_dir_loc, obs_data_dir):
     """Read in all observational input data.
 
     TODO: DETAILED DOCS
     """
-    obs_data_loc = f"{data_dir_loc}/{obs_data_dir}"
+    obs_data_loc = f"{input_data_dir_loc}/{obs_data_dir}"
     return cf.read(obs_data_loc), obs_data_loc
 
 
 @timeit
-def read_model_input_data(data_dir_loc, model_data_dir):
+def read_model_input_data(input_data_dir_loc, model_data_dir):
     """Read in all model input data.
 
     TODO: DETAILED DOCS
     """
-    model_data_loc = f"{data_dir_loc}/{model_data_dir}"
+    model_data_loc = f"{input_data_dir_loc}/{model_data_dir}"
     return cf.read(model_data_loc), model_data_loc
 
 
-def read_input_data(data_dir_loc, obs_data_dir, model_data_dir):
+def read_input_data(input_data_dir_loc, obs_data_dir, model_data_dir):
     """Read in all input data.
 
     TODO: DETAILED DOCS
     """
     get_env_and_diagnostics_report()
     obs_data, obs_data_loc = read_obs_input_data(
-        data_dir_loc, obs_data_dir)
+        input_data_dir_loc, obs_data_dir)
     model_data, model_data_loc = read_model_input_data(
-        data_dir_loc, model_data_dir)
+        input_data_dir_loc, model_data_dir)
 
     # Reporting
     logger.critical("All input data successfully read in.")
@@ -551,6 +551,7 @@ def make_preview_plots(
             cfp.gopen(
                 file=f"{outputs_dir}/{plotname_start}_obs_track_with_data.png"
             )
+            print("HOLA")
             cfp_input_general_config.update(verbose=verbose)
             cfp.traj(obs_field, **cfp_input_general_config)
             cfp.gclose()
@@ -1074,7 +1075,7 @@ def main():
 
     # Process and validate inputs, including optional flight track preview plot
     obs_data, model_data = read_input_data(
-        args.data_dir_loc, args.obs_data_dir, args.model_data_dir)
+        args.input_data_dir_loc, args.obs_data_dir, args.model_data_dir)
     obs_field, model_field = get_input_fields_of_interest(
         obs_data, model_data, args.chosen_obs_fields, args.chosen_model_fields)
 
