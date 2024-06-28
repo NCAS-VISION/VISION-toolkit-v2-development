@@ -31,7 +31,7 @@ setup(
     packages=find_packages(),
     entry_points={
         "console_scripts": [
-            "visiontoolkit = visiontoolkit.__main__:main"
+            "visiontoolkit = visiontoolkit.visiontoolkit:main"
         ]
     },
 )
