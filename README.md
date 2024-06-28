@@ -4,6 +4,27 @@ Scripts and resources related to the VISION project
 
 ## Instructions relating to the resources
 
+### Running the script
+
+The script has now been given minimal packaging so it can be
+run as a command. Try it out with:
+
+```console
+$ visiontoolkit --help
+```
+
+and use the CLI inputs to guide as to what to specify.
+
+Note that for development, I have mostly been using FAAM STANCO campaign
+data for which I provide a custom config. as follows to run the script:
+
+```console
+$ visiontoolkit --config-file="configurations/faam-stanco-e2e-config.json"
+```
+
+(that configuration JSON file is provided in this repository.)
+
+
 ### Instructions to run the cf-python end-to-end co-location script
 
 *Note: these instructions are brief given we are quickly updating
