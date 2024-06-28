@@ -55,6 +55,7 @@ def configure_logging():
         )  # prevents even critical log messages
     return logger
 
+
 logger = configure_logging()
 
 
@@ -137,7 +138,7 @@ CONFIG_DEFAULTS = {
         "linewidth": 0,  # turn off line plotting to only have markers
         "title": (
             "Flight track from observational field to co-locate model "
-        "field onto"
+            "field onto"
         ),
     },
     "cfp-input-general-config": {
@@ -169,7 +170,7 @@ def process_config():
         description=(
             "Virtual Integration of Satellite and In-Situ Observation "
             "Networks (VISION) toolkit flight simulator"
-        )
+        ),
     )
 
     # Set CLI defaults for anything not specified via CLI
@@ -178,7 +179,8 @@ def process_config():
     # namely with underscores as word delimiters, but for processing defaults
     # have to use hyphens since argparse converts to these for valid attr names
     config_cli_input = {
-        k.replace("-", "_"): v for k, v in CONFIG_DEFAULTS.items()}
+        k.replace("-", "_"): v for k, v in CONFIG_DEFAULTS.items()
+    }
     parser.set_defaults(**config_cli_input)
 
     args = process_cli_arguments(parser)
@@ -188,7 +190,8 @@ def process_config():
         f"Default configuration is:\n{pformat(config_cli_input)}\n"
     )
     logger.critical(
-        f"Parsed CLI configuration arguments are:\n{pformat(args)}\n")
+        f"Parsed CLI configuration arguments are:\n{pformat(args)}\n"
+    )
 
     config_file = args.config_file
     if config_file:
@@ -200,8 +203,7 @@ def process_config():
     for key, value in vars(args).items():
         match_key = key.replace("_", "-")
         if match_key in config_from_file:
-            setattr(
-                final_config_namespace, key, config_from_file[match_key])
+            setattr(final_config_namespace, key, config_from_file[match_key])
 
     logger.critical(
         "Final input configuration, considering CLI inputs including "
@@ -241,108 +243,137 @@ def process_cli_arguments(parser):
     # 'bool() function is not recommended as a type converter, see
     # https://docs.python.org/3/library/argparse.html#argparse-type
     parser.add_argument(
-        "-v", "--verbose", action="store_true",
-        help="provide detailed output [TODO ENABLE VARIOUS LEVELS VIA LOGGING]"
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="provide detailed output [TODO ENABLE VARIOUS LEVELS VIA LOGGING]",
     )
     parser.add_argument(
-        "-c", "--config-file", action="store",
+        "-c",
+        "--config-file",
+        action="store",
         help=(
             "configuration file in JSON format to supply configuration, "
             "which overrides any configuration provided by other "
             "command-line options, if duplication of input occurs"
-        )
+        ),
     )
     parser.add_argument(
-        "-i", "--input-data-dir-loc", action="store",
-        help="path location of the top-level data directory [TODO CLARIFY]"
+        "-i",
+        "--input-data-dir-loc",
+        action="store",
+        help="path location of the top-level data directory [TODO CLARIFY]",
     )
     parser.add_argument(
-        "-o", "--obs-data-dir", action="store",
-        help="path location of the observational data directory [TODO CLARIFY]"
+        "-o",
+        "--obs-data-dir",
+        action="store",
+        help="path location of the observational data directory [TODO CLARIFY]",
     )
     parser.add_argument(
-        "-m", "--model-data-dir", action="store",
-        help="path location of the model data directory [TODO CLARFIY]"
+        "-m",
+        "--model-data-dir",
+        action="store",
+        help="path location of the model data directory [TODO CLARFIY]",
     )
     # Need an index or slice for these next 2, hence integer or slice object,
     # but given argparse isn't degined to handle this, accept as string
     # and validate later.
     parser.add_argument(
-        "--chosen-obs-fields", action="store",
+        "--chosen-obs-fields",
+        action="store",
         help=(
             "index or slice to select fields from the FieldList "
             "corresponding to the read-in observational data, else "
             "the entire FieldList is used"
-        )
+        ),
     )
     parser.add_argument(
-        "--chosen-model-fields", action="store",
+        "--chosen-model-fields",
+        action="store",
         help=(
             "index or slice to select fields from the FieldList "
             "corresponding to the read-in model data, else "
             "the entire FieldList is used"
-        )
+        ),
     )
     parser.add_argument(
-        "-d", "--outputs-dir", action="store",
-        help="path location of the top-level directory to create outputs in"
+        "-d",
+        "--outputs-dir",
+        action="store",
+        help="path location of the top-level directory to create outputs in",
     )
     parser.add_argument(
-        "-f", "--output-file-name", action="store",
-        help="name including extension to give the result output file"
+        "-f",
+        "--output-file-name",
+        action="store",
+        help="name including extension to give the result output file",
     )
     parser.add_argument(
-        "--history-message", action="store",
+        "--history-message",
+        action="store",
         help=(
             "message that gets added to the 'history' property on the "
             "output file"
-        )
+        ),
     )
     parser.add_argument(
-        "-r", "--regrid-method", action="store",
+        "-r",
+        "--regrid-method",
+        action="store",
         help=(
             "regridding interpolation method to apply, see 'method' "
             "parameter to 'cf.regrids' method for options: "
             "https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html"
-        )
+        ),
     )
     parser.add_argument(
-        "-z", "--regrid-z-coord", action="store",
+        "-z",
+        "--regrid-z-coord",
+        action="store",
         help=(
             "vertical (z) coordinate to use as the vertical component in "
             "the spatial interpolation step"
-        )
+        ),
     )
     parser.add_argument(
-        "--plotname-start", action="store",
-        help="initial text to use in the names of all plots generated"
+        "--plotname-start",
+        action="store",
+        help="initial text to use in the names of all plots generated",
     )
     parser.add_argument(
-        "-p", "--show-plot-of-input-obs", action="store_true",
+        "-p",
+        "--show-plot-of-input-obs",
+        action="store_true",
         help=(
             "flag to indicate whether to show plots of the input "
             "observational data before the colocation logic begins, as "
             "a preview"
-        )
+        ),
     )
     parser.add_argument(
-        "-t", "--plot-of-input-obs-track-only", action="store_true",
+        "-t",
+        "--plot-of-input-obs-track-only",
+        action="store_true",
         help=(
             "flag to indicate whether only the track/trajectory "
             "of the observational data is shown, as opposed to the data "
             "on the track, for the input observational data preview plots"
-        )
+        ),
     )
     parser.add_argument(
-        "--cfp-cscale", action="store",
+        "--cfp-cscale",
+        action="store",
         help=(
             "cf-plot plotting configuration as a string to set the "
             "colour scale for the (input preview and) output plots, "
             "ee: https://ncas-cms.github.io/cf-plot/build/cscale.html#cscale"
-        )
+        ),
     )
     parser.add_argument(
-        "--cfp-mapset-config", type=json.loads, action="store",
+        "--cfp-mapset-config",
+        type=json.loads,
+        action="store",
         help=(
             "cf-plot plotting configuration as a dictionary to set the "
             "mapping parameters for the (input preview and) output plots, "
@@ -350,7 +381,9 @@ def process_cli_arguments(parser):
         ),
     )
     parser.add_argument(
-        "--cfp-input-levs-config", type=json.loads, action="store",
+        "--cfp-input-levs-config",
+        type=json.loads,
+        action="store",
         help=(
             "cf-plot plotting configuration as a dictionary to set the "
             "contour levels for the input preview plots, "
@@ -358,7 +391,20 @@ def process_cli_arguments(parser):
         ),
     )
     parser.add_argument(
-        "--cfp-input-track-only-config", type=json.loads, action="store",
+        "--cfp-input-general-config",
+        type=json.loads,
+        action="store",
+        help=(
+            "cf-plot plotting configuration as a dictionary to set the "
+            "general plotting variables for the input preview full plot, see:"
+            "https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars"
+            "[TODO CLARIFY/SEPARATE SETVARS AND PLOT CALL CONFIG.]"
+        ),
+    )
+    parser.add_argument(
+        "--cfp-input-track-only-config",
+        type=json.loads,
+        action="store",
         help=(
             "cf-plot plotting configuration as a dictionary to set the general"
             " plotting variables for track-only input preview plot, see:"
@@ -366,7 +412,9 @@ def process_cli_arguments(parser):
         ),
     )
     parser.add_argument(
-        "--cfp-output-levs-config", type=json.loads, action="store",
+        "--cfp-output-levs-config",
+        type=json.loads,
+        action="store",
         help=(
             "cf-plot plotting configuration as a dictionary to set the "
             "contour levels for the output plots, "
@@ -374,7 +422,9 @@ def process_cli_arguments(parser):
         ),
     )
     parser.add_argument(
-        "--cfp-output-general-config", type=json.loads, action="store",
+        "--cfp-output-general-config",
+        type=json.loads,
+        action="store",
         help=(
             "cf-plot plotting configuration as a dictionary to set the "
             "general plotting variables for the output plots, see:"
@@ -463,9 +513,11 @@ def read_input_data(input_data_dir_loc, obs_data_dir, model_data_dir):
     """
     get_env_and_diagnostics_report()
     obs_data, obs_data_loc = read_obs_input_data(
-        input_data_dir_loc, obs_data_dir)
+        input_data_dir_loc, obs_data_dir
+    )
     model_data, model_data_loc = read_model_input_data(
-        input_data_dir_loc, model_data_dir)
+        input_data_dir_loc, model_data_dir
+    )
 
     # Reporting
     logger.critical("All input data successfully read in.")
@@ -495,7 +547,8 @@ def report_about_input_data(obs_data, model_data):
 
 @timeit
 def get_input_fields_of_interest(
-        obs_data, model_data, chosen_obs_fields, chosen_model_fields):
+    obs_data, model_data, chosen_obs_fields, chosen_model_fields
+):
     """Return fields of interest from input datasets.
 
     TODO: DETAILED DOCS
@@ -509,12 +562,17 @@ def get_input_fields_of_interest(
 
 @timeit
 def make_preview_plots(
-    obs_field, show_plot_of_input_obs,
+    obs_field,
+    show_plot_of_input_obs,
     plot_of_input_obs_track_only,
-    outputs_dir, plotname_start,
-    cfp_mapset_config, cfp_cscale, cfp_input_levs_config,
+    outputs_dir,
+    plotname_start,
+    cfp_mapset_config,
+    cfp_cscale,
+    cfp_input_levs_config,
     cfp_input_track_only_config,
-    cfp_input_general_config, verbose
+    cfp_input_general_config,
+    verbose,
 ):
     """Generate plots of the flight track for a pre-colocation preview.
 
@@ -546,7 +604,9 @@ def make_preview_plots(
             cfp_input_track_only_config.update(verbose=verbose)
             cfp.traj(equal_data_obs_field, **cfp_input_track_only_config)
             cfp.gclose()
-            cfp.cscale(cfp_cscale)  # reset for normal (default-style) plots after
+            cfp.cscale(
+                cfp_cscale
+            )  # reset for normal (default-style) plots after
         if plot_of_input_obs_track_only in (0, 2):
             cfp.gopen(
                 file=f"{outputs_dir}/{plotname_start}_obs_track_with_data.png"
@@ -616,8 +676,8 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     logger.critical(f"Unit-conformed model time coord. is: {model_times}")
     # Get the time coordinates again to ensure/assert conversion on field
     same_units = (
-        get_time_coords(obs_field, model_field)[0].data.Units ==
-        get_time_coords(obs_field, model_field)[1].data.Units
+        get_time_coords(obs_field, model_field)[0].data.Units
+        == get_time_coords(obs_field, model_field)[1].data.Units
     )
     logger.critical(
         f"Units on observational and model time coords. are the same?: "
@@ -640,8 +700,8 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     logger.critical(f"Calendar on model time coordinate is: {model_calendar}")
 
     same_calendar = (
-        get_time_coords(obs_field, model_field)[0].calendar ==
-        get_time_coords(obs_field, model_field)[1].calendar
+        get_time_coords(obs_field, model_field)[0].calendar
+        == get_time_coords(obs_field, model_field)[1].calendar
     )
     logger.critical(
         f"Calendars on observational and model time coords. are the same?: "
@@ -650,8 +710,7 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 
 
 @timeit
-def subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field, verbose):
+def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
     """Extract only relevant data in the model field via a 4D subspace.
 
     Relevant data is extracted in the form of a field comprising the model
@@ -747,7 +806,8 @@ def subspace_to_spatiotemporal_bounding_box(
 
 @timeit
 def spatial_interpolation(
-        obs_field, model_field_bb, regrid_method, regrid_z_coord):
+    obs_field, model_field_bb, regrid_method, regrid_z_coord
+):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
 
     Horizontal X-Y and vertical Z coordinates are interpolated. This is
@@ -793,8 +853,12 @@ def spatial_interpolation(
 
 @timeit
 def time_interpolation(
-        obs_times, model_times, obs_field, model_field, spatially_colocated_field,
-        history_message,
+    obs_times,
+    model_times,
+    obs_field,
+    model_field,
+    spatially_colocated_field,
+    history_message,
 ):
     """Interpolate the flight path temporally (in time T).
 
@@ -1016,8 +1080,12 @@ def write_output_data(final_result_field, output_file_name):
 
 @timeit
 def make_outputs_plots(
-        final_result_field, cfp_output_levs_config,
-        outputs_dir, plotname_start, cfp_output_general_config, verbose
+    final_result_field,
+    cfp_output_levs_config,
+    outputs_dir,
+    plotname_start,
+    cfp_output_general_config,
+    verbose,
 ):
     """Generate plots of the flight track for a pre-colocation preview.
 
@@ -1075,18 +1143,25 @@ def main():
 
     # Process and validate inputs, including optional flight track preview plot
     obs_data, model_data = read_input_data(
-        args.input_data_dir_loc, args.obs_data_dir, args.model_data_dir)
+        args.input_data_dir_loc, args.obs_data_dir, args.model_data_dir
+    )
     obs_field, model_field = get_input_fields_of_interest(
-        obs_data, model_data, args.chosen_obs_fields, args.chosen_model_fields)
+        obs_data, model_data, args.chosen_obs_fields, args.chosen_model_fields
+    )
 
     # TODO: this has too many parameters for one function, separate out
     make_preview_plots(
-        obs_field, args.show_plot_of_input_obs,
+        obs_field,
+        args.show_plot_of_input_obs,
         args.plot_of_input_obs_track_only,
-        outputs_dir, plotname_start,
-        args.cfp_mapset_config, args.cfp_cscale, args.cfp_input_levs_config,
+        outputs_dir,
+        plotname_start,
+        args.cfp_mapset_config,
+        args.cfp_cscale,
+        args.cfp_input_levs_config,
         args.cfp_input_track_only_config,
-        args.cfp_input_general_config, verbose
+        args.cfp_input_general_config,
+        verbose,
     )
     ensure_cf_compliance(obs_field, model_field)  # TODO currently does nothing
 
@@ -1101,7 +1176,10 @@ def main():
 
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
-        obs_field, model_field_bb, args.regrid_method, args.regrid_z_coord,
+        obs_field,
+        model_field_bb,
+        args.regrid_method,
+        args.regrid_z_coord,
     )
     final_result_field = time_interpolation(
         obs_times,
