@@ -4,6 +4,13 @@ import os
 from setuptools import find_packages, setup
 
 
+def get_dependencies():
+    """Get dependencies for the package, listed in 'requirements.txt'.
+    """
+    requirements = open("requirements.txt", "r")
+    return requirements.read().splitlines()
+
+
 # TODO 1: add further information typical for a setup.py, esp. dependency
 # requirements and package data, but also extras such as keywords,
 # platforms, etc.
@@ -20,6 +27,7 @@ setup(
     author="NCAS, TODO",
     version="0.1",  # TODO 3: set this when ready, currently pre-release/beta
     python_requires=">=3.10",
+    install_requires=get_dependencies(),
     packages=find_packages(),
     entry_points={
         "console_scripts": [

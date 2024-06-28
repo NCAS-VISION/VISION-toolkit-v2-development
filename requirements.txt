@@ -1,0 +1,2 @@
+cf-python>=3.9.0
+cf-plot>=3.3.0
