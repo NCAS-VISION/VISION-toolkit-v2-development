@@ -19,6 +19,7 @@ Note that for development, I have mostly been using FAAM STANCO campaign
 data for which I provide a custom config. as follows to run the script:
 
 ```console
+$ cd visiontoolkit
 $ visiontoolkit --config-file="configurations/faam-stanco-e2e-config.json"
 ```
 
