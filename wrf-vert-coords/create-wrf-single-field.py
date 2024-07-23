@@ -1,6 +1,6 @@
 COMPUTE_VERT_COORS = True
 WRITE_OUT_NAME = "final-wrf-with-vert-coords.nc"
-CHECK_READ_IN_AS_ONE = True
+CHECK_AGGREGATES_TO_ONE = True
 
 
 import cf
@@ -107,9 +107,14 @@ t.dump()
 cf.write(t, WRITE_OUT_NAME)
 print(f"\n\nWriting out done: see {WRITE_OUT_NAME}!")
 
-if CHECK_READ_IN_AS_ONE:
-    # 10. Check everything is OK by re-reading this in, should be one field now
-    g = cf.read(WRITE_OUT_NAME)
-    print("\n\nLength of read-in final field is:", len(g))
-    print("Final field (first in list, hoping for singular list) is:")
+if CHECK_AGGREGATES_TO_ONE:
+    # 10. Check everything is OK by aggregating the current FieldList, should
+    # now be aggregatable to one field so emerge as a single field now.
+    g = cf.aggregate(t)
+    print("\n\nLength of aggregated final FieldList is:", len(g))
+    print("Final zeroth field is:")
     g[0].dump()
+    # NOTE: check all is good by using 'ncdump -h <filename>' on the output
+    # netCDF file, shoudl see a 'formula_terms' e.g:
+    #     ZNU:formula_terms = "a: A b: B p0: p0 ps: ps" ;
+    # attached to the z coordinate (ZNU in this example).

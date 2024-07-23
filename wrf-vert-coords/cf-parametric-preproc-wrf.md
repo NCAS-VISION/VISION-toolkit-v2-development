@@ -113,8 +113,7 @@ Coordinate Reference: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
 >>> # All ready to add!
 >>> 
 >>> # 4. Add the coordinate reference to the field t
->>> t.set_construct(c)
-'coordinatereference0'
+>>> c_key = t.set_construct(c)
 >>> t
 <CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>
 >>> print(t)
@@ -224,23 +223,10 @@ Dimension coordinate: atmosphere_hybrid_sigma_pressure_coordinate
     Data(50) = [0.9969073534011841, ..., 0.0019467439269647002]
 >>> 
 >>> # Now set this on t, to incorporate the z into t as a dim. coord.
->>> t.set_construct(d)
-'dimensioncoordinate2'
->>> print(t)
-Field: ncvar%T (ncvar%T)
-------------------------
-Data            : ncvar%T(ncdim%Time(61), atmosphere_hybrid_sigma_pressure_coordinate(50), ncdim%south_north(179), ncdim%west_east(139))
-Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
-                : atmosphere_hybrid_sigma_pressure_coordinate(50) = [0.9969073534011841, ..., 0.0019467439269647002]
-                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
-Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
-                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
-                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
-Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
-Domain ancils   : ncvar%A(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
-                : ncvar%B(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.9968656897544861, ..., 0.0]
-                : ncvar%p0() = 1013.25 hPa
-                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+>>> d_key = t.set_construct(d)  # save key name for use next
+>>> Also need to add it to the coordinate reference as its coordinate
+>>> c = t.construct(c_key)
+>>> c.set_coordinate(d_key)  # edited in-place on t
 >>> # Now added!
 >>> 
 >>> # 8. Now everything should be ready. Inspect the field and write it out
@@ -311,20 +297,17 @@ Coordinate reference: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
     Coordinate conversion:b = Domain Ancillary: ncvar%B
     Coordinate conversion:p0 = Domain Ancillary: ncvar%p0
     Coordinate conversion:ps = Domain Ancillary: ncvar%ps
-
+    Dimension Coordinate: atmosphere_hybrid_sigma_pressure_coordinate
 >>> cf.write(t, "final-wrf-with-vert-coords.nc")
 >>> 
->>> # Check everything is OK by re-reading this in, should be one field now
->>> g = cf.read("final-wrf-with-vert-coords.nc")
+>>> # Check everything is OK by aggregating the current FieldList, should
+>>> # now be aggregatable to one field so emerge as a single field now.
+>>> g = cf.aggregate(t)
 >>> g
-[<CF Field: ncvar%A(atmosphere_hybrid_sigma_pressure_coordinate(50))>,
- <CF Field: ncvar%B(atmosphere_hybrid_sigma_pressure_coordinate(50))>,
- <CF Field: ncvar%T(ncdim%Time(61), atmosphere_hybrid_sigma_pressure_coordinate(50), ncdim%south_north(179), ncdim%west_east(139))>,
- <CF Field: ncvar%p0 hPa>,
- <CF Field: ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) hPa>]
->>>
->>> # OK so there should just be one field but there is more, still needs some
->>> # work then but we are nearly there...
+[<CF Field: ncvar%T(ncdim%Time(61), atmosphere_hybrid_sigma_pressure_coordinate(50), ncdim%south_north(179), ncdim%west_east(139))>]
+>>> len(g)
+1
+>>> # A single field, just like we needed as a result. All good!
 ```
 
 *****
