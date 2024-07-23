@@ -40,18 +40,18 @@ c.coordinate_conversion.set_parameter(
 # Get the variables from the 'formula terms' equation and match them to
 # the keys from the set_construct() call above.
 dom_ancils = {
-    'a': 'domainancillary0',
-    'b': 'domainancillary1',
-    'p0': 'domainancillary2',
-    'ps': 'domainancillary3',
+    "a": ket_t_a,
+    "b": key_t_b,
+    "p0": key_t_p0,
+    "ps": key_t_ps,
 }
 c.coordinate_conversion.set_domain_ancillaries(dom_ancils)
-print("\n\nCoordinate  reference about to add is:")
+print("\n\nCoordinate reference about to add is:")
 c.dump()
 # All ready to add!
 
 # 4. Add the coordinate reference to the field t
-t.set_construct(c)
+c_key = t.set_construct(c)
 print("\n\nField t after coordinate reference setting is:", t)
 
 # 5. There is some unit processing to do, since we can't yet do the computation
@@ -91,11 +91,15 @@ print("\n\nAdding a dimension coordinate of the squeezed first z element:")
 d.dump()
 
 # Now set this on t, to incorporate the z into t as a dim. coord.
-t.set_construct(d)
+d_key = t.set_construct(d)
 # Now added!
 print("\n\nAdded dimension coord. to t:", t)
 
-# 8. Finally, need to add the dimension coordinate as a 
+# 8. Also need to add it to the coordinate reference as its coordinate
+c = t.construct(c_key)
+c.set_coordinate(d_key)
+print("\n\nSet the dimension coord. on the coord. ref. in t:")
+c.dump()
 
 # 9. Now everything should be ready. Inspect the field and write it out
 print("\n\nDone, now writing out this t field:")
@@ -107,3 +111,5 @@ if CHECK_READ_IN_AS_ONE:
     # 10. Check everything is OK by re-reading this in, should be one field now
     g = cf.read(WRITE_OUT_NAME)
     print("\n\nLength of read-in final field is:", len(g))
+    print("Final field (first in list, hoping for singular list) is:")
+    g[0].dump()
