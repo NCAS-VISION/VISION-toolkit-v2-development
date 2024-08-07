@@ -79,6 +79,15 @@ def timeit(func):
 
 
 # ----------------------------------------------------------------------------
+# Define custom errors
+# ----------------------------------------------------------------------------
+
+class CFComplianceIssue(Exception):
+    """Raised for cases of errors caused by lack of CF Compliance."""
+    pass
+
+
+# ----------------------------------------------------------------------------
 # Define and parse configuration e.g. inputs, outputs.
 # ----------------------------------------------------------------------------
 
@@ -646,11 +655,35 @@ def get_time_coords(obs_field, model_field):
 
     TODO: DETAILED DOCS
     """
+    # Observational time axis processing
+    if obs_field.construct("T", default=False):
+        obs_t_identifier = "T"
+    elif model_field.construct("time", default=False):
+        obs_t_identifier = "time"
+    else:
+        raise CFComplianceIssue(
+            "An identifiable and unique time coordinate is needed but "
+            "was not found for the observational input. Got for "
+            f"obs_field.constructs('T'):\n {obs_field.constructs('T')}\n"
+        )
     # Observational data is a DSG so should always have T as an aux. coord.
-    obs_times = obs_field.auxiliary_coordinate("T")
-    model_times = model_field.dimension_coordinate("T")
+    obs_times = obs_field.auxiliary_coordinate(obs_t_identifier)
 
-    return obs_times, model_times
+    # Model time axis processing
+    if model_field.construct("T", default=False):
+        model_t_identifier = "T"
+    elif model_field.construct("time", default=False):
+        model_t_identifier = "time"
+    else:
+        raise CFComplianceIssue(
+            "An identifiable and unique time coordinate is needed but "
+            "was not found for the model input. Got for "
+            f"model_field.constructs('T'):\n {model_field.constructs('T')}\n"
+        )
+    model_times = model_field.dimension_coordinate(model_t_identifier)
+    # WRF data for now: use model_field.dimension_coordinate( ncvar%Time")
+
+    return (obs_times, model_times), (obs_t_identifier, model_t_identifier)
 
 
 @timeit
@@ -771,6 +804,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
         f"Z: {z_coord_tight_bounds}\n"
         f"T: {t_coord_tight_bounds}\n"
     )
+
     if verbose:  # conditional avoids this calculation twice unless VERBOSE
         model_field_bb_indices = model_field.indices(
             1,  # the halo size that extends the bounding box by 1 in index space
@@ -1166,7 +1200,11 @@ def main():
     ensure_cf_compliance(obs_field, model_field)  # TODO currently does nothing
 
     # Time coordinate considerations, pre-colocation
-    obs_times, model_times = get_time_coords(obs_field, model_field)
+    times, time_iedntifiers = get_time_coords(
+        obs_field, model_field)
+    obs_times, model_times = times
+    obs_t_identifier, model_t_identifier = time_iedntifiers
+    # TODO apply obs_t_identifier, model_t_identifier in further logic
     ensure_unit_calendar_consistency(obs_field, model_field)
 
     # Subspacing to remove irrelavant information, pre-colocation
