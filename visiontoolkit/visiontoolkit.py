@@ -889,6 +889,8 @@ def spatial_interpolation(
 def time_interpolation(
     obs_times,
     model_times,
+    obs_t_identifier,
+    model_t_identifier,
     obs_field,
     model_field,
     spatially_colocated_field,
@@ -909,8 +911,10 @@ def time_interpolation(
     # In our field after spatial interpolation, the Dimension Coord has the
     # model time data and the Aux Coord has the observational time data
     # NOTE: keep these calls in, desite earlier ones probably in-place.
-    model_times = spatially_colocated_field.dimension_coordinate("T")
-    obs_times = spatially_colocated_field.auxiliary_coordinate("T")
+    model_times = spatially_colocated_field.dimension_coordinate(
+        model_t_identifier)
+    obs_times = spatially_colocated_field.auxiliary_coordinate(
+        obs_t_identifier)
     model_times_len = len(model_times.data)
     obs_times_len = len(obs_times.data)
 
@@ -923,9 +927,9 @@ def time_interpolation(
     # Constructs
     m = spatially_colocated_field.copy()
     # Observations, if DSG, will always be the auxiliary coordinate time
-    obs_time_key = m.auxiliary_coordinate("T", key=True)
+    obs_time_key = m.auxiliary_coordinate(obs_t_identifier, key=True)
     # Model data time must always be a dimension coordinate
-    model_time_key = m.dimension_coordinate("T", key=True)
+    model_time_key = m.dimension_coordinate(model_t_identifier, key=True)
     logger.critical(f"Observational (aux) coord. time key is: {obs_time_key}")
     logger.critical(f"Model (dim) time key is: {model_time_key}\n")
 
@@ -995,10 +999,13 @@ def time_interpolation(
         # NOTE: All calc. variables are arrays, except this first one,
         #       a scalar (constant whatever the obs time)
         distance_01 = (
-            s1.dimension_coordinate("T") - s0.dimension_coordinate("T")
+            s1.dimension_coordinate(model_t_identifier) -
+            s0.dimension_coordinate(model_t_identifier)
         ).data
         distances_0 = (
-            s0.auxiliary_coordinate("T")[index] - s0.dimension_coordinate("T")
+            s0.auxiliary_coordinate(
+                obs_t_identifier)[index] -
+            s0.dimension_coordinate(obs_t_identifier)
         ).data
 
         # Calculate the datetime 'distances' to be used for the weighting
@@ -1115,6 +1122,7 @@ def write_output_data(final_result_field, output_file_name):
 @timeit
 def make_outputs_plots(
     final_result_field,
+    obs_t_identifier,
     cfp_output_levs_config,
     outputs_dir,
     plotname_start,
@@ -1142,7 +1150,7 @@ def make_outputs_plots(
     #       massive red herring. In which case, generalise it so that the input
     #       can be a field with a 2D *or* a 1D array to plot. If 1D, it means
     #       it has a trajectory dimension leading, which can be dropped.
-    aux_coor_t = final_result_field.auxiliary_coordinate("T")
+    aux_coor_t = final_result_field.auxiliary_coordinate(obs_t_identifier)
     dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
     final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
 
@@ -1200,10 +1208,10 @@ def main():
     ensure_cf_compliance(obs_field, model_field)  # TODO currently does nothing
 
     # Time coordinate considerations, pre-colocation
-    times, time_iedntifiers = get_time_coords(
+    times, time_identifiers = get_time_coords(
         obs_field, model_field)
     obs_times, model_times = times
-    obs_t_identifier, model_t_identifier = time_iedntifiers
+    obs_t_identifier, model_t_identifier = time_identifiers
     # TODO apply obs_t_identifier, model_t_identifier in further logic
     ensure_unit_calendar_consistency(obs_field, model_field)
 
@@ -1222,6 +1230,8 @@ def main():
     final_result_field = time_interpolation(
         obs_times,
         model_times,
+        obs_t_identifier,
+        model_t_identifier,
         obs_field,
         model_field,
         spatially_colocated_field,
