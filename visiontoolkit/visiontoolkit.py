@@ -814,7 +814,8 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
 
     if verbose:  # conditional avoids this calculation twice unless VERBOSE
         model_field_bb_indices = model_field.indices(
-            1,  # the halo size that extends the bounding box by 1 in index space
+            # the halo size that extends the bounding box by 1 in index space
+            "envelope", 1,
             **bb_kwargs,
         )
         logger.critical(
@@ -827,7 +828,8 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
     # may want to do this include having separate halo sizes for each
     # coordinate, etc.
     model_field_bb = model_field.subspace(
-        1,  # the halo size that extends the bounding box by 1 in index space
+        # the halo size that extends the bounding box by 1 in index space
+        "envelope", 1,
         **bb_kwargs,
     )
 
