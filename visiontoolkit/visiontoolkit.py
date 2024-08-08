@@ -82,8 +82,10 @@ def timeit(func):
 # Define custom errors
 # ----------------------------------------------------------------------------
 
+
 class CFComplianceIssue(Exception):
     """Raised for cases of errors caused by lack of CF Compliance."""
+
     pass
 
 
@@ -650,7 +652,7 @@ def ensure_cf_compliance(obs_field, model_field):
     pass
 
 
-def get_time_coords(obs_field, model_field):
+def get_time_coords(obs_field, model_field, return_identifiers=True):
     """Return the relevant time coordinates from the fields.
 
     TODO: DETAILED DOCS
@@ -683,7 +685,10 @@ def get_time_coords(obs_field, model_field):
     model_times = model_field.dimension_coordinate(model_t_identifier)
     # WRF data for now: use model_field.dimension_coordinate( ncvar%Time")
 
-    return (obs_times, model_times), (obs_t_identifier, model_t_identifier)
+    if return_identifiers:
+        return (obs_times, model_times), (obs_t_identifier, model_t_identifier)
+    else:
+        return obs_times, model_times
 
 
 @timeit
@@ -692,7 +697,9 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 
     TODO: DETAILED DOCS
     """
-    obs_times, model_times = get_time_coords(obs_field, model_field)
+    obs_times, model_times = get_time_coords(
+        obs_field, model_field, return_identifiers=False
+    )
 
     # Ensure the units of the obs and model datetimes are consistent - conform
     # them if they differ (if they don't, Units setting operation is harmless).
@@ -704,14 +711,10 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 
     # Change the units on the model (not obs) times since there are fewer
     # data points on those, meaning less converting work.
-    model_times.Units = obs_times_units
+    ###model_times.Units = obs_times_units
 
     logger.critical(f"Unit-conformed model time coord. is: {model_times}")
-    # Get the time coordinates again to ensure/assert conversion on field
-    same_units = (
-        get_time_coords(obs_field, model_field)[0].data.Units
-        == get_time_coords(obs_field, model_field)[1].data.Units
-    )
+    same_units = obs_times.data.Units == model_times.data.Units
     logger.critical(
         f"Units on observational and model time coords. are the same?: "
         f"{same_units}\n"
@@ -732,10 +735,7 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     model_calendar = model_times.calendar
     logger.critical(f"Calendar on model time coordinate is: {model_calendar}")
 
-    same_calendar = (
-        get_time_coords(obs_field, model_field)[0].calendar
-        == get_time_coords(obs_field, model_field)[1].calendar
-    )
+    same_calendar = obs_calendar == model_calendar
     logger.critical(
         f"Calendars on observational and model time coords. are the same?: "
         f"{same_calendar}\n"
@@ -754,7 +754,11 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
 
     TODO: DETAILED DOCS
     """
-    obs_times, model_times = get_time_coords(obs_field, model_field)
+    times, t_ids = get_time_coords(
+        obs_field, model_field, return_identifiers=True
+    )
+    obs_times, model_times = times
+    model_t_id = t_ids[1]
 
     # TODO: ensure this works for flights that take off on one day and end on
     # another e.g. 11 pm - 3 am flight.
@@ -796,22 +800,22 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
     y_coord_tight_bounds = obs_Y.data.minimum(), obs_Y.data.maximum()
     z_coord_tight_bounds = obs_Z.data.minimum(), obs_Z.data.maximum()
     t_coord_tight_bounds = obs_times.data.minimum(), obs_times.data.maximum()
+    bb_kwargs = {
+        "X": cf.wi(*x_coord_tight_bounds),
+        "Y": cf.wi(*y_coord_tight_bounds),
+        "Z": cf.wi(*z_coord_tight_bounds),
+        # Can't just use 'T' here since we might have a different name
+        model_t_id: cf.wi(*t_coord_tight_bounds),
+    }
     logger.critical(
         "Set to create 4D bounding box onto model field, based on obs. field "
-        "tight boundaries of (4D: X, Y, Z, T):\n"
-        f"X: {x_coord_tight_bounds}\n"
-        f"Y: {y_coord_tight_bounds}\n"
-        f"Z: {z_coord_tight_bounds}\n"
-        f"T: {t_coord_tight_bounds}\n"
+        f"tight boundaries of (4D: X, Y, Z, T):\n{pformat(bb_kwargs)}\n"
     )
 
     if verbose:  # conditional avoids this calculation twice unless VERBOSE
         model_field_bb_indices = model_field.indices(
             1,  # the halo size that extends the bounding box by 1 in index space
-            X=cf.wi(*x_coord_tight_bounds),
-            Y=cf.wi(*y_coord_tight_bounds),
-            Z=cf.wi(*z_coord_tight_bounds),
-            T=cf.wi(*t_coord_tight_bounds),
+            **bb_kwargs,
         )
         logger.critical(
             "Indices of model field bounding box subspace are:"
@@ -824,10 +828,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
     # coordinate, etc.
     model_field_bb = model_field.subspace(
         1,  # the halo size that extends the bounding box by 1 in index space
-        X=cf.wi(*x_coord_tight_bounds),
-        Y=cf.wi(*y_coord_tight_bounds),
-        Z=cf.wi(*z_coord_tight_bounds),
-        T=cf.wi(*t_coord_tight_bounds),
+        **bb_kwargs,
     )
 
     logger.critical(
@@ -912,9 +913,11 @@ def time_interpolation(
     # model time data and the Aux Coord has the observational time data
     # NOTE: keep these calls in, desite earlier ones probably in-place.
     model_times = spatially_colocated_field.dimension_coordinate(
-        model_t_identifier)
+        model_t_identifier
+    )
     obs_times = spatially_colocated_field.auxiliary_coordinate(
-        obs_t_identifier)
+        obs_t_identifier
+    )
     model_times_len = len(model_times.data)
     obs_times_len = len(obs_times.data)
 
@@ -999,13 +1002,12 @@ def time_interpolation(
         # NOTE: All calc. variables are arrays, except this first one,
         #       a scalar (constant whatever the obs time)
         distance_01 = (
-            s1.dimension_coordinate(model_t_identifier) -
-            s0.dimension_coordinate(model_t_identifier)
+            s1.dimension_coordinate(model_t_identifier)
+            - s0.dimension_coordinate(model_t_identifier)
         ).data
         distances_0 = (
-            s0.auxiliary_coordinate(
-                obs_t_identifier)[index] -
-            s0.dimension_coordinate(obs_t_identifier)
+            s0.auxiliary_coordinate(obs_t_identifier)[index]
+            - s0.dimension_coordinate(obs_t_identifier)
         ).data
 
         # Calculate the datetime 'distances' to be used for the weighting
@@ -1208,8 +1210,7 @@ def main():
     ensure_cf_compliance(obs_field, model_field)  # TODO currently does nothing
 
     # Time coordinate considerations, pre-colocation
-    times, time_identifiers = get_time_coords(
-        obs_field, model_field)
+    times, time_identifiers = get_time_coords(obs_field, model_field)
     obs_times, model_times = times
     obs_t_identifier, model_t_identifier = time_identifiers
     # TODO apply obs_t_identifier, model_t_identifier in further logic
