@@ -13,7 +13,7 @@ run as a command. Try it out with:
 $ visiontoolkit --help
 ```
 
-and use the CLI inputs to guide as to what to specify.
+and use the CLI inputs to guide as to what to specify as arguments.
 
 Note that for development, I have mostly been using FAAM STANCO campaign
 data for which I provide a custom config. as follows to run the script:
@@ -25,23 +25,34 @@ $ visiontoolkit --config-file="configurations/faam-stanco-e2e-config.json"
 
 (that configuration JSON file is provided in this repository.)
 
+If you want to run using WRF model input data, there is also a configuration script for that at
+`visiontoolkit/configurations/wrf-preprocessed-e2e-config.json`, though note
+the WRF prcoessing is under active development so values in this configuration file may soon be
+tweaked. You will need to point in the script to pre-processed WRF data such as that processed
+with code under, with saved outputs stored under, `wrf-vert-coords`.
 
-### Instructions to run the cf-python end-to-end co-location script
+
+### Instructions to run the vision toolkit code
 
 *Note: these instructions are brief given we are quickly updating
 the script and relevant libraries, but hopefully enough to go on
 for now. Once things stabilise more, we will update them and add
 detail.*
 
-1. The **script** is under this repo `vision-project-resources` at
-   `cf-scripts/cf-vision-flight-e2e.py`.
+1. The working toolkit (at this stage, just a lone script) is under this repo at
+  `visiontoolkit/visiontoolkit.py`. If you install the toolkit via `pip install -e .`
+  or similar, you can run that script simply by calling the command `visiontoolkit`, but
+  you could also run it as a script via e.g. `python visiontoolkit/visiontoolkit.py`.
+  Note: the code was developed first under `cf-scripts/cf-vision-flight-e2e.py` but
+  has since been moved across to `visiontoolkit/visiontoolkit.py` for proper packaging
+  requrements and the old directory `cf-scripts` deleted.
 
 2. The **environment** you need will to run it requires a custom version of
    cf-plot, and otherwise you will need all the
    dependencies of that and of cf-python. So, to get the right
    Python environment (conda and/or mamba will make it simplest):
 
-   1. Ensure you are using Python version 3.10 or later
+   1. Ensure you are using Python version 3.10 or later.
    2. Install the latest cf-python and cf-plot, noting in the latter case this
       is mostly to ensure you have the right dependencies because we will
       then go on to apply a patch `diff` to cf-plot, so use different
@@ -146,45 +157,4 @@ detail.*
 
         ```
 
-See below for instructions on specifying data inputs.
-
-Please make a note of any issues you experience, and let us know.
-
-
-### Inputs to the cf-python end-to-end co-location script
-
-You will need to point to the right data location in the script.
-
-The input data will need to be made
-CF-compliant to work to run, and there is a script that does that
-for datasets which aren't yet compliant. Please see the `twine-vision`
-Slack channel for details of such a script, provided by Maria.
-
-The paths to your data should be specified at the top of the script in:
-https://github.com/NCAS-VISION/vision-project-resources/blob/a40bdbf4c9162c883efdeaa20061e162e7ff3141/cf-scripts/cf-vision-flight-e2e.py#L31-L39
-
-
-### Outputs from the cf-python end-to-end co-location script
-
-Outputs are generated from the script (if it runs successfully), to
-the directory set in the `OUTPUTS_DIR` variable:
-
-* XY plots of the flight track (across any Z) for:
-  * the input obervational field and/or only its track, if the relevant
-    flags are set to `True`, namely
-    namely `SHOW_PLOT_OF_INPUT_OBS` and `PLOT_OF_INPUT_OBS_TRACK_ONLY`);
-  * the output co-located field.
-* the final output co-located field netCDF file, written-out at the
-  end of the script, in `cf-script-outputs/cf_vision_result_field.nc`.
-
-Furthermore, when the `VERBOSE` flag is `True`, lots of information is
-output to STDOUT and this can be saved and stored with the following
-command from a script run:
-
-```console
-$ python cf-vision-flight-e2e.py >out 2>&1
-```
-
-with the STDOUT captured for the runs which generated the plots
-added to this repo also stored in this way, in the text file
-`cf-script-outputs/cf-vision-flight-e2e-stdout.txt`, for illustration.
+Please contact Sadie if you need any help running anything here.
