@@ -739,10 +739,29 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     model_calendar = model_times.calendar
     logger.critical(f"Calendar on model time coordinate is: {model_calendar}")
 
-    same_calendar = obs_calendar == model_calendar
+    # Some custom calendar consistency logic, necessary for e.g. WRF data
+    before_pg_cutoff = cf.gt(cf.dt(1582, 10, 15))
+    if (
+            obs_calendar == "standard" and
+            model_calendar == "proleptic_gregorian" and
+            before_pg_cutoff.evaluate(model_times.minimum())
+    ):
+        # 'A calendar with the Gregorian rules for leap-years extended to
+        #  dates before 1582-10-15', see:
+        # https://cfconventions.org/Data/cf-conventions/
+        # cf-conventions-1.11/cf-conventions.html#calendar
+        # so it unless the data is before 1582, e.g. very historical runs,
+        # it i equivalent to have 'standard' set (and can match up).
+        logger.critical(
+            f"Changing {model_times} calendar from '{model_calendar}' to "
+            "'standard' (equivalent given all times are after 1582-10-15) "
+            "to enable the time co-location to work."
+        )
+        model_times.override_calendar("standard", inplace=True)
+
     logger.critical(
         f"Calendars on observational and model time coords. are the same?: "
-        f"{same_calendar}\n"
+        f"{obs_times.calendar == model_times.calendar}\n"
     )
 
 
