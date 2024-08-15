@@ -6,7 +6,7 @@
     "chosen-model-fields": 0,
     "outputs-dir": "cf-script-outputs",
     "output-file-name": "cf_vision_result_field.nc",
-    "regrid-z-coord": "air_pressure",
+    "regrid-z-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
     "plot-of-input-obs-track-only": 2,
     "cfp-mapset-config": {
         "lonmin": -2,

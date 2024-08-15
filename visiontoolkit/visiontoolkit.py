@@ -622,7 +622,6 @@ def make_preview_plots(
             cfp.gopen(
                 file=f"{outputs_dir}/{plotname_start}_obs_track_with_data.png"
             )
-            print("HOLA")
             cfp_input_general_config.update(verbose=verbose)
             cfp.traj(obs_field, **cfp_input_general_config)
             cfp.gclose()
@@ -671,19 +670,24 @@ def get_time_coords(obs_field, model_field, return_identifiers=True):
     # Observational data is a DSG so should always have T as an aux. coord.
     obs_times = obs_field.auxiliary_coordinate(obs_t_identifier)
 
-    # Model time axis processing
-    if model_field.construct("T", default=False):
+    # Model time axis processing: need a singular time axes with appropriate
+    # standard name
+    model_t_identifier = None
+    t_axes = model_field.constructs("T")
+    if t_axes and len(t_axes) == 1:  # care in case there are >1 'T' axes
         model_t_identifier = "T"
-    elif model_field.construct("time", default=False):
+    # TODO check only one variable can have 'time' exact name
+    if model_field.construct("time", default=False):
         model_t_identifier = "time"
-    else:
+
+    if not model_t_identifier:
         raise CFComplianceIssue(
             "An identifiable and unique time coordinate is needed but "
             "was not found for the model input. Got for "
             f"model_field.constructs('T'):\n {model_field.constructs('T')}\n"
         )
+
     model_times = model_field.dimension_coordinate(model_t_identifier)
-    # WRF data for now: use model_field.dimension_coordinate( ncvar%Time")
 
     if return_identifiers:
         return (obs_times, model_times), (obs_t_identifier, model_t_identifier)
@@ -800,6 +804,15 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
     y_coord_tight_bounds = obs_Y.data.minimum(), obs_Y.data.maximum()
     z_coord_tight_bounds = obs_Z.data.minimum(), obs_Z.data.maximum()
     t_coord_tight_bounds = obs_times.data.minimum(), obs_times.data.maximum()
+
+    # DEBUGGING T COORD ISSUES
+    print("T AXES ARE", model_field.constructs(model_t_id))
+    try:
+        model_field.indices(time=cf.wi(*t_coord_tight_bounds))
+        print("ALL GOOD")
+    except Exception as exc:
+        print(f"FAILED with {exc}")
+
     bb_kwargs = {
         "X": cf.wi(*x_coord_tight_bounds),
         "Y": cf.wi(*y_coord_tight_bounds),
