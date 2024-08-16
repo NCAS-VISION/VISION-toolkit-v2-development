@@ -657,34 +657,29 @@ def get_time_coords(obs_field, model_field, return_identifiers=True):
     TODO: DETAILED DOCS
     """
     # Observational time axis processing
-    if obs_field.construct("T", default=False):
+    if obs_field.coordinate("T", default=False):
         obs_t_identifier = "T"
-    elif model_field.construct("time", default=False):
+    elif obs_field.coordinate("time", default=False):
         obs_t_identifier = "time"
     else:
         raise CFComplianceIssue(
             "An identifiable and unique time coordinate is needed but "
             "was not found for the observational input. Got for "
-            f"obs_field.constructs('T'):\n {obs_field.constructs('T')}\n"
+            f"obs_field.constructs('T'):\n {obs_field.coordinates('T')}\n"
         )
     # Observational data is a DSG so should always have T as an aux. coord.
     obs_times = obs_field.auxiliary_coordinate(obs_t_identifier)
 
-    # Model time axis processing: need a singular time axes with appropriate
-    # standard name
-    model_t_identifier = None
-    t_axes = model_field.constructs("T")
-    if t_axes and len(t_axes) == 1:  # care in case there are >1 'T' axes
+    # Model time axis processing
+    if model_field.coordinate("T", default=False):
         model_t_identifier = "T"
-    # TODO check only one variable can have 'time' exact name
-    if model_field.construct("time", default=False):
+    elif model_field.coordinate("time", default=False):
         model_t_identifier = "time"
-
-    if not model_t_identifier:
+    else:
         raise CFComplianceIssue(
             "An identifiable and unique time coordinate is needed but "
             "was not found for the model input. Got for "
-            f"model_field.constructs('T'):\n {model_field.constructs('T')}\n"
+            f"model_field.constructs('T'):\n {model_field.coordinates('T')}\n"
         )
 
     model_times = model_field.dimension_coordinate(model_t_identifier)
