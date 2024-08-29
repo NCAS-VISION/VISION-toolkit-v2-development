@@ -737,9 +737,9 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     # Some custom calendar consistency logic, necessary for e.g. WRF data
     before_pg_cutoff = cf.gt(cf.dt(1582, 10, 15))
     if (
-            obs_calendar == "standard" and
-            model_calendar == "proleptic_gregorian" and
-            before_pg_cutoff.evaluate(model_times.minimum())
+        obs_calendar == "standard"
+        and model_calendar == "proleptic_gregorian"
+        and before_pg_cutoff.evaluate(model_times.minimum())
     ):
         # 'A calendar with the Gregorian rules for leap-years extended to
         #  dates before 1582-10-15', see:
@@ -819,14 +819,6 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
     z_coord_tight_bounds = obs_Z.data.minimum(), obs_Z.data.maximum()
     t_coord_tight_bounds = obs_times.data.minimum(), obs_times.data.maximum()
 
-    # DEBUGGING T COORD ISSUES
-    print("T AXES ARE", model_field.constructs(model_t_id))
-    try:
-        model_field.indices(time=cf.wi(*t_coord_tight_bounds))
-        print("ALL GOOD")
-    except Exception as exc:
-        print(f"FAILED with {exc}")
-
     bb_kwargs = {
         "X": cf.wi(*x_coord_tight_bounds),
         "Y": cf.wi(*y_coord_tight_bounds),
@@ -834,31 +826,150 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
         # Can't just use 'T' here since we might have a different name
         model_t_id: cf.wi(*t_coord_tight_bounds),
     }
-    logger.critical(
-        "Set to create 4D bounding box onto model field, based on obs. field "
-        f"tight boundaries of (4D: X, Y, Z, T):\n{pformat(bb_kwargs)}\n"
-    )
 
-    if verbose:  # conditional avoids this calculation twice unless VERBOSE
+    # Attempt to do a full bounding box subspace immediately (if indices call
+    # works, the subspace call will work) - if it works, great! But probably it
+    # won't work and we deal with that next...
+    immediate_subspace_works = False
+    try:
         model_field_bb_indices = model_field.indices(
             # the halo size that extends the bounding box by 1 in index space
-            "envelope", 1,
+            "envelope",
+            1,
             **bb_kwargs,
         )
+        immediate_subspace_works = True
+        if verbose:
+            logger.critical(
+                "Immediate full indices calculation attempt WORKED, "
+                f"proceeding using {model_field_bb_indices}"
+            )
+    except Exception as exc:
         logger.critical(
-            "Indices of model field bounding box subspace are:"
-            f"{model_field_bb_indices}"
+            f"Immediate full subspace attempt FAILED, with '{exc}',"
+            "so we will now do it in a more careful way..."
         )
 
-    # Note: can do the spatial and the temporal subspacing separately, and if
-    # want to do this make the call twice for each coordinate arg. Reasons we
-    # may want to do this include having separate halo sizes for each
-    # coordinate, etc.
-    model_field_bb = model_field.subspace(
+    # Since we always use the same arguments for subspace mode and halo size
+    # TODO can't use partial for now, DH has explained subspace is actually a
+    # property and not a method and that causes error and complication.
+    # DH will raise an issue and PR to simplify subspace back to being a
+    # standard method, then we can use the partial here, to consolidate.
+    """
+    model_field_bb_subspace = functools.partial(
+        model_field.subspace,
+        "envelope",
         # the halo size that extends the bounding box by 1 in index space
-        "envelope", 1,
-        **bb_kwargs,
+        1,
     )
+    """
+
+    if immediate_subspace_works:
+        logger.critical(
+            "Set to create 4D bounding box onto model field, based on obs. field "
+            f"tight boundaries of (4D: X, Y, Z, T):\n{pformat(bb_kwargs)}\n"
+        )
+
+        # Note: can do the spatial and the temporal subspacing separately, and if
+        # want to do this make the call twice for each coordinate arg. Reasons we
+        # may want to do this include having separate halo sizes for each
+        # coordinate, etc.
+        model_field_bb = model_field.subspace("envelope", 1, **bb_kwargs)
+    else:  # more likely case, so be more careful and treat axes separately
+        # Horizontal
+        logger.critical("1. Horizontal subspace step")
+        # For this case where we do 3 separate subspaces, we reassign to
+        # the same field and only at the end create 'model_field_bb' variable
+        # We should be safe to do the horizontal subspacing as one
+        model_field = model_field.subspace(
+            "envelope",
+            1,
+            X=cf.wi(*x_coord_tight_bounds),
+            Y=cf.wi(*y_coord_tight_bounds),
+        )
+        logger.critical(
+            "Horizontal ('X' and 'Y') bounding box calculated. It is: "
+            f"{model_field}"
+        )
+
+        # Vertical
+        logger.critical("2. Vertical subspace step")
+        # First, need to calculate the vertical coordinates if there are
+        # parametric vertical dimension coordinates to handle.
+        # TODO cater for case where are > 1 coord refs (ValueError for now)
+        coord_ref = model_field.coordinate_reference(default=None)
+        if not coord_ref:  # no parametric coords, simple case
+            model_field = model_field.subspace(
+                "envelope",
+                1,
+                Z=cf.wi(*z_coord_tight_bounds),
+            )
+        else:
+            logger.critical(
+                "Need to calculate parametric vertical coordinates. "
+                "Attempting..."
+            )
+            model_field_w_vertical = model_field.compute_vertical_coordinates()
+
+            # TODO: see Issue 802, after closure will have better way to know
+            # the vertical coordinate added by the calc, if it added it at all:
+            # https://github.com/NCAS-CMS/cf-python/issues/802
+            added_vertical = not model_field_w_vertical.equals(model_field)
+            # If a vertical dim coord was added, we need to use that for our
+            # z coordinate from now onwards
+            # TODO move vertical calc. out of this method more generally for
+            # better processing going forward
+            # TODO handle lack of, will currently give ValueError
+            vertical_sn = model_field_w_vertical.coordinate_reference().coordinate_conversion.get_parameter(
+                "computed_standard_name"
+            )
+            new_z_coord = model_field_w_vertical.coordinate(vertical_sn)
+            logger.critical(
+                "Added vertical coordinates from parameters: "
+                f"{new_z_coord.dump(display=False)}."
+            )
+
+            # Reset model_field to one with vertical coord now
+            # TODO use in-place before so no need to create new one?
+            model_field = model_field_w_vertical
+            logger.critical(
+                "Model field with vertical coords is: "
+                f"{model_field.dump(display=False)}"
+            )
+
+            # Unit conforming: convert units on new cal'd Z to obs Z units
+            # TODO can deal with further unit conformance using query units
+            # for the queries we subspace on!
+            new_z_coord.Units = obs_Z.Units
+            logger.critical(
+                "Units conformed for computed vertical coordinates:"
+                f"{new_z_coord} with same units as {obs_Z}"
+            )
+
+            vert_kwargs = {vertical_sn: cf.wi(*z_coord_tight_bounds)}
+            model_field = model_field.subspace(
+                "envelope",
+                1,
+                **vert_kwargs,
+            )
+
+        logger.critical(
+            f"Vertical ('Z') bounding box calculated. It is: {model_field}"
+        )
+
+        # TODO, fails here for generic inputs since times are different!
+        # So set to ignore all times for the 'hack time' use case mode.
+
+        logger.critical("3. Time subspace step")
+        # Time - try first, if try last won't work!
+        time_kwargs = {model_t_id: cf.wi(*t_coord_tight_bounds)}
+        # Now we set model_field -> model_field_bb, as this is our
+        # last separate subspace.
+        model_field_bb = model_field.subspace("envelope", 1, **time_kwargs)
+        logger.critical(
+            f"Time ('{model_t_id}') bounding box calculated. It is: "
+            f"{model_field_bb}"
+        )
 
     logger.critical(
         "4D bounding box calculated. Model data with bounding box applied is: "
