@@ -100,6 +100,19 @@ CONFIG_DEFAULTS = {
     # TODO: Get ESMF logging via cf incoporated into Python logging system,
     # see Issue #286.
     "verbose": True,
+    # *** Run mode with time override(s) ***
+    # Specify the mode on which to run the E2E, where valid choices are:
+    # 1. a mode to take data as-is assuming the model input data spans the
+    #    datetimes of the observational input data (set "False"),
+    # 2. where the times on the observations are ignored so that they are
+    #    set and assumed to take a given start time, as specified as one
+    #    datetime string. Datetimes are assuemd to be UTC and should be
+    #    pre-converted from another timezones before input if applicable.
+    #
+    #    TODO: could have a shortcut if want to assume start time of model?
+    # 3. TODO include a whole climatology to calculate, specifying
+    #    multiple datetime overrides as a sequence (input API for this TODO)
+    "start-time-override": "2023-07-10 12:00:00",
     # *** Input data choices ***
     "input-data-dir-loc": ".",
     "obs-data-dir": ".",
@@ -267,6 +280,17 @@ def process_cli_arguments(parser):
             "configuration file in JSON format to supply configuration, "
             "which overrides any configuration provided by other "
             "command-line options, if duplication of input occurs"
+        ),
+    )
+    parser.add_argument(
+        "-s",
+        "--start-time-override",
+        action="store",
+        help=(
+            "if given, a datetime in UTC timezone with which to override "
+            "the observational datetimes so that the colocation is conducted "
+            "with the spatial components of the observational path but "
+            "assuming the given start time and not the actual one"
         ),
     )
     parser.add_argument(
@@ -651,6 +675,38 @@ def ensure_cf_compliance(obs_field, model_field):
     pass
 
 
+@timeit
+def set_start_datetime(obs_times, obs_t_identifier, new_obs_starttime):
+    """Replace observational time data with those starting from a new value.
+
+    TODO: DETAILED DOCS
+    """
+    # 0. Check is a valid datetime input
+    try:
+        new_dt_start = cf.dt(new_obs_starttime)
+    except (ValueError, TypeError):
+        raise ValueError(
+            "Value for 'start-time-override' must be a valid datetime "
+            f"accepted by cf.dt(), but got: {new_obs_starttime}. See "
+            "https://ncas-cms.github.io/cf-python/function/cf.dt.html "
+            "for valid inputs."
+        )
+
+    # 1. If it is, change the observational time data to have the same
+    #    spacings but starting from the specified start datetime
+    # 1a) Find difference from original starttime to new starttime
+    shift_to_startime = obs_times[0] - new_dt_start
+    # 1b) Apply this shift to all time data
+    new_obs_times = obs_times - shift_to_startime
+    obs_times.set_data(new_obs_times)
+
+    logger.critical(
+        f"Applied override to observational times, now have: {obs_times}, "
+        f"with data of: {obs_times.data}"
+    )
+    return obs_times
+
+
 def get_time_coords(obs_field, model_field, return_identifiers=True):
     """Return the relevant time coordinates from the fields.
 
@@ -737,9 +793,9 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     # Some custom calendar consistency logic, necessary for e.g. WRF data
     before_pg_cutoff = cf.gt(cf.dt(1582, 10, 15))
     if (
-        obs_calendar == "standard"
-        and model_calendar == "proleptic_gregorian"
-        and before_pg_cutoff.evaluate(model_times.minimum())
+            obs_calendar == "standard" and
+            model_calendar == "proleptic_gregorian" and
+            before_pg_cutoff.evaluate(model_times.minimum())
     ):
         # 'A calendar with the Gregorian rules for leap-years extended to
         #  dates before 1582-10-15', see:
@@ -834,8 +890,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
     try:
         model_field_bb_indices = model_field.indices(
             # the halo size that extends the bounding box by 1 in index space
-            "envelope",
-            1,
+            "envelope", 1,
             **bb_kwargs,
         )
         immediate_subspace_works = True
@@ -882,8 +937,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
         # the same field and only at the end create 'model_field_bb' variable
         # We should be safe to do the horizontal subspacing as one
         model_field = model_field.subspace(
-            "envelope",
-            1,
+            "envelope", 1,
             X=cf.wi(*x_coord_tight_bounds),
             Y=cf.wi(*y_coord_tight_bounds),
         )
@@ -900,16 +954,14 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
         coord_ref = model_field.coordinate_reference(default=None)
         if not coord_ref:  # no parametric coords, simple case
             model_field = model_field.subspace(
-                "envelope",
-                1,
+                "envelope", 1,
                 Z=cf.wi(*z_coord_tight_bounds),
             )
         else:
             logger.critical(
                 "Need to calculate parametric vertical coordinates. "
-                "Attempting..."
-            )
-            model_field_w_vertical = model_field.compute_vertical_coordinates()
+                "Attempting...")
+            model_field_w_vertical = model_field.compute_vertical_coordinates()   
 
             # TODO: see Issue 802, after closure will have better way to know
             # the vertical coordinate added by the calc, if it added it at all:
@@ -920,9 +972,9 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
             # TODO move vertical calc. out of this method more generally for
             # better processing going forward
             # TODO handle lack of, will currently give ValueError
-            vertical_sn = model_field_w_vertical.coordinate_reference().coordinate_conversion.get_parameter(
-                "computed_standard_name"
-            )
+            vertical_sn = model_field_w_vertical.coordinate_reference(
+                ).coordinate_conversion.get_parameter(
+                    "computed_standard_name")
             new_z_coord = model_field_w_vertical.coordinate(vertical_sn)
             logger.critical(
                 "Added vertical coordinates from parameters: "
@@ -948,9 +1000,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
 
             vert_kwargs = {vertical_sn: cf.wi(*z_coord_tight_bounds)}
             model_field = model_field.subspace(
-                "envelope",
-                1,
-                **vert_kwargs,
+                "envelope", 1, **vert_kwargs,
             )
 
         logger.critical(
@@ -965,6 +1015,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
         time_kwargs = {model_t_id: cf.wi(*t_coord_tight_bounds)}
         # Now we set model_field -> model_field_bb, as this is our
         # last separate subspace.
+        model_field_bb = model_field.indices("envelope", 1, **time_kwargs)
         model_field_bb = model_field.subspace("envelope", 1, **time_kwargs)
         logger.critical(
             f"Time ('{model_t_id}') bounding box calculated. It is: "
@@ -1353,6 +1404,13 @@ def main():
     times, time_identifiers = get_time_coords(obs_field, model_field)
     obs_times, model_times = times
     obs_t_identifier, model_t_identifier = time_identifiers
+
+    new_obs_starttime = args.start_time_override
+    if new_obs_starttime:
+        # TODO can just do in-place rather than reassign, might be best?
+        obs_times = set_start_datetime(
+            obs_times, obs_t_identifier, new_obs_starttime)
+
     # TODO apply obs_t_identifier, model_t_identifier in further logic
     ensure_unit_calendar_consistency(obs_field, model_field)
 
