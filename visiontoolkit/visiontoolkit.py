@@ -969,6 +969,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
                 "envelope", 1,
                 Z=cf.wi(*z_coord_tight_bounds),
             )
+            vertical_sn = False
         else:
             logger.critical(
                 "Need to calculate parametric vertical coordinates. "
@@ -1039,12 +1040,13 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
         f"{model_field_bb}"
     )
 
-    return model_field_bb
+    return model_field_bb, vertical_sn
 
 
 @timeit
 def spatial_interpolation(
-        obs_field, model_field_bb, regrid_method, regrid_z_coord, source_axes
+        obs_field, model_field_bb, regrid_method, regrid_z_coord, source_axes,
+        model_t_identifier, vertical_sn
 ):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
 
@@ -1073,13 +1075,51 @@ def spatial_interpolation(
     # not, have nothing to work with) but
     # regrids method can't work with a size-1.
     # Can we use 'contains' or (better?) 'cellwi' method to do this?
-    spatially_colocated_field = model_field_bb.regrids(
-        obs_field,
-        method=regrid_method,
-        z=regrid_z_coord,
-        ln_z=True,
-        src_axes=source_axes,
-    )
+    immediate_regrid_works = True
+    try:
+        spatially_colocated_field = model_field_bb.regrids(
+            obs_field,
+            method=regrid_method,
+            z=regrid_z_coord,
+            ln_z=True,
+            src_axes=source_axes,
+        )
+    except ValueError:
+        immediate_regrid_works = False
+        # We have to be more clever, probably we have a case with 4D Z coords
+        # so we need to iterate over times to effectively get 3D Z coords
+        # and then squeeze out the time axis from it.
+
+    # TODO could put this in exception code above but nicer out here?
+    if not immediate_regrid_works:
+        model_bb_t_key, model_bb_t = model_field_bb.coordinate(
+            model_t_identifier, item=True)
+
+        # Get the axes positions first before we iterate
+        z_coord = model_field_bb.coordinate(vertical_sn)
+        data_axes = model_field_bb.get_data_axes()
+        ###data_axes = model_field_bb.get_data_axes()
+        time_da = model_field_bb.domain_axis(model_t_identifier, key=True)
+        time_da_index = data_axes.index(time_da)
+        print("DATA AXES ARE", data_axes)
+        print("TIME DA IS", time_da, time_da_index)
+        
+        print("z is ", z_coord)
+
+        for time in model_bb_t:
+            kwargs = {model_t_identifier: time}
+            # TODO what subspace args might we want here?
+            z_per_time = model_field_bb.subspace(**kwargs)
+            z_coord_per_time = z_per_time.coordinate(vertical_sn)
+            # TODO possible bug in WRF pre-proc or in cf whereby aux coord axes
+            # are not in compatible order with the data axes, so do a hacky swap:
+            z_coord_per_time.swapaxes(0, 1, inplace=True)
+
+            # Need to squeeze out the time coordinate, but ONLY from the
+            # vertical_sn (computer vertical coords) z coordinate, not the
+            # data axes overall.
+            z_coord_per_time.squeeze(time_da_index, inplace=True)
+            print("Z COORD IS NOW:", z_coord_per_time, z_coord_per_time.data)
 
     # TODO: consider whether or not to persist the regridded / spatial interp
     # before the next stage, or to do in a fully lazy way.
@@ -1428,7 +1468,8 @@ def main():
     ensure_unit_calendar_consistency(obs_field, model_field)
 
     # Subspacing to remove irrelavant information, pre-colocation
-    model_field_bb = subspace_to_spatiotemporal_bounding_box(
+    # TODO tidy passing through of computer vertical coord identifier
+    model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
         obs_field, model_field, verbose
     )
 
@@ -1439,6 +1480,8 @@ def main():
         args.regrid_method,
         args.regrid_z_coord,
         args.source_axes,
+        model_t_identifier,
+        vertical_sn,
     )
     final_result_field = time_interpolation(
         obs_times,
