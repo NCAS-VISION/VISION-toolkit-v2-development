@@ -140,6 +140,7 @@ CONFIG_DEFAULTS = {
     # Only if both data have more than one of identical z-coord do we need
     # to ask for this info.
     "regrid-z-coord": None,  # default to None given above note
+    "source-axes": False,
     # *** Plotting: what to plot and how to minimally configure it ***
     "plotname-start": "vision_toolkit",
     # Optionally, display plots of the input observational data, or its track
@@ -369,6 +370,15 @@ def process_cli_arguments(parser):
         help=(
             "vertical (z) coordinate to use as the vertical component in "
             "the spatial interpolation step"
+        ),
+    )
+    parser.add_argument(
+        "--source-axes",
+        action="store",
+        help=(
+            "identifies the source grid’s X and Y dimensions if they "
+            "cannot be inferred from the existence of 1D dimension "
+            "coordinates"
         ),
     )
     parser.add_argument(
@@ -699,6 +709,8 @@ def set_start_datetime(obs_times, obs_t_identifier, new_obs_starttime):
     # 1b) Apply this shift to all time data
     new_obs_times = obs_times - shift_to_startime
     obs_times.set_data(new_obs_times)
+
+    # TODO should we update the metadata to reflect the previous operation?
 
     logger.critical(
         f"Applied override to observational times, now have: {obs_times}, "
@@ -1032,7 +1044,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
 
 @timeit
 def spatial_interpolation(
-    obs_field, model_field_bb, regrid_method, regrid_z_coord
+        obs_field, model_field_bb, regrid_method, regrid_z_coord, source_axes
 ):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
 
@@ -1066,6 +1078,7 @@ def spatial_interpolation(
         method=regrid_method,
         z=regrid_z_coord,
         ln_z=True,
+        src_axes=source_axes,
     )
 
     # TODO: consider whether or not to persist the regridded / spatial interp
@@ -1371,7 +1384,7 @@ def main():
     # Manage inputs from CLI and from configuration file, if present.
     args = process_config()
 
-    # Set variables in case that multiple functions use a given argument value
+    # Set variables for cases where multiple functions need to use values
     outputs_dir = args.outputs_dir
     plotname_start = args.plotname_start
     verbose = args.verbose
@@ -1425,6 +1438,7 @@ def main():
         model_field_bb,
         args.regrid_method,
         args.regrid_z_coord,
+        args.source_axes,
     )
     final_result_field = time_interpolation(
         obs_times,
