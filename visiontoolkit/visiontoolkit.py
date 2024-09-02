@@ -1366,7 +1366,7 @@ def time_interpolation(
     final_result_field.set_properties(model_field.properties())
     # * Add new, or append to if already exists, 'history' property
     #   details to say that we colocated etc. with VISION / cf.
-    history_details = final_result_field.get_property("history")
+    history_details = final_result_field.get_property("history", default="")
     history_details += (
         " ~ " + history_message
     )  # include divider to previous info
@@ -1551,6 +1551,7 @@ def main():
     write_output_data(final_result_field, args.output_file_name)
     make_outputs_plots(
         final_result_field,
+        obs_t_identifier,
         args.cfp_output_levs_config,
         outputs_dir,
         plotname_start,
