@@ -727,8 +727,10 @@ def get_time_coords(obs_field, model_field, return_identifiers=True):
     # Observational time axis processing
     if obs_field.coordinate("T", default=False):
         obs_t_identifier = "T"
+        print("YES 1")
     elif obs_field.coordinate("time", default=False):
         obs_t_identifier = "time"
+        print("YES 2")
     else:
         raise CFComplianceIssue(
             "An identifiable and unique time coordinate is needed but "
@@ -1113,7 +1115,7 @@ def spatial_interpolation(
         z_coord = model_field_bb.coordinate(new_vertical_id)
         z_coord.set_property('standard_name', value=vertical_sn)
 
-        spatially_colocated_field = cf.FieldList()
+        spatially_colocated_fields = cf.FieldList()
         for time in model_bb_t:
             kwargs = {model_t_identifier: time}
             # TODO what subspace args might we want here?
@@ -1160,7 +1162,16 @@ def spatial_interpolation(
                 f"3D Z colocated field component for {time} is "
                 f"{spatially_colocated_field_comp} "
             )
-            spatially_colocated_field.append(spatially_colocated_field_comp)
+            spatially_colocated_fields.append(spatially_colocated_field_comp)
+        # Finally, need to concatenate the individually-regridded per-time
+        # components
+        spatially_colocated_field = cf.Field.concatenate(
+            spatially_colocated_fields
+        )
+        logger.critical(
+            f"Final concatenated field (from 3D Z colocated fields) is "
+            f"{spatially_colocated_field} "
+        )
 
     # TODO: consider whether or not to persist the regridded / spatial interp
     # before the next stage, or to do in a fully lazy way.
@@ -1291,8 +1302,8 @@ def time_interpolation(
             - s0.dimension_coordinate(model_t_identifier)
         ).data
         distances_0 = (
-            s0.auxiliary_coordinate(obs_t_identifier)[index]
-            - s0.dimension_coordinate(obs_t_identifier)
+            s0.auxiliary_coordinate(model_t_identifier)[index]
+            - s0.dimension_coordinate(model_t_identifier)
         ).data
 
         # Calculate the datetime 'distances' to be used for the weighting
