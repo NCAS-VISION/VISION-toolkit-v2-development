@@ -900,11 +900,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
     # won't work and we deal with that next...
     immediate_subspace_works = False
     try:
-        model_field_bb_indices = model_field.indices(
-            # the halo size that extends the bounding box by 1 in index space
-            "envelope", 1,
-            **bb_kwargs,
-        )
+        model_field_bb_indices = model_field_bb_subspace(**bb_kwargs)
         immediate_subspace_works = True
         if verbose:
             logger.critical(
@@ -922,14 +918,12 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
     # property and not a method and that causes error and complication.
     # DH will raise an issue and PR to simplify subspace back to being a
     # standard method, then we can use the partial here, to consolidate.
-    """
     model_field_bb_subspace = functools.partial(
         model_field.subspace,
         "envelope",
         # the halo size that extends the bounding box by 1 in index space
         1,
     )
-    """
 
     if immediate_subspace_works:
         logger.critical(
@@ -941,15 +935,14 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
         # want to do this make the call twice for each coordinate arg. Reasons we
         # may want to do this include having separate halo sizes for each
         # coordinate, etc.
-        model_field_bb = model_field.subspace("envelope", 1, **bb_kwargs)
+        model_field_bb = model_field_bb_subspace(**bb_kwargs)
     else:  # more likely case, so be more careful and treat axes separately
         # Horizontal
         logger.critical("1. Horizontal subspace step")
         # For this case where we do 3 separate subspaces, we reassign to
         # the same field and only at the end create 'model_field_bb' variable
         # We should be safe to do the horizontal subspacing as one
-        model_field = model_field.subspace(
-            "envelope", 1,
+        model_field = model_field_bb_subspace(
             X=cf.wi(*x_coord_tight_bounds),
             Y=cf.wi(*y_coord_tight_bounds),
         )
@@ -965,8 +958,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
         # TODO cater for case where are > 1 coord refs (ValueError for now)
         coord_ref = model_field.coordinate_reference(default=None)
         if not coord_ref:  # no parametric coords, simple case
-            model_field = model_field.subspace(
-                "envelope", 1,
+            model_field = model_field_bb_subspace(
                 Z=cf.wi(*z_coord_tight_bounds),
             )
             vertical_sn = False
@@ -1012,6 +1004,8 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
             )
 
             vert_kwargs = {vertical_sn: cf.wi(*z_coord_tight_bounds)}
+            # TODO: partial case commented below is breaking things here! WHY!?
+            ### model_field = model_field_bb_subspace(**vert_kwargs)
             model_field = model_field.subspace(
                 "envelope", 1, **vert_kwargs,
             )
@@ -1028,7 +1022,8 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
         time_kwargs = {model_t_id: cf.wi(*t_coord_tight_bounds)}
         # Now we set model_field -> model_field_bb, as this is our
         # last separate subspace.
-        model_field_bb = model_field.indices("envelope", 1, **time_kwargs)
+        # TODO partial also not working here - clues, clues.
+        ###model_field_bb = model_field_bb_subspace(**time_kwargs)
         model_field_bb = model_field.subspace("envelope", 1, **time_kwargs)
         logger.critical(
             f"Time ('{model_t_id}') bounding box calculated. It is: "
