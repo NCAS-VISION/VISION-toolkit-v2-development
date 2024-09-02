@@ -1058,7 +1058,10 @@ def spatial_interpolation(
     """
     # TODO: UGRID grids might need some extra steps/work for this.
 
-    logger.critical("Starting spatial interpolation (regridding) step...")
+    logger.critical(
+        "Starting spatial interpolation (regridding) step..."
+        f"WITH {model_field_bb}"
+    )
 
     # Creating the spatial bounding box may have made some of the spatial
     # dimensions singular, which would lead to an error or:
@@ -1103,24 +1106,67 @@ def spatial_interpolation(
         time_da_index = data_axes.index(time_da)
         print("DATA AXES ARE", data_axes)
         print("TIME DA IS", time_da, time_da_index)
-        
-        print("z is ", z_coord)
 
+        # TODO possible bug in WRF pre-proc or in cf whereby aux coord axes
+        # are not in compatible order with the data axes, so do a HACKY SWAP:
+        new_z_coord = z_coord.swapaxes(1, 0)  # TODO NOT WORKING?
+        model_field_bb.del_construct(vertical_sn)
+        # TODO rename vertical_sn to z_id or z_key or similar
+        new_vertical_id = model_field_bb.set_construct(
+            new_z_coord, axes=[model_t_identifier, "Z",
+                               source_axes["Y"], source_axes["X"]],
+        )
+        z_coord = model_field_bb.coordinate(new_vertical_id)
+        z_coord.set_property('standard_name', value=vertical_sn)
+
+        spatially_colocated_fields = cf.FieldList()
         for time in model_bb_t:
             kwargs = {model_t_identifier: time}
             # TODO what subspace args might we want here?
-            z_per_time = model_field_bb.subspace(**kwargs)
-            z_coord_per_time = z_per_time.coordinate(vertical_sn)
-            # TODO possible bug in WRF pre-proc or in cf whereby aux coord axes
-            # are not in compatible order with the data axes, so do a hacky swap:
-            z_coord_per_time.swapaxes(0, 1, inplace=True)
+            model_field_z_per_time = model_field_bb.subspace(**kwargs)
+            z_coord_per_time = model_field_z_per_time.coordinate(vertical_sn)
 
             # Need to squeeze out the time coordinate, but ONLY from the
             # vertical_sn (computer vertical coords) z coordinate, not the
             # data axes overall.
-            z_coord_per_time.squeeze(time_da_index, inplace=True)
-            print("Z COORD IS NOW:", z_coord_per_time, z_coord_per_time.data)
+            model_field_z_per_time.del_construct(vertical_sn)
+            fin_z_coord = z_coord_per_time.squeeze(time_da_index)
+            model_field_z_per_time.set_construct(
+                fin_z_coord, axes=["Z", source_axes["Y"], source_axes["X"]],
+            )
 
+            logger.critical(
+                f"Squeezed Z coordinate: {z_coord_per_time},"
+                f"{z_coord_per_time.data}"
+            )
+            logger.critical(
+                f"Model field per time data is: {model_field_z_per_time}"
+            )
+
+            # ALSO NEED TO SQUEEZE X AND Y AUX COORDS! for those 2d aux
+            # lat and lons! Then everything is all set up for the 3D Z regrids
+            # HACK FIRST USE DIRECT NAMES TO GET WORKIN: ncvar%XLAT, ncvar%XLONG
+            for a_name in ("ncvar%XLAT", "ncvar%XLONG"):
+                a_coord = model_field_z_per_time.coordinate(a_name)
+                model_field_z_per_time.del_construct(a_name)
+                fin_a_coord = a_coord.squeeze()  # safe - can other dim be size 1?
+                model_field_z_per_time.set_construct(
+                    fin_a_coord, axes=[source_axes["Y"], source_axes["X"]],
+                )
+
+            # Do the regrids weighting operation for the 3D Z in each case
+            spatially_colocated_field = model_field_z_per_time.regrids(
+                obs_field,
+                method=regrid_method,
+                z=vertical_sn,
+                ln_z=True,  # TODO should we use a log here in this case?
+                src_axes=source_axes,
+            )
+            spatially_colocated_fields.append(spatially_colocated_field)
+
+    logger.critical(
+        f"Overall 3D Z colocated fields are {spatially_colocated_fields} "
+    )
     # TODO: consider whether or not to persist the regridded / spatial interp
     # before the next stage, or to do in a fully lazy way.
 
