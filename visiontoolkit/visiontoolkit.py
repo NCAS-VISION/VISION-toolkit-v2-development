@@ -1096,7 +1096,6 @@ def spatial_interpolation(
         # Get the axes positions first before we iterate
         z_coord = model_field_bb.coordinate(vertical_sn)
         data_axes = model_field_bb.get_data_axes()
-        ###data_axes = model_field_bb.get_data_axes()
         time_da = model_field_bb.domain_axis(model_t_identifier, key=True)
         time_da_index = data_axes.index(time_da)
         print("DATA AXES ARE", data_axes)
@@ -1114,7 +1113,7 @@ def spatial_interpolation(
         z_coord = model_field_bb.coordinate(new_vertical_id)
         z_coord.set_property('standard_name', value=vertical_sn)
 
-        spatially_colocated_fields = cf.FieldList()
+        spatially_colocated_field = cf.FieldList()
         for time in model_bb_t:
             kwargs = {model_t_identifier: time}
             # TODO what subspace args might we want here?
@@ -1150,18 +1149,19 @@ def spatial_interpolation(
                 )
 
             # Do the regrids weighting operation for the 3D Z in each case
-            spatially_colocated_field = model_field_z_per_time.regrids(
+            spatially_colocated_field_comp = model_field_z_per_time.regrids(
                 obs_field,
                 method=regrid_method,
                 z=vertical_sn,
                 ln_z=True,  # TODO should we use a log here in this case?
                 src_axes=source_axes,
             )
-            spatially_colocated_fields.append(spatially_colocated_field)
+            logger.critical(
+                f"3D Z colocated field component for {time} is "
+                f"{spatially_colocated_field_comp} "
+            )
+            spatially_colocated_field.append(spatially_colocated_field_comp)
 
-    logger.critical(
-        f"Overall 3D Z colocated fields are {spatially_colocated_fields} "
-    )
     # TODO: consider whether or not to persist the regridded / spatial interp
     # before the next stage, or to do in a fully lazy way.
 
