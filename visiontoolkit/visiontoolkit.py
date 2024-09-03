@@ -33,6 +33,7 @@ import functools
 import json
 import logging
 import numpy as np
+import os
 import sys
 
 import cfplot as cfp
@@ -237,6 +238,19 @@ def process_config():
         f"\n{pformat(final_config_namespace)}\n"
     )
     return final_config_namespace
+
+
+def validate_config(final_config_namespace):
+    """TODO"""
+    # TODO add validation in incrementally to cover all input options & args
+
+    # outputs_dir: create if does not exist
+    if not os.path.exists(final_config_namespace.outputs_dir):
+        logger.critical(
+            "Output directory does not exist, creating it at: "
+            f"{final_config_namespace.outputs_dir}"
+        )
+        os.makedirs(final_config_namespace.outputs_dir)
 
 
 def process_config_file(config_file):
@@ -631,7 +645,8 @@ def make_preview_plots(
     if show_plot_of_input_obs:
         # Plot *input* observational data for a preview, before doing anything
         # Min, max as determined using final_result_field.min(), .max():
-        cfp.levs(**cfp_input_levs_config)
+        if cfp_input_levs_config:
+            cfp.levs(**cfp_input_levs_config)
         if plot_of_input_obs_track_only in (1, 2):
             # Use the same field but set all data to zero so can plot the whole
             # track in the same colour to just display the path, not orig. data
@@ -1454,7 +1469,8 @@ def make_outputs_plots(
 
     # Set levels for plotting of data in a colourmap
     # Min, max as determined using final_result_field.min(), .max():
-    cfp.levs(**cfp_output_levs_config)
+    if cfp_output_levs_config:
+        cfp.levs(**cfp_output_levs_config)
 
     # Make and open the final plot
     # NOTE: can try 'legend_lines=True' for the lines plotted with average
@@ -1475,6 +1491,8 @@ def main():
 
     # Manage inputs from CLI and from configuration file, if present.
     args = process_config()
+    # Check all inputs are valid else error before starting toolkit logic
+    validate_config(args)
 
     # Set variables for cases where multiple functions need to use values
     outputs_dir = args.outputs_dir
