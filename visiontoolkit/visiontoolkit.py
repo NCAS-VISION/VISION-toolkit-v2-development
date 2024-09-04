@@ -1420,14 +1420,14 @@ def create_cra_outputs():
 
 
 @timeit
-def write_output_data(final_result_field, output_file_name):
+def write_output_data(final_result_field, output_path_name):
     """Write out the 4D (XYZT) colocated result as output data.
 
     TODO: DETAILED DOCS
     """
 
     # Write final field result out to file on-disk
-    cf.write(final_result_field, output_file_name)
+    cf.write(final_result_field, output_path_name)
 
     logger.critical("Writing of output file complete.")
 
@@ -1566,7 +1566,9 @@ def main():
 
     # Create and process outputs
     create_cra_outputs()  # TODO currently does nothing
-    write_output_data(final_result_field, args.output_file_name)
+    # TODO improve path handling with PathLib library
+    output_path_name = f"{outputs_dir}/{args.output_file_name}"
+    write_output_data(final_result_field, output_path_name)
     make_outputs_plots(
         final_result_field,
         obs_t_identifier,
