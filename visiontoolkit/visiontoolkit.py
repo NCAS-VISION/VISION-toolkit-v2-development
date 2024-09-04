@@ -734,6 +734,37 @@ def set_start_datetime(obs_times, obs_t_identifier, new_obs_starttime):
     return obs_times
 
 
+@timeit
+def check_time_coverage(obs_times, model_times):
+    """TODO
+    """
+
+    msg_start = (
+        "Model data datetimes must cover the whole of the datetime range "
+        "spanned by the observational data, but got"
+    )
+    model_min = model_times.minimum()
+    obs_min = obs_times.minimum()
+    model_max = model_times.maximum()
+    obs_max = obs_times.maximum()
+    logger.critical(
+        f"Model data has maxima {model_max} and minima {model_min}"
+    )
+    logger.critical(
+        f"Obs data has maxima {obs_max} and minima {obs_min}"
+    )
+
+    if model_min > obs_min:
+        raise ValueError(
+            f"{msg_start} minima of {model_min} for the model > {obs_min} "
+            "for the observations."
+        )
+    if model_max < obs_max:
+        raise ValueError(
+            f"{msg_start} maxima of {model_max} for the model < {obs_max} "
+            "for the observations."
+        )
+
 def get_time_coords(obs_field, model_field, return_identifiers=True):
     """Return the relevant time coordinates from the fields.
 
@@ -1530,12 +1561,16 @@ def main():
 
     new_obs_starttime = args.start_time_override
     if new_obs_starttime:
-        # TODO can just do in-place rather than reassign, might be best?
+        # TODO can just do in-place rather than re-assign, might be best?
         obs_times = set_start_datetime(
             obs_times, obs_t_identifier, new_obs_starttime)
 
     # TODO apply obs_t_identifier, model_t_identifier in further logic
     ensure_unit_calendar_consistency(obs_field, model_field)
+
+    # Ensure the model time axes covers the entire time axes span of the
+    # obs track - else we can't go forward - if so inform about this clearly
+    check_time_coverage(obs_times, model_times)
 
     # Subspacing to remove irrelavant information, pre-colocation
     # TODO tidy passing through of computer vertical coord identifier
