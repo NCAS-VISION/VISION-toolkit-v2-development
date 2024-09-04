@@ -113,7 +113,7 @@ CONFIG_DEFAULTS = {
     #    TODO: could have a shortcut if want to assume start time of model?
     # 3. TODO include a whole climatology to calculate, specifying
     #    multiple datetime overrides as a sequence (input API for this TODO)
-    "start-time-override": "2023-07-10 12:00:00",
+    "start-time-override": False,
     # *** Input data choices ***
     "input-data-dir-loc": ".",
     "obs-data-dir": ".",

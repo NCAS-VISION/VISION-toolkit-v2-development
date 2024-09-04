@@ -1,4 +1,5 @@
 {
+    "start-time-override": "2023-07-10 12:00:00",
     "input-data-dir-loc": "..",
     "obs-data-dir": "data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
     "model-data-dir": "wrf-vert-coords/e2e-ready-wrf-update1.nc",
