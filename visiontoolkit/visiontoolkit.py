@@ -969,12 +969,14 @@ def subspace_to_spatiotemporal_bounding_box(
     # property and not a method and that causes error and complication.
     # DH will raise an issue and PR to simplify subspace back to being a
     # standard method, then we can use the partial here, to consolidate.
+    """
     model_field_bb_subspace = functools.partial(
         model_field.subspace,
         "envelope",
         # the halo size that extends the bounding box by 1 in index space
         halo_size,
     )
+    """
 
     if immediate_subspace_works:
         logger.critical(
@@ -986,14 +988,29 @@ def subspace_to_spatiotemporal_bounding_box(
         # want to do this make the call twice for each coordinate arg. Reasons we
         # may want to do this include having separate halo sizes for each
         # coordinate, etc.
-        model_field_bb = model_field_bb_subspace(**bb_kwargs)
+        model_field_bb = model_field.subspace(
+            "envelope", halo_size, **bb_kwargs)
     else:  # more likely case, so be more careful and treat axes separately
+        logger.critical("1. Time subspace step")
+        time_kwargs = {model_t_id: cf.wi(*t_coord_tight_bounds)}
+        # Now we set model_field -> model_field_bb, as this is our
+        # last separate subspace.
+        # TODO partial also not working here - clues, clues.
+        ###model_field_bb = model_field_bb_subspace(**time_kwargs)
+        model_field = model_field.subspace(
+            "envelope", halo_size, **time_kwargs)
+        logger.critical(
+            f"Time ('{model_t_id}') bounding box calculated. It is: "
+            f"{model_field}"
+        )
+
         # Horizontal
-        logger.critical("1. Horizontal subspace step")
+        logger.critical("2. Horizontal subspace step")
         # For this case where we do 3 separate subspaces, we reassign to
         # the same field and only at the end create 'model_field_bb' variable
         # We should be safe to do the horizontal subspacing as one
-        model_field = model_field_bb_subspace(
+        model_field = model_field.subspace(
+            "envelope", halo_size,
             X=cf.wi(*x_coord_tight_bounds),
             Y=cf.wi(*y_coord_tight_bounds),
         )
@@ -1003,13 +1020,14 @@ def subspace_to_spatiotemporal_bounding_box(
         )
 
         # Vertical
-        logger.critical("2. Vertical subspace step")
+        logger.critical("3. Vertical subspace step")
         # First, need to calculate the vertical coordinates if there are
         # parametric vertical dimension coordinates to handle.
         # TODO cater for case where are > 1 coord refs (ValueError for now)
         coord_ref = model_field.coordinate_reference(default=None)
         if not coord_ref:  # no parametric coords, simple case
-            model_field = model_field_bb_subspace(
+            model_field = model_field.subspace(
+                "envelope", halo_size,
                 Z=cf.wi(*z_coord_tight_bounds),
             )
             vertical_sn = False
@@ -1057,29 +1075,12 @@ def subspace_to_spatiotemporal_bounding_box(
             vert_kwargs = {vertical_sn: cf.wi(*z_coord_tight_bounds)}
             # TODO: partial case commented below is breaking things here! WHY!?
             ### model_field = model_field_bb_subspace(**vert_kwargs)
-            model_field = model_field.subspace(
+            model_field_bb = model_field.subspace(
                 "envelope", halo_size, **vert_kwargs,
             )
 
         logger.critical(
-            f"Vertical ('Z') bounding box calculated. It is: {model_field}"
-        )
-
-        # TODO, fails here for generic inputs since times are different!
-        # So set to ignore all times for the 'hack time' use case mode.
-
-        logger.critical("3. Time subspace step")
-        # Time - try first, if try last won't work!
-        time_kwargs = {model_t_id: cf.wi(*t_coord_tight_bounds)}
-        # Now we set model_field -> model_field_bb, as this is our
-        # last separate subspace.
-        # TODO partial also not working here - clues, clues.
-        ###model_field_bb = model_field_bb_subspace(**time_kwargs)
-        model_field_bb = model_field.subspace(
-            "envelope", halo_size, **time_kwargs)
-        logger.critical(
-            f"Time ('{model_t_id}') bounding box calculated. It is: "
-            f"{model_field_bb}"
+            f"Vertical ('Z') bounding box calculated. It is: {model_field_bb}"
         )
 
     logger.critical(
@@ -1288,7 +1289,10 @@ def time_interpolation(
     # Chop the flight path up into these *segments* and do a weighted merge
     # of data from segments adjacent in the model times to form the final
     # time-interpolated value.
-    logger.critical("*** Begin iteration over pairwise 'segments'. ***")
+    logger.critical(
+        "*** Begin iteration over pairwise 'segments'. ***\n"
+        f"Segments to loop over are, pairwise: {model_times.datetime_array}"
+    )
     for index, (t1, t2) in enumerate(pairwise(model_times.datetime_array)):
         logger.critical(f"\n*** Segment {index} ***\n")
         # Define the pairwise segment datetime endpoints
