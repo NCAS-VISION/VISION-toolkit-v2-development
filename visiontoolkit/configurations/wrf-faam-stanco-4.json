@@ -1,0 +1,20 @@
+{
+    "start-time-override": "2023-07-11 18:05:00",
+    "input-data-dir-loc": "..",
+    "obs-data-dir": "data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
+    "model-data-dir": "wrf-vert-coords/e2e-ready-wrf-update1.nc",
+    "chosen-obs-fields": 0,
+    "chosen-model-fields": 0,
+    "outputs-dir": "cf-script-outputs/wrf-faam-stanco-2",
+    "output-file-name": "wrf_faam_stanco_2_vision_result.nc",
+    "regrid-z-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
+    "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
+    "plot-of-input-obs-track-only": 2,
+    "cfp-mapset-config": {
+        "lonmin": -2,
+        "lonmax": 2,
+        "latmin": 50,
+        "latmax": 54,
+        "resolution": "10m"
+    }
+}

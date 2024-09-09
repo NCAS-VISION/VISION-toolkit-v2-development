@@ -1231,6 +1231,91 @@ def spatial_interpolation(
     return spatially_colocated_field
 
 
+def time_subspace_per_segment(
+        index, model_times_len, t1, t2, m, obs_time_key, model_time_key,
+        model_t_identifier
+):
+    """TODO."""
+    # Define the pairwise segment datetime endpoints
+    logger.critical(
+        f"Datetime endpoints for this segment are: {t1}, {t2}.\n"
+    )
+
+    # Define a query which will find any datetimes within these times
+    # to map all observational times to the appropriate segment, later.
+    q = cf.wi(
+        cf.dt(t1), cf.dt(t2), open_upper=True
+    )  # TODO is cf.dt wrapping necessary?
+    logger.critical(f"Querying with query: {q} on field:\n{m}\n")
+
+    # Subspace the observational times to match the segments above,
+    # namely using the query created above.
+    # Use a direct subspace method, which works generally.
+    #
+    # NOTE: without the earlier bounding box step, this will fail due to
+    #       not being able to find the subspace at irrelevant times.
+    s0_subspace_args = {
+        obs_time_key: q,
+        model_time_key: [index],
+    }
+    logger.critical(
+        f"\nUsing subspace arguments for i=0 of: {s0_subspace_args}\n"
+    )
+    s0 = m.subspace(**s0_subspace_args)
+
+    s1_subspace_args = {
+        obs_time_key: q,
+        model_time_key: [index + 1],
+    }
+    logger.critical(
+        f"Using subspace arguments for i=1 of: {s1_subspace_args}\n"
+    )
+    s1 = m.subspace(**s1_subspace_args)
+
+    # Squeeze here to remove size 1 dim ready for calculations to come,
+    # i.e. to unpack from '[[ ]]' shape(1, N) structure.
+    # NOTE: a=0 and b=1 from old/whiteboard schematic and notes).
+    values_0 = s0.data.squeeze()
+    values_1 = s1.data.squeeze()
+
+    # Calculate the arrays to be used in the weighting calculation. All
+    # arithmetic done numpy-array wise, so no need to iterate over values.
+    #
+    # NOTE: converted to data to get data array not dim coord as output for
+    #       weighted values.
+    # TODO: take care using keys! We can't rely on keys being consistent
+    #       between different fields, so may need to re-determine these at
+    #       different steps, else (ideally) find a robust way not using
+    #       keys to pick out the relevant time constructs.
+    # NOTE: All calc. variables are arrays, except this first one,
+    #       a scalar (constant whatever the obs time)
+    distance_01 = (
+        s1.dimension_coordinate(model_t_identifier)
+        - s0.dimension_coordinate(model_t_identifier)
+    ).data
+    distances_0 = (
+        s0.auxiliary_coordinate(model_t_identifier)[index]
+        - s0.dimension_coordinate(model_t_identifier)
+    ).data
+
+    # Calculate the datetime 'distances' to be used for the weighting
+    distances_1 = distance_01 - distances_0
+    weights_0 = distances_1 / distance_01
+    weights_1 = distances_0 / distance_01
+
+    # Calculate the final weighted values using a basic weighting
+    # formulae.
+    # NOTE: by the maths, the sum of the two weights should be 1, so there
+    #       is no need to divide by that, though confirm with a print-out
+    logger.critical(
+        "Weights total (should be 1.0, as a validation check) is: "
+        f"{(weights_0 + weights_1).array[0]}\n"
+    )
+
+    values_weighted = weights_0 * values_0 + weights_1 * values_1
+    return values_weighted
+
+
 @timeit
 def time_interpolation(
     obs_times,
@@ -1239,6 +1324,7 @@ def time_interpolation(
     model_t_identifier,
     obs_field,
     model_field,
+    halo_size,
     spatially_colocated_field,
     history_message,
 ):
@@ -1279,7 +1365,6 @@ def time_interpolation(
     logger.critical(f"Model (dim) time key is: {model_time_key}\n")
 
     # Empty objects ready to populate - TODO make these FieldLists if approp.?
-    datetime_segments = []
     v_w = []
 
     # Iterate over pairs of adjacent model datetimes, defining 'segments'.
@@ -1292,85 +1377,33 @@ def time_interpolation(
     )
     for index, (t1, t2) in enumerate(pairwise(model_times.datetime_array)):
         logger.critical(f"\n*** Segment {index} ***\n")
-        # Define the pairwise segment datetime endpoints
-        logger.critical(
-            f"Datetime endpoints for this segment are: {t1}, {t2}.\n"
-        )
-        datetime_segments.append((t1, t2))
+        # Rarely, when we apply a halo and the start or end time is on the
+        # boundary where there is a model time point, there will be no
+        # points captured by the outermost subspaces. Therefore, for the first
+        # and last segments ONLY we use a try/except to account for this:
+        permit_zero_axis_size_index_error = False
+        if index in (index, model_times_len):
+            permit_zero_axis_size_index_error = True
+            print("ALLOWING FAILURE")
 
-        # Define a query which will find any datetimes within these times
-        # to map all observational times to the appropriate segment, later.
-        q = cf.wi(
-            cf.dt(t1), cf.dt(t2), open_upper=True
-        )  # TODO is cf.dt wrapping necessary?
-        logger.critical(f"Querying with query: {q} on field:\n{m}\n")
-
-        # Subspace the observational times to match the segments above,
-        # namely using the query created above.
-        # Use a direct subspace method, which works generally.
-        #
-        # NOTE: without the earlier bounding box step, this will fail due to
-        #       not being able to find the subspace at irrelevant times.
-        s0_subspace_args = {
-            obs_time_key: q,
-            model_time_key: [index],
-        }
-        logger.critical(
-            f"\nUsing subspace arguments for i=0 of: {s0_subspace_args}\n"
-        )
-        s0 = m.subspace(**s0_subspace_args)
-
-        s1_subspace_args = {
-            obs_time_key: q,
-            model_time_key: [index + 1],
-        }
-        logger.critical(
-            f"Using subspace arguments for i=1 of: {s1_subspace_args}\n"
-        )
-        s1 = m.subspace(**s1_subspace_args)
-
-        # Squeeze here to remove size 1 dim ready for calculations to come,
-        # i.e. to unpack from '[[ ]]' shape(1, N) structure.
-        # NOTE: a=0 and b=1 from old/whiteboard schematic and notes).
-        values_0 = s0.data.squeeze()
-        values_1 = s1.data.squeeze()
-
-        # Calculate the arrays to be used in the weighting calculation. All
-        # arithmetic done numpy-array wise, so no need to iterate over values.
-        #
-        # NOTE: converted to data to get data array not dim coord as output for
-        #       weighted values.
-        # TODO: take care using keys! We can't rely on keys being consistent
-        #       between different fields, so may need to re-determine these at
-        #       different steps, else (ideally) find a robust way not using
-        #       keys to pick out the relevant time constructs.
-        # NOTE: All calc. variables are arrays, except this first one,
-        #       a scalar (constant whatever the obs time)
-        distance_01 = (
-            s1.dimension_coordinate(model_t_identifier)
-            - s0.dimension_coordinate(model_t_identifier)
-        ).data
-        distances_0 = (
-            s0.auxiliary_coordinate(model_t_identifier)[index]
-            - s0.dimension_coordinate(model_t_identifier)
-        ).data
-
-        # Calculate the datetime 'distances' to be used for the weighting
-        distances_1 = distance_01 - distances_0
-        weights_0 = distances_1 / distance_01
-        weights_1 = distances_0 / distance_01
-
-        # Calculate the final weighted values using a basic weighting
-        # formulae.
-        # NOTE: by the maths, the sum of the two weights should be 1, so there
-        #       is no need to divide by that, though confirm with a print-out
-        logger.critical(
-            "Weights total (should be 1.0, as a validation check) is: "
-            f"{(weights_0 + weights_1).array[0]}\n"
-        )
-
-        values_weighted = weights_0 * values_0 + weights_1 * values_1
-        v_w.append(values_weighted)
+        if permit_zero_axis_size_index_error:
+            try:
+                values_weighted = time_subspace_per_segment(
+                    index, model_times_len, t1, t2, m, obs_time_key,
+                    model_time_key, model_t_identifier
+                )
+                v_w.append(values_weighted)
+                logging.critical("RETURN FROM POTENTIAL NULL-RETURN")
+            except IndexError:
+                logger.critical(
+                    f"SKIPPING NULL-RETURN segment with: {t1}, {t2}.\n"
+                )
+        else:
+            values_weighted = time_subspace_per_segment(
+                index, model_times_len, t1, t2, m, obs_time_key,
+                model_time_key, model_t_identifier
+            )
+            v_w.append(values_weighted)
 
     # NOTE: masked values are mostly/all to do with the pressure being below
     #       when flight lands and takes off etc. on runway and close, cases
@@ -1532,6 +1565,7 @@ def main():
     outputs_dir = args.outputs_dir
     plotname_start = args.plotname_start
     verbose = args.verbose
+    halo_size = args.halo_size
 
     # Process and validate inputs, including optional flight track preview plot
     obs_data, model_data = read_input_data(
@@ -1578,7 +1612,7 @@ def main():
     # Subspacing to remove irrelavant information, pre-colocation
     # TODO tidy passing through of computer vertical coord identifier
     model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field, args.halo_size, verbose
+        obs_field, model_field, halo_size, verbose
     )
 
     # Perform spatial and then temporal interpolation to colocate
@@ -1598,6 +1632,7 @@ def main():
         model_t_identifier,
         obs_field,
         model_field,
+        halo_size,
         spatially_colocated_field,
         args.history_message,
     )
