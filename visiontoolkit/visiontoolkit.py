@@ -1254,14 +1254,19 @@ def time_interpolation(
     """
     logger.critical("Starting time interpolation step.\n")
 
+    # Setup ready for iteration...
+    m = spatially_colocated_field.copy()
+
     # In our field after spatial interpolation, the Dimension Coord has the
     # model time data and the Aux Coord has the observational time data
     # NOTE: keep these calls in, desite earlier ones probably in-place.
-    model_times = spatially_colocated_field.dimension_coordinate(
-        model_t_identifier
+    # Model data time must always be a dimension coordinate.
+    model_time_key, model_times = m.dimension_coordinate(
+        model_t_identifier, item=True
     )
-    obs_times = spatially_colocated_field.auxiliary_coordinate(
-        obs_t_identifier
+    # Observations, if DSG, will always be the auxiliary coordinate time
+    obs_time_key, obs_times = m.auxiliary_coordinate(
+        obs_t_identifier, item=True
     )
     model_times_len = len(model_times.data)
     obs_times_len = len(obs_times.data)
@@ -1270,14 +1275,6 @@ def time_interpolation(
         f"Number of model time data points: {model_times_len}\n"
         f"Number of observational time sample data points: {obs_times_len}\n"
     )
-
-    # Setup ready for iteration...
-    # Constructs
-    m = spatially_colocated_field.copy()
-    # Observations, if DSG, will always be the auxiliary coordinate time
-    obs_time_key = m.auxiliary_coordinate(obs_t_identifier, key=True)
-    # Model data time must always be a dimension coordinate
-    model_time_key = m.dimension_coordinate(model_t_identifier, key=True)
     logger.critical(f"Observational (aux) coord. time key is: {obs_time_key}")
     logger.critical(f"Model (dim) time key is: {model_time_key}\n")
 
