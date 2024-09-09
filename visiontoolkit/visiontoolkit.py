@@ -133,6 +133,8 @@ CONFIG_DEFAULTS = {
         "colocate from model data to the observational data "
         "spatio-temporal location."
     ),
+    # *** Subspacing options ***
+    "halo-size": 1,
     # *** Regridding options, to configure the 4D interpolation ***
     "regrid-method": "linear",
     # Note this option except in rare cases won't be required, as should almost
@@ -877,7 +879,8 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 
 
 @timeit
-def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
+def subspace_to_spatiotemporal_bounding_box(
+        obs_field, model_field, halo_size, verbose):
     """Extract only relevant data in the model field via a 4D subspace.
 
     Relevant data is extracted in the form of a field comprising the model
@@ -970,7 +973,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
         model_field.subspace,
         "envelope",
         # the halo size that extends the bounding box by 1 in index space
-        1,
+        halo_size,
     )
 
     if immediate_subspace_works:
@@ -1055,7 +1058,7 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
             # TODO: partial case commented below is breaking things here! WHY!?
             ### model_field = model_field_bb_subspace(**vert_kwargs)
             model_field = model_field.subspace(
-                "envelope", 1, **vert_kwargs,
+                "envelope", halo_size, **vert_kwargs,
             )
 
         logger.critical(
@@ -1072,7 +1075,8 @@ def subspace_to_spatiotemporal_bounding_box(obs_field, model_field, verbose):
         # last separate subspace.
         # TODO partial also not working here - clues, clues.
         ###model_field_bb = model_field_bb_subspace(**time_kwargs)
-        model_field_bb = model_field.subspace("envelope", 1, **time_kwargs)
+        model_field_bb = model_field.subspace(
+            "envelope", halo_size, **time_kwargs)
         logger.critical(
             f"Time ('{model_t_id}') bounding box calculated. It is: "
             f"{model_field_bb}"
@@ -1146,8 +1150,6 @@ def spatial_interpolation(
         data_axes = model_field_bb.get_data_axes()
         time_da = model_field_bb.domain_axis(model_t_identifier, key=True)
         time_da_index = data_axes.index(time_da)
-        print("DATA AXES ARE", data_axes)
-        print("TIME DA IS", time_da, time_da_index)
 
         # TODO possible bug in WRF pre-proc or in cf whereby aux coord axes
         # are not in compatible order with the data axes, so do a HACKY SWAP:
@@ -1575,7 +1577,7 @@ def main():
     # Subspacing to remove irrelavant information, pre-colocation
     # TODO tidy passing through of computer vertical coord identifier
     model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field, verbose
+        obs_field, model_field, args.halo_size, verbose
     )
 
     # Perform spatial and then temporal interpolation to colocate
