@@ -1375,28 +1375,42 @@ def time_interpolation(
         "*** Begin iteration over pairwise 'segments'. ***\n"
         f"Segments to loop over are, pairwise: {model_times.datetime_array}"
     )
+    # Note the length of (pairwise(model_times.datetime_array) is equal to
+    # model_times_len - 1 by its nature, e.g. A, B, C -> (A, B), (B, C)).
     for index, (t1, t2) in enumerate(pairwise(model_times.datetime_array)):
         logger.critical(f"\n*** Segment {index} ***\n")
         # Rarely, when we apply a halo and the start or end time is on the
         # boundary where there is a model time point, there will be no
-        # points captured by the outermost subspaces. Therefore, for the first
-        # and last segments ONLY we use a try/except to account for this:
-        permit_zero_axis_size_index_error = False
-        if index in (index, model_times_len):
-            permit_zero_axis_size_index_error = True
-            print("ALLOWING FAILURE")
+        # points captured by the outermost subspaces. Therefore, for the
+        # segments corresponding to the halo ONLY we use a try/except to
+        # account for this:
+        permit_null_subspace = False
+        # Here want the outermost segments corresponding to the halo_size.
+        # The '-1' for both elements is to account for indices starting at 0
+        # whereas halo sizes begin at 1 to have significance, where the
+        # second item in the tuple uses length of pairwise iterator being
+        # equal to model_times_len - 1, so is:
+        # (model_times_len - 1) - 1 - (halo_size - 1), and -1+1-1 = -1 overall.
+        if index in (halo_size - 1, model_times_len - 1 - halo_size):
+            permit_null_subspace = True
+            logger.critical(
+                "Allowing potential null-return subspace for segment emerging "
+                f"from halo size of {halo_size}, equivalent halo position in "
+                f"time segment array of: {index + 1}/{model_times_len - 1}"
+            )
 
-        if permit_zero_axis_size_index_error:
+        if permit_null_subspace:
             try:
                 values_weighted = time_subspace_per_segment(
                     index, model_times_len, t1, t2, m, obs_time_key,
                     model_time_key, model_t_identifier
                 )
                 v_w.append(values_weighted)
-                logging.critical("RETURN FROM POTENTIAL NULL-RETURN")
             except IndexError:
                 logger.critical(
-                    f"SKIPPING NULL-RETURN segment with: {t1}, {t2}.\n"
+                    f"Null-return subspce for segment with: {t1}, {t2}.\n"
+                    "This is a result of the halo_size set, so not a cause "
+                    "for concern!"
                 )
         else:
             values_weighted = time_subspace_per_segment(
