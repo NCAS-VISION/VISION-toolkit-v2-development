@@ -1024,7 +1024,7 @@ def subspace_to_spatiotemporal_bounding_box(
         # TODO cater for case where are > 1 coord refs (ValueError for now)
         coord_ref = model_field.coordinate_reference(default=None)
         if not coord_ref:  # no parametric coords, simple case
-            model_field = model_field.subspace(
+            model_field_bb = model_field.subspace(
                 "envelope", halo_size,
                 Z=cf.wi(*z_coord_tight_bounds),
             )
