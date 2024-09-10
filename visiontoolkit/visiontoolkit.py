@@ -165,7 +165,7 @@ CONFIG_DEFAULTS = {
         "markersize": 0.5,
         "linewidth": 0,  # turn off line plotting to only have markers
         "title": (
-            "Flight track from observational field to co-locate model "
+            "Input: flight track from observational field to co-locate model "
             "field onto"
         ),
     },
@@ -174,7 +174,7 @@ CONFIG_DEFAULTS = {
         "markersize": 5,
         "linewidth": 0.4,
         "title": (
-            "Observational field input (path, to be used for "
+            "Input: observational field (path, to be used for "
             "co-location, with its corresponding data, to be ignored)"
         ),
     },
@@ -183,7 +183,7 @@ CONFIG_DEFAULTS = {
         "legend": True,
         "markersize": 5,
         "linewidth": 0.4,
-        "title": "Co-located result: model co-located onto observational path",
+        "title": "Result: model co-located onto observational path",
     },
 }
 
@@ -775,10 +775,8 @@ def get_time_coords(obs_field, model_field, return_identifiers=True):
     # Observational time axis processing
     if obs_field.coordinate("T", default=False):
         obs_t_identifier = "T"
-        print("YES 1")
     elif obs_field.coordinate("time", default=False):
         obs_t_identifier = "time"
-        print("YES 2")
     else:
         raise CFComplianceIssue(
             "An identifiable and unique time coordinate is needed but "
@@ -1520,6 +1518,7 @@ def make_outputs_plots(
     cfp_output_levs_config,
     outputs_dir,
     plotname_start,
+    new_obs_starttime,
     cfp_output_general_config,
     verbose,
 ):
@@ -1559,6 +1558,15 @@ def make_outputs_plots(
     cfp.gopen(file=f"{outputs_dir}/{plotname_start}_final_colocated_field.png")
 
     cfp_output_general_config.update(verbose=verbose)
+    # Note the set start time of the obs on the plot title as key info.
+    if new_obs_starttime:
+        update_title = f"assuming starting time of {new_obs_starttime}"
+        orig_title = cfp_output_general_config.get("title", None)
+        if orig_title:
+            cfp_output_general_config.update(
+                title=f"{orig_title} {update_title}")
+        else:
+            cfp_output_general_config["title"] = update_title.title()
     cfp.traj(final_result_field, **cfp_output_general_config)
     cfp.gclose()
 
@@ -1662,6 +1670,7 @@ def main():
         args.cfp_output_levs_config,
         outputs_dir,
         plotname_start,
+        new_obs_starttime,
         args.cfp_output_general_config,
         verbose,
     )
