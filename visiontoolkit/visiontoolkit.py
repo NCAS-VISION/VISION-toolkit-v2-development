@@ -101,6 +101,7 @@ CONFIG_DEFAULTS = {
     # TODO: Get ESMF logging via cf incoporated into Python logging system,
     # see Issue #286.
     "verbose": True,
+    "skip-all-plotting": True,
     # *** Run mode with time override(s) ***
     # Specify the mode on which to run the E2E, where valid choices are:
     # 1. a mode to take data as-is assuming the model input data spans the
@@ -1588,6 +1589,7 @@ def main():
     plotname_start = args.plotname_start
     verbose = args.verbose
     halo_size = args.halo_size
+    skip_all_plotting = args.skip_all_plotting
 
     # Process and validate inputs, including optional flight track preview plot
     obs_data, model_data = read_input_data(
@@ -1598,19 +1600,20 @@ def main():
     )
 
     # TODO: this has too many parameters for one function, separate out
-    make_preview_plots(
-        obs_field,
-        args.show_plot_of_input_obs,
-        args.plot_of_input_obs_track_only,
-        outputs_dir,
-        plotname_start,
-        args.cfp_mapset_config,
-        args.cfp_cscale,
-        args.cfp_input_levs_config,
-        args.cfp_input_track_only_config,
-        args.cfp_input_general_config,
-        verbose,
-    )
+    if not skip_all_plotting:
+        make_preview_plots(
+            obs_field,
+            args.show_plot_of_input_obs,
+            args.plot_of_input_obs_track_only,
+            outputs_dir,
+            plotname_start,
+            args.cfp_mapset_config,
+            args.cfp_cscale,
+            args.cfp_input_levs_config,
+            args.cfp_input_track_only_config,
+            args.cfp_input_general_config,
+            verbose,
+        )
     ensure_cf_compliance(obs_field, model_field)  # TODO currently does nothing
 
     # Time coordinate considerations, pre-colocation
@@ -1664,16 +1667,17 @@ def main():
     # TODO improve path handling with PathLib library
     output_path_name = f"{outputs_dir}/{args.output_file_name}"
     write_output_data(final_result_field, output_path_name)
-    make_outputs_plots(
-        final_result_field,
-        obs_t_identifier,
-        args.cfp_output_levs_config,
-        outputs_dir,
-        plotname_start,
-        new_obs_starttime,
-        args.cfp_output_general_config,
-        verbose,
-    )
+    if not skip_all_plotting:
+        make_outputs_plots(
+            final_result_field,
+            obs_t_identifier,
+            args.cfp_output_levs_config,
+            outputs_dir,
+            plotname_start,
+            new_obs_starttime,
+            args.cfp_output_general_config,
+            verbose,
+        )
 
 
 if __name__ == "__main__":
