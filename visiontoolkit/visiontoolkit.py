@@ -101,7 +101,7 @@ CONFIG_DEFAULTS = {
     # TODO: Get ESMF logging via cf incoporated into Python logging system,
     # see Issue #286.
     "verbose": True,
-    "skip-all-plotting": True,
+    "skip-all-plotting": False,
     # *** Run mode with time override(s) ***
     # Specify the mode on which to run the E2E, where valid choices are:
     # 1. a mode to take data as-is assuming the model input data spans the
