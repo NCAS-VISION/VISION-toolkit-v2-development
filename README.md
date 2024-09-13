@@ -11,18 +11,18 @@ repository as its canonical home and marked as Version 2.0 of the toolkit.) :war
 
 ## Instructions for setup and use
 
-### Installation of the toolkit
+### Installing the toolkit
 
 1. The working toolkit (at this stage, just a lone script) is under this repo at
   `visiontoolkit/visiontoolkit.py`. You *can* run it as a lone script, e.g.
-  `python visiontoolkit.py`, but it best you install it locally:
+  `python visiontoolkit.py`, but it best you install it locally as follows:
 
-  If you install the toolkit via `pip install -e .`
-  or similar, you can run that script simply by calling the command `visiontoolkit`, but
-  you could also run it as a script via e.g. `python visiontoolkit/visiontoolkit.py`.
-  Note: the code was developed first under `cf-scripts/cf-vision-flight-e2e.py` but
-  has since been moved across to `visiontoolkit/visiontoolkit.py` for proper packaging
-  requrements and the old directory `cf-scripts` deleted.
+    * If you install the toolkit via `pip install -e .`
+    or similar, you can run that script simply by calling the command `visiontoolkit`, but
+    you could also run it as a script via e.g. `python visiontoolkit/visiontoolkit.py`.
+    Note: the code was developed first under `cf-scripts/cf-vision-flight-e2e.py` but
+    has since been moved across to `visiontoolkit/visiontoolkit.py` for proper packaging
+    requrements and the old directory `cf-scripts` deleted.
 
 3. The **environment** you need will to run it requires a custom branch of
    cf-plot, and otherwise you will need all the
@@ -38,12 +38,10 @@ repository as its canonical home and marked as Version 2.0 of the toolkit.) :war
       * https://ncas-cms.github.io/cf-python/installation.html
       * https://ncas-cms.github.io/cf-plot/build/download.html#to-install-cf-plot
 
-   3. You need the latest version of cf-plot ON A SPECIFIC BRANCH WHERE A
-       PATCH HAS BEEN APPLIED, so use the `generalise-traj` branch required
-       using the following command:
-       `pip install git+https://github.com/NCAS-CMS/cf-plot.git@generalise-traj`
-
-Please contact Sadie if you need any help running anything here.
+   3. You need the latest version of cf-plot on a specific branch where a special
+      bug-fix patch has bene applied, so use the `generalise-traj` branch required
+      using the following command:
+      `pip install git+https://github.com/NCAS-CMS/cf-plot.git@generalise-traj`
 
 
 ### Running the toolkit
@@ -65,7 +63,7 @@ $ cd visiontoolkit
 $ visiontoolkit --config-file="configurations/faam-stanco-e2e-config.json"
 ```
 
-(that configuration JSON file is provided in this repository.)
+(Note that configuration JSON file is provided in this repository.)
 
 If you want to run using WRF model input data, there is also a configuration script for that at
 `visiontoolkit/configurations/wrf-preprocessed-e2e-config.json`, though note
