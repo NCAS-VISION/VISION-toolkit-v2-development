@@ -13,27 +13,22 @@ repository as its canonical home and marked as Version 2.0 of the toolkit.) :war
 
 ### Installing the toolkit
 
-1. The working toolkit (at this stage, just a lone script) is under this repo at
-  `visiontoolkit/visiontoolkit.py`. You *can* run it as a lone script, e.g.
-  `python visiontoolkit.py`, but it best you install it locally as follows:
+1. **Install** the toolkit by cloning this repository and running `pip install -e .` in the root
+   directory of it. Note you do not need to do this to run the script, since you can
+   run it with `python visiontoolkit/visiontoolkit.py`, but with that installation
+   you can run and use the command `visiontoolkit` instead of having to call the script
+   with the Python interpreter.
 
-    * If you install the toolkit via `pip install -e .`
-    or similar, you can run that script simply by calling the command `visiontoolkit`, but
-    you could also run it as a script via e.g. `python visiontoolkit/visiontoolkit.py`.
-    Note: the code was developed first under `cf-scripts/cf-vision-flight-e2e.py` but
-    has since been moved across to `visiontoolkit/visiontoolkit.py` for proper packaging
-    requrements and the old directory `cf-scripts` deleted.
-
-3. The **environment** you need will to run it requires a custom branch of
+4. The **environment** you need will to run it requires a custom branch of
    cf-plot, and otherwise you will need all the
    dependencies of that and of cf-python. So, to get the right
-   Python environment (conda and/or mamba will make it simplest):
+   Python environment (`conda` and/or `mamba` will make it simplest):
 
    1. Ensure you are using Python version 3.10 or later.
-   2. Install the latest cf-python and cf-plot, noting in the latter case this
+   2. Install the latest cf-python and cf-plot (noting in the latter case this
       is mostly to ensure you have the right dependencies because we will
-      then go on to apply a patch `diff` to cf-plot, so use different
-      versions of those. To do this, see the instructions at:
+      then go on to install a specific branch from cf-plot as below).
+      To do this, see the instructions at:
 
       * https://ncas-cms.github.io/cf-python/installation.html
       * https://ncas-cms.github.io/cf-plot/build/download.html#to-install-cf-plot
@@ -47,26 +42,27 @@ repository as its canonical home and marked as Version 2.0 of the toolkit.) :war
 ### Running the toolkit
 
 The script has now been given minimal packaging so it can be
-run as a command. Try it out with:
+run as a command after installation as per the abov instructions. See the available
+CLI from running:
 
 ```console
 $ visiontoolkit --help
 ```
 
-and use the CLI inputs to guide as to what to specify as arguments.
-
-Note that for development, I have mostly been using FAAM STANCO campaign
-data for which I provide a custom config. as follows to run the script:
+For example, this repository contains example configuration files for running
+with both UM and WRF model inputs, though note both assume pre-processing
+has been done on the input data to ensure correct form and CF Compliance
+(more information will be added about this here soon):
 
 ```console
 $ cd visiontoolkit
-$ visiontoolkit --config-file="configurations/faam-stanco-e2e-config.json"
+$ visiontoolkit --config-file="configurations/um-faam-stanco-1.json"
 ```
 
-(Note that configuration JSON file is provided in this repository.)
+or using WRF model input:
 
-If you want to run using WRF model input data, there is also a configuration script for that at
-`visiontoolkit/configurations/wrf-preprocessed-e2e-config.json`, though note
-the WRF prcoessing is under active development so values in this configuration file may soon be
-tweaked. You will need to point in the script to pre-processed WRF data such as that processed
-with code under, with saved outputs stored under, `wrf-vert-coords`.
+```console
+$ cd visiontoolkit
+$ visiontoolkit --config-file="configurations/wrf-faam-stanco-1.json"
+```
+
