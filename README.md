@@ -1,8 +1,15 @@
-# VISION Project Resources
+# VISION-toolkit-v2-development
 
-Scripts and resources related to the VISION project 
+**Development towards Version 2 of the VISION project toolkit**
 
-## Instructions relating to the resources
+:warning: Note this code is *actively under development* and no guarantees about
+functionality or about documentation or testing can be made. For a released
+earlier version of the toolkit, please see and use the tool provided in the
+[`VISION-toolkit`](https://github.com/NCAS-VISION/VISION-toolkit) repository,
+and consult the documentation there. (When this code is ready it will be copied to that
+repository as its canonical home and marked as Version 2.0 of the toolkit.) :warning:
+
+## Instructions for setup and use
 
 ### Installation of the toolkit
 
