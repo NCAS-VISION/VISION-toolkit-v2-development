@@ -1,0 +1,290 @@
+╰─ python                                                                     ─╯
+Python 3.12.0 | packaged by conda-forge | (main, Oct  3 2023, 08:43:22) [GCC 12.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import cf
+>>> 
+>>> # 0. Read in data pre-processed with wrf-python to get relevant vars
+>>> f = cf.read("wrf-data-processed/wrf-press-test.nc")
+>>> f
+[<CF Field: ncvar%A(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%B(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>,
+ <CF Field: ncvar%ZNU(ncdim%Time(61), ncdim%bottom_top(50))>,
+ <CF Field: ncvar%p0>,
+ <CF Field: ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139))>]
+>>> # Take out the fields of relevance
+>>> a = f[0]
+>>> b = f[1]
+>>> t = f[2]
+>>> z = f[3]
+>>> p0 = f[4]
+>>> ps = f[5]
+>>> 
+>>> # 1. Set up the domain ancils
+>>> a_da = cf.DomainAncillary(source=a)
+>>> b_da = cf.DomainAncillary(source=b)
+>>> p0_da = cf.DomainAncillary(source=p0)
+>>> ps_da = cf.DomainAncillary(source=ps)
+>>> 
+>>> # 2. Add these as constructs to t, our main field
+>>> t.set_construct(a_da)
+'domainancillary0'
+>>> t.set_construct(b_da)
+'domainancillary1'
+>>> t.set_construct(p0_da)
+'domainancillary2'
+>>> t.set_construct(ps_da)
+'domainancillary3'
+>>> 
+>>> print(t)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]]
+>>> 
+>>> # 3. Create the coordinate reference
+>>> c = cf.CoordinateReference()
+>>> # Set the standard name which we get from App. D of the CF Conventions doc
+>>> c.coordinate_conversion.set_parameter("standard_name", "atmosphere_hybrid_sigma_pressure_coordinate")
+>>> # Get the computed standard name from App D. section 'formula terms'
+>>> c.coordinate_conversion.set_parameter("computed_standard_name", "air_pressure")
+>>> # Get the variables from the 'formula terms' equation and match them to
+>>> # the keys from the set_construct() call above.
+>>> dom_ancils = {
+...     'a': 'domainancillary0',
+...     'b': 'domainancillary1',
+...     'p0': 'domainancillary2',
+...     'ps': 'domainancillary3',
+... }
+>>> c.coordinate_conversion.set_domain_ancillaries(dom_ancils)
+>>> c
+<CF CoordinateReference: standard_name:atmosphere_hybrid_sigma_pressure_coordinate>
+>>> c.dump()
+Coordinate Reference: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+    Coordinate conversion:computed_standard_name = air_pressure
+    Coordinate conversion:standard_name = atmosphere_hybrid_sigma_pressure_coordinate
+    Coordinate conversion:a = domainancillary0
+    Coordinate conversion:b = domainancillary1
+    Coordinate conversion:p0 = domainancillary2
+    Coordinate conversion:ps = domainancillary3
+>>> # All ready to add!
+>>> 
+>>> # 4. Add the coordinate reference to the field t
+>>> t.set_construct(c)
+'coordinatereference0'
+>>> t
+<CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>
+>>> print(t)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]]
+>>> 
+>>> # There is some unit processing to do, since we can't yet do the computation:
+>>> t.compute_vertical_coordinates()
+Traceback (most recent call last):
+...
+ValueError: Can't calculate non-parametric vertical coordinates: 'p0' term <CF DomainAncillary: ncvar%p0() > has incorrect units: <Units: >. Expected units equivalent to <Units: Pa>
+>>> 
+>>> # 5. Do the unit addition required from the above
+>>> # No units on the domain ancils - pulled in from wrf-python - should find a way to get those in via the script
+>>> p0 = t.construct("ncvar%p0")
+>>> ps = t.construct("ncvar%ps")
+>>> p0.override_units("hPa", inplace=True)
+>>> ps.override_units("hPa", inplace=True)
+>>> print(t)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25 hPa
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+>>> # Units now added as desired
+>>>
+>>> # 6. Now the call to compute_vertical_coordinates should work!
+>>> t1 = t.compute_vertical_coordinates()>>> t1
+<CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>
+>>> print(t1)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+                : air_pressure(ncdim%bottom_top(50), ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[[1021.5154515355825, ..., 51.87520217895508]]]] 100 Pa
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25 hPa
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+>>> # Note there is now an 'air_pressure' aux coord! We have done it!
+>>> 
+>>> # Note we should only write out the field without the computed vert coord
+>>> # since that will double the size of the data. Calculate when need, don't save
+>>> # e.g. we will calculate it at the start of the VISION script.
+>>> 
+>>> # 7. Finally, we need to deal with the z coordinate which is presently
+>>> #    just a separate field
+>>> z
+<CF Field: ncvar%ZNU(ncdim%Time(61), ncdim%bottom_top(50))>
+>>> z.array
+masked_array(
+  data=[[0.99690735, 0.9898827 , 0.9809824 , ..., 0.01032035, 0.00598422,
+         0.00194674],
+        [0.99690735, 0.9898827 , 0.9809824 , ..., 0.01032035, 0.00598422,
+         0.00194674],
+        [0.99690735, 0.9898827 , 0.9809824 , ..., 0.01032035, 0.00598422,
+         0.00194674],
+        ...,
+        [0.99690735, 0.9898827 , 0.9809824 , ..., 0.01032035, 0.00598422,
+         0.00194674],
+        [0.99690735, 0.9898827 , 0.9809824 , ..., 0.01032035, 0.00598422,
+         0.00194674],
+        [0.99690735, 0.9898827 , 0.9809824 , ..., 0.01032035, 0.00598422,
+         0.00194674]],
+  mask=False,
+  fill_value=nan,
+  dtype=float32)
+>>> # Note these are all the same across the times, so take just the first
+>>> z0 = z[0].squeeze()
+>>> z0
+<CF Field: ncvar%ZNU(ncdim%bottom_top(50))>
+>>> 
+>>> # Create a dimension coordinate of this
+>>> d = cf.DimensionCoordinate(source=z0)
+>>> d.set_property("standard_name", "atmosphere_hybrid_sigma_pressure_coordinate")
+>>> d.set_property("computed_standard_name", "air_pressure")>>> d
+<CF DimensionCoordinate: atmosphere_hybrid_sigma_pressure_coordinate(50) >
+>>> d.dump()
+Dimension coordinate: atmosphere_hybrid_sigma_pressure_coordinate
+    _FillValue = nan
+    computed_standard_name = 'air_pressure'
+    standard_name = 'atmosphere_hybrid_sigma_pressure_coordinate'
+    Data(50) = [0.9969073534011841, ..., 0.0019467439269647002]
+>>> 
+>>> # Now set this on t, to incorporate the z into t as a dim. coord.
+>>> t.set_construct(d)
+'dimensioncoordinate2'
+>>> print(t)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), atmosphere_hybrid_sigma_pressure_coordinate(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : atmosphere_hybrid_sigma_pressure_coordinate(50) = [0.9969073534011841, ..., 0.0019467439269647002]
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25 hPa
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+>>> # Now added!
+>>> 
+>>> # 8. Now everything should be ready. Inspect the field and write it out
+>>> t.dump()
+------------------------
+Field: ncvar%T (ncvar%T)
+------------------------
+_FillValue = nan
+
+Data(ncdim%Time(61), atmosphere_hybrid_sigma_pressure_coordinate(50), ncdim%south_north(179), ncdim%west_east(139)) = [[[[-8.230499267578125, ..., 228.87506103515625]]]]
+
+Domain Axis: atmosphere_hybrid_sigma_pressure_coordinate(50)
+Domain Axis: key%domainaxis4(1)
+Domain Axis: ncdim%Time(61)
+Domain Axis: ncdim%south_north(179)
+Domain Axis: ncdim%west_east(139)
+
+Dimension coordinate: ncvar%Time
+    calendar = 'proleptic_gregorian'
+    units = 'hours since 2023-07-10 12:00:00'
+    Data(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+
+Dimension coordinate: ncvar%datetime
+    calendar = 'proleptic_gregorian'
+    units = 'days since 2023-07-10 12:00:00'
+    Data(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+
+Dimension coordinate: atmosphere_hybrid_sigma_pressure_coordinate
+    _FillValue = nan
+    computed_standard_name = 'air_pressure'
+    standard_name = 'atmosphere_hybrid_sigma_pressure_coordinate'
+    Data(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.9969073534011841, ..., 0.0019467439269647002]
+
+Auxiliary coordinate: ncvar%XLAT
+    _FillValue = nan
+    Data(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+
+Auxiliary coordinate: ncvar%XLONG
+    _FillValue = nan
+    Data(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+
+Auxiliary coordinate: ncvar%XTIME
+    _FillValue = nan
+    Data(ncdim%Time(61)) = [0.0, ..., 3600.0]
+
+Domain ancillary: ncvar%A
+    _FillValue = nan
+    Data(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+
+Domain ancillary: ncvar%B
+    _FillValue = nan
+    Data(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.9968656897544861, ..., 0.0]
+
+Domain ancillary: ncvar%p0
+    _FillValue = nan
+    units = 'hPa'
+    Data() = 1013.25 hPa
+
+Domain ancillary: ncvar%ps
+    _FillValue = nan
+    units = 'hPa'
+    Data(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+
+Coordinate reference: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+    Coordinate conversion:computed_standard_name = air_pressure
+    Coordinate conversion:standard_name = atmosphere_hybrid_sigma_pressure_coordinate
+    Coordinate conversion:a = Domain Ancillary: ncvar%A
+    Coordinate conversion:b = Domain Ancillary: ncvar%B
+    Coordinate conversion:p0 = Domain Ancillary: ncvar%p0
+    Coordinate conversion:ps = Domain Ancillary: ncvar%ps
+
+>>> cf.write(t, "final-wrf-with-vert-coords.nc")
+>>> 
+>>> # Check everything is OK by re-reading this in, should be one field now
+>>> g = cf.read("final-wrf-with-vert-coords.nc")
+>>> g
+[<CF Field: ncvar%A(atmosphere_hybrid_sigma_pressure_coordinate(50))>,
+ <CF Field: ncvar%B(atmosphere_hybrid_sigma_pressure_coordinate(50))>,
+ <CF Field: ncvar%T(ncdim%Time(61), atmosphere_hybrid_sigma_pressure_coordinate(50), ncdim%south_north(179), ncdim%west_east(139))>,
+ <CF Field: ncvar%p0 hPa>,
+ <CF Field: ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) hPa>]
+ 

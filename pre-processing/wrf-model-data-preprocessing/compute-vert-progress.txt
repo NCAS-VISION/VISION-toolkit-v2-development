@@ -1,0 +1,659 @@
+[slb93@sci4 ~]$ cd /gws/nopw/j04/vision/WRF_testdata/c345
+[slb93@sci4 c345]$ ls
+all_d01_aggregate.nc            wrfout_d01_2023-07-13_00:00:00  wrfout_d03_2023-07-10_14:00:00
+core_faam_20230711.nc           wrfout_d02_2023-07-10_12:00:00  wrfout_d03_2023-07-10_15:00:00
+sadie-temp-scripts              wrfout_d02_2023-07-10_13:00:00  wrfout_d03_2023-07-10_16:00:00
+test-sadie.nc                   wrfout_d02_2023-07-10_14:00:00  wrfout_d03_2023-07-10_17:00:00
+wrfout_d01_2023-07-10_12:00:00  wrfout_d02_2023-07-10_15:00:00  wrfout_d03_2023-07-10_18:00:00
+wrfout_d01_2023-07-10_13:00:00  wrfout_d02_2023-07-10_16:00:00  wrfout_d03_2023-07-10_19:00:00
+wrfout_d01_2023-07-10_14:00:00  wrfout_d02_2023-07-10_17:00:00  wrfout_d03_2023-07-10_20:00:00
+wrfout_d01_2023-07-10_15:00:00  wrfout_d02_2023-07-10_18:00:00  wrfout_d03_2023-07-10_21:00:00
+wrfout_d01_2023-07-10_16:00:00  wrfout_d02_2023-07-10_19:00:00  wrfout_d03_2023-07-10_22:00:00
+wrfout_d01_2023-07-10_17:00:00  wrfout_d02_2023-07-10_20:00:00  wrfout_d03_2023-07-10_23:00:00
+wrfout_d01_2023-07-10_18:00:00  wrfout_d02_2023-07-10_21:00:00  wrfout_d03_2023-07-11_00:00:00
+wrfout_d01_2023-07-10_19:00:00  wrfout_d02_2023-07-10_22:00:00  wrfout_d03_2023-07-11_01:00:00
+wrfout_d01_2023-07-10_20:00:00  wrfout_d02_2023-07-10_23:00:00  wrfout_d03_2023-07-11_02:00:00
+wrfout_d01_2023-07-10_21:00:00  wrfout_d02_2023-07-11_00:00:00  wrfout_d03_2023-07-11_03:00:00
+wrfout_d01_2023-07-10_22:00:00  wrfout_d02_2023-07-11_01:00:00  wrfout_d03_2023-07-11_04:00:00
+wrfout_d01_2023-07-10_23:00:00  wrfout_d02_2023-07-11_02:00:00  wrfout_d03_2023-07-11_05:00:00
+wrfout_d01_2023-07-11_00:00:00  wrfout_d02_2023-07-11_03:00:00  wrfout_d03_2023-07-11_06:00:00
+wrfout_d01_2023-07-11_01:00:00  wrfout_d02_2023-07-11_04:00:00  wrfout_d03_2023-07-11_07:00:00
+wrfout_d01_2023-07-11_02:00:00  wrfout_d02_2023-07-11_05:00:00  wrfout_d03_2023-07-11_08:00:00
+wrfout_d01_2023-07-11_03:00:00  wrfout_d02_2023-07-11_06:00:00  wrfout_d03_2023-07-11_09:00:00
+wrfout_d01_2023-07-11_04:00:00  wrfout_d02_2023-07-11_07:00:00  wrfout_d03_2023-07-11_10:00:00
+wrfout_d01_2023-07-11_05:00:00  wrfout_d02_2023-07-11_08:00:00  wrfout_d03_2023-07-11_11:00:00
+wrfout_d01_2023-07-11_06:00:00  wrfout_d02_2023-07-11_09:00:00  wrfout_d03_2023-07-11_12:00:00
+wrfout_d01_2023-07-11_07:00:00  wrfout_d02_2023-07-11_10:00:00  wrfout_d03_2023-07-11_13:00:00
+wrfout_d01_2023-07-11_08:00:00  wrfout_d02_2023-07-11_11:00:00  wrfout_d03_2023-07-11_14:00:00
+wrfout_d01_2023-07-11_09:00:00  wrfout_d02_2023-07-11_12:00:00  wrfout_d03_2023-07-11_15:00:00
+wrfout_d01_2023-07-11_10:00:00  wrfout_d02_2023-07-11_13:00:00  wrfout_d03_2023-07-11_16:00:00
+wrfout_d01_2023-07-11_11:00:00  wrfout_d02_2023-07-11_14:00:00  wrfout_d03_2023-07-11_17:00:00
+wrfout_d01_2023-07-11_12:00:00  wrfout_d02_2023-07-11_15:00:00  wrfout_d03_2023-07-11_18:00:00
+wrfout_d01_2023-07-11_13:00:00  wrfout_d02_2023-07-11_16:00:00  wrfout_d03_2023-07-11_19:00:00
+wrfout_d01_2023-07-11_14:00:00  wrfout_d02_2023-07-11_17:00:00  wrfout_d03_2023-07-11_20:00:00
+wrfout_d01_2023-07-11_15:00:00  wrfout_d02_2023-07-11_18:00:00  wrfout_d03_2023-07-11_21:00:00
+wrfout_d01_2023-07-11_16:00:00  wrfout_d02_2023-07-11_19:00:00  wrfout_d03_2023-07-11_22:00:00
+wrfout_d01_2023-07-11_17:00:00  wrfout_d02_2023-07-11_20:00:00  wrfout_d03_2023-07-11_23:00:00
+wrfout_d01_2023-07-11_18:00:00  wrfout_d02_2023-07-11_21:00:00  wrfout_d03_2023-07-12_00:00:00
+wrfout_d01_2023-07-11_19:00:00  wrfout_d02_2023-07-11_22:00:00  wrfout_d03_2023-07-12_01:00:00
+wrfout_d01_2023-07-11_20:00:00  wrfout_d02_2023-07-11_23:00:00  wrfout_d03_2023-07-12_02:00:00
+wrfout_d01_2023-07-11_21:00:00  wrfout_d02_2023-07-12_00:00:00  wrfout_d03_2023-07-12_03:00:00
+wrfout_d01_2023-07-11_22:00:00  wrfout_d02_2023-07-12_01:00:00  wrfout_d03_2023-07-12_04:00:00
+wrfout_d01_2023-07-11_23:00:00  wrfout_d02_2023-07-12_02:00:00  wrfout_d03_2023-07-12_05:00:00
+wrfout_d01_2023-07-12_00:00:00  wrfout_d02_2023-07-12_03:00:00  wrfout_d03_2023-07-12_06:00:00
+wrfout_d01_2023-07-12_01:00:00  wrfout_d02_2023-07-12_04:00:00  wrfout_d03_2023-07-12_07:00:00
+wrfout_d01_2023-07-12_02:00:00  wrfout_d02_2023-07-12_05:00:00  wrfout_d03_2023-07-12_08:00:00
+wrfout_d01_2023-07-12_03:00:00  wrfout_d02_2023-07-12_06:00:00  wrfout_d03_2023-07-12_09:00:00
+wrfout_d01_2023-07-12_04:00:00  wrfout_d02_2023-07-12_07:00:00  wrfout_d03_2023-07-12_10:00:00
+wrfout_d01_2023-07-12_05:00:00  wrfout_d02_2023-07-12_08:00:00  wrfout_d03_2023-07-12_11:00:00
+wrfout_d01_2023-07-12_06:00:00  wrfout_d02_2023-07-12_09:00:00  wrfout_d03_2023-07-12_12:00:00
+wrfout_d01_2023-07-12_07:00:00  wrfout_d02_2023-07-12_10:00:00  wrfout_d03_2023-07-12_13:00:00
+wrfout_d01_2023-07-12_08:00:00  wrfout_d02_2023-07-12_11:00:00  wrfout_d03_2023-07-12_14:00:00
+wrfout_d01_2023-07-12_09:00:00  wrfout_d02_2023-07-12_12:00:00  wrfout_d03_2023-07-12_15:00:00
+wrfout_d01_2023-07-12_10:00:00  wrfout_d02_2023-07-12_13:00:00  wrfout_d03_2023-07-12_16:00:00
+wrfout_d01_2023-07-12_11:00:00  wrfout_d02_2023-07-12_14:00:00  wrfout_d03_2023-07-12_17:00:00
+wrfout_d01_2023-07-12_12:00:00  wrfout_d02_2023-07-12_15:00:00  wrfout_d03_2023-07-12_18:00:00
+wrfout_d01_2023-07-12_13:00:00  wrfout_d02_2023-07-12_16:00:00  wrfout_d03_2023-07-12_19:00:00
+wrfout_d01_2023-07-12_14:00:00  wrfout_d02_2023-07-12_17:00:00  wrfout_d03_2023-07-12_20:00:00
+wrfout_d01_2023-07-12_15:00:00  wrfout_d02_2023-07-12_18:00:00  wrfout_d03_2023-07-12_21:00:00
+wrfout_d01_2023-07-12_16:00:00  wrfout_d02_2023-07-12_19:00:00  wrfout_d03_2023-07-12_22:00:00
+wrfout_d01_2023-07-12_17:00:00  wrfout_d02_2023-07-12_20:00:00  wrfout_d03_2023-07-12_23:00:00
+wrfout_d01_2023-07-12_18:00:00  wrfout_d02_2023-07-12_21:00:00  wrfout_d03_2023-07-13_00:00:00
+wrfout_d01_2023-07-12_19:00:00  wrfout_d02_2023-07-12_22:00:00  wrf-press-test.nc
+wrfout_d01_2023-07-12_20:00:00  wrfout_d02_2023-07-12_23:00:00  z_cat_d01_cf.nc
+wrfout_d01_2023-07-12_21:00:00  wrfout_d02_2023-07-13_00:00:00  z_cat_d02_cf.nc
+wrfout_d01_2023-07-12_22:00:00  wrfout_d03_2023-07-10_12:00:00  z_cat_d03_cf.nc
+wrfout_d01_2023-07-12_23:00:00  wrfout_d03_2023-07-10_13:00:00
+[slb93@sci4 c345]$ module load jaspy/3.11/r20240508 
+[slb93@sci4 c345]$ python
+Python 3.11.9 | packaged by conda-forge | (main, Apr 19 2024, 18:36:13) [GCC 12.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import cfplot as cfp
+>>> import cf
+>>> 
+>>> f = cf.read("wrf-press-test.nc")
+>>> f
+[<CF Field: ncvar%A(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%B(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>,
+ <CF Field: ncvar%ZNU(ncdim%Time(61), ncdim%bottom_top(50))>,
+ <CF Field: ncvar%p0>,
+ <CF Field: ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139))>]
+>>> p = f[0]*f[4] + f[1]*f[5]
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cf/mixin/propertiesdata.py", line 173, in __mul__
+    return self._binary_operation(y, "__mul__")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cf/field.py", line 1254, in _binary_operation
+    new_data = field0.data._binary_operation(field1.data, method)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cf/data/data.py", line 3767, in _binary_operation
+    result = getattr(dx0, method)(dx1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/dask/array/core.py", line 222, in wrapper
+    return f(self, other)
+           ^^^^^^^^^^^^^^
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/dask/array/core.py", line 2365, in __mul__
+    return elemwise(operator.mul, self, other)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/dask/array/core.py", line 4795, in elemwise
+    broadcast_shapes(*shapes)
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/dask/array/core.py", line 4723, in broadcast_shapes
+    raise ValueError(
+ValueError: operands could not be broadcast together with shapes (50, 1, 1) (61, 179, 139)
+>>> f
+[<CF Field: ncvar%A(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%B(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>,
+ <CF Field: ncvar%ZNU(ncdim%Time(61), ncdim%bottom_top(50))>,
+ <CF Field: ncvar%p0>,
+ <CF Field: ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139))>]
+>>> t = f[2]
+>>> f
+[<CF Field: ncvar%A(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%B(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>,
+ <CF Field: ncvar%ZNU(ncdim%Time(61), ncdim%bottom_top(50))>,
+ <CF Field: ncvar%p0>,
+ <CF Field: ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139))>]
+>>> t
+<CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>
+>>> print(t)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+>>> a = cf.DomainAncillary(source=f[0])
+>>> a
+<CF DomainAncillary: ncvar%A(50) >
+>>> a.array
+masked_array(data=[1.94273889e-04, 7.53761386e-04, 1.76450517e-03,
+                   3.50022106e-03, 6.35885168e-03, 1.08896233e-02,
+                   1.77981034e-02, 2.79091001e-02, 4.20606062e-02,
+                   6.09210245e-02, 8.47491175e-02, 1.13171361e-01,
+                   1.45074710e-01, 1.78766906e-01, 2.12051764e-01,
+                   2.41965696e-01, 2.66616791e-01, 2.85813987e-01,
+                   2.99641818e-01, 3.08370203e-01, 3.12386692e-01,
+                   3.12146693e-01, 3.08136910e-01, 3.00849587e-01,
+                   2.90764332e-01, 2.78336108e-01, 2.63987780e-01,
+                   2.48105809e-01, 2.31544197e-01, 2.15548247e-01,
+                   2.00653911e-01, 1.86785460e-01, 1.73872292e-01,
+                   1.61848545e-01, 1.50653034e-01, 1.40228674e-01,
+                   1.30522326e-01, 1.21484533e-01, 1.13069281e-01,
+                   1.05233684e-01, 9.79377925e-02, 9.11444277e-02,
+                   8.48190039e-02, 7.89292678e-02, 7.34452158e-02,
+                   6.83389008e-02, 6.35843202e-02, 5.91572411e-02,
+                   5.50350845e-02, 5.11968434e-02],
+             mask=False,
+       fill_value=nan,
+            dtype=float32)
+>>> t.set_construct(a)  # in this case no need to set axes, but more generally might
+'domainancillary0'
+>>> t
+<CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>
+>>> print(t)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+>>> f
+[<CF Field: ncvar%A(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%B(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>,
+ <CF Field: ncvar%ZNU(ncdim%Time(61), ncdim%bottom_top(50))>,
+ <CF Field: ncvar%p0>,
+ <CF Field: ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139))>]
+>>> b = cf.DomainAncillary(source=f[1])
+>>> p0 = cf.DomainAncillary(source=f[4])
+>>> ps = cf.DomainAncillary(source=f[5])
+>>> 
+>>> t.set_construct(b)  # in this case no need to set axes, but more generally might
+'domainancillary1'
+>>> t.set_construct(p0)  # in this case no need to set axes, but more generally might
+'domainancillary2'
+>>> t.set_construct(ps)  # in this case no need to set axes, but more generally might
+'domainancillary3'
+>>> 
+>>> print(t)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]]
+>>> 
+>>> # Coordinate ref creation
+>>> c = cf.CoordinateReference()
+>>> c.set_coordinates()  # for other cases, if 1D z cordinate would need to set this here
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: CoordinateReference.set_coordinates() missing 1 required positional argument: 'coordinates'
+>>> # c.set_coordinates()  # for other cases, if 1D z cordinate would need to set this here
+>>> c.coordinate_conversion.set_parameter('standard_name', 'atmosphere_hybrid_sigma_pressure_coordinate')  # get this name from App. D in CF Conventions
+>>> c.coordinate_conversion.set_parameter('computed_standard_name', 'air_pressure')  # get from the above too
+>>> c.coordinate_conversion.set_domain_ancillaries({'a': 'domainancillary0', 'b': 'domainancillary1', 'p0': 'domainancillary2', 'ps': 'domainancillary3'})  # match up to 'formula terms' equation var names from the above
+>>> c
+<CF CoordinateReference: standard_name:atmosphere_hybrid_sigma_pressure_coordinate>
+>>> print(c)
+standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+>>> c.dump()
+Coordinate Reference: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+    Coordinate conversion:computed_standard_name = air_pressure
+    Coordinate conversion:standard_name = atmosphere_hybrid_sigma_pressure_coordinate
+    Coordinate conversion:a = domainancillary0
+    Coordinate conversion:b = domainancillary1
+    Coordinate conversion:p0 = domainancillary2
+    Coordinate conversion:ps = domainancillary3
+>>> t.set_construct(c)
+'coordinatereference0'
+>>> print(t)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]]
+>>> t.dump()
+------------------------
+Field: ncvar%T (ncvar%T)
+------------------------
+_FillValue = nan
+
+Data(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139)) = [[[[-8.230499267578125, ..., 228.87506103515625]]]]
+
+Domain Axis: key%domainaxis4(1)
+Domain Axis: ncdim%Time(61)
+Domain Axis: ncdim%bottom_top(50)
+Domain Axis: ncdim%south_north(179)
+Domain Axis: ncdim%west_east(139)
+
+Dimension coordinate: ncvar%Time
+    calendar = 'proleptic_gregorian'
+    units = 'hours since 2023-07-10 12:00:00'
+    Data(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+
+Dimension coordinate: ncvar%datetime
+    calendar = 'proleptic_gregorian'
+    units = 'days since 2023-07-10 12:00:00'
+    Data(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+
+Auxiliary coordinate: ncvar%XLAT
+    _FillValue = nan
+    Data(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+
+Auxiliary coordinate: ncvar%XLONG
+    _FillValue = nan
+    Data(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+
+Auxiliary coordinate: ncvar%XTIME
+    _FillValue = nan
+    Data(ncdim%Time(61)) = [0.0, ..., 3600.0]
+
+Domain ancillary: ncvar%A
+    _FillValue = nan
+    Data(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+
+Domain ancillary: ncvar%B
+    _FillValue = nan
+    Data(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+
+Domain ancillary: ncvar%p0
+    _FillValue = nan
+    Data() = 1013.25
+
+Domain ancillary: ncvar%ps
+    _FillValue = nan
+    Data(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]]
+
+Coordinate reference: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+    Coordinate conversion:computed_standard_name = air_pressure
+    Coordinate conversion:standard_name = atmosphere_hybrid_sigma_pressure_coordinate
+    Coordinate conversion:a = Domain Ancillary: ncvar%A
+    Coordinate conversion:b = Domain Ancillary: ncvar%B
+    Coordinate conversion:p0 = Domain Ancillary: ncvar%p0
+    Coordinate conversion:ps = Domain Ancillary: ncvar%ps
+
+>>> t2 = t.copy()
+>>> cf.write(t2, 'wrf-press-test-with-coord-ref.nc')
+>>> 
+>>> t.compute_vertical_coordinates(inplace=True)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cfdm/decorators.py", line 44, in inplace_wrapper
+    processed_copy = operation_method(self, *args, **kwargs)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cfdm/decorators.py", line 171, in verbose_override_wrapper
+    return method_with_verbose_kwarg(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cf/field.py", line 9510, in compute_vertical_coordinates
+    ) = FormulaTerms.formula(f, cr, default_to_zero, strict)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cf/formula_terms.py", line 2124, in formula
+    ) = getattr(cls, standard_name)(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cf/formula_terms.py", line 922, in atmosphere_hybrid_sigma_pressure_coordinate
+    p0, _ = cls._domain_ancillary_term(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cf/formula_terms.py", line 195, in _domain_ancillary_term
+    raise ValueError(
+ValueError: Can't calculate non-parametric vertical coordinates: 'p0' term <CF DomainAncillary: ncvar%p0() > has incorrect units: <Units: >. Expected units equivalent to <Units: Pa>
+>>> # So we need to do some unit-setting
+>>> t
+<CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>
+>>> print(t)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]]
+>>> # No units on the domain ancils - pulled in from wrf-python - should find a way to get those in via the script
+>>> # For now, extract these (a bit of a hack)
+>>> p0 = t.construct("ncvar%p0")
+>>> p0.override_units("hPa", inplace=True)
+>>> ps = t.construct("ncvar%ps")
+>>> ps.override_units("hPa", inplace=True)
+>>> 
+>>> print(t)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25 hPa
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+>>> # So now the units are compatible
+>>> 
+>>> t.compute_vertical_coordinates(inplace=True)
+>>> print(t)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+                : air_pressure(ncdim%bottom_top(50), ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[[1021.5154515355825, ..., 51.87520217895508]]]] 100 Pa
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25 hPa
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+>>> # Note there is now an 'air_pressure' aux coord! We have done it!
+>>> cf.write(t, 'wrf-press-test-with-coord-ref.nc')
+>>> t2
+<CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>
+>>> print(t2)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]]
+>>> t3 = t.copy()
+>>> t3.del_construct("air_pressure")
+<CF AuxiliaryCoordinate: air_pressure(50, 61, 179, 139) 100 Pa>
+>>> 
+>>> print(t3)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25 hPa
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+
+>>> cf.write(t3, 'wrf-press-test-with-coord-ref.nc')  # only write this out and compute_vert_coor in VISION, as doubles size
+>>> 
+>>> g = cf.read('wrf-press-test-with-coord-ref.nc')
+>>> g
+[<CF Field: ncvar%A(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%B(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>,
+ <CF Field: ncvar%p0 hPa>,
+ <CF Field: ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) hPa>]
+>>> gt = g[3]
+>>> gt.compute_vertical_coordinates()
+<CF Field: ncvar%p0 hPa>
+>>> gt
+<CF Field: ncvar%p0 hPa>
+>>> print(gt)
+Field: ncvar%p0 (ncvar%p0)
+--------------------------
+Data            : ncvar%p0 hPa
+
+>>> 
+>>> print(t3)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25 hPa
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+>>> cf.write(t3, 'wrf-with-coord-ref.nc')
+
+x =>>> 
+>>> x = cf.read('wrf-with-coord-ref.nc')
+>>> print(x)
+[<CF Field: ncvar%A(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%B(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>,
+ <CF Field: ncvar%p0 hPa>,
+ <CF Field: ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) hPa>]
+>>> # Should only be getting oe field read-in!
+>>> 
+>>> print(f)
+[<CF Field: ncvar%A(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%B(ncdim%bottom_top(50))>,
+ <CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>,
+ <CF Field: ncvar%ZNU(ncdim%Time(61), ncdim%bottom_top(50))>,
+ <CF Field: ncvar%p0>,
+ <CF Field: ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139))>]
+>>> # Now need to use ZNU so we can do that
+>>> z = f[3]
+>>> z.array
+masked_array(
+  data=[[0.99690735, 0.9898827 , 0.9809824 , ..., 0.01032035, 0.00598422,
+         0.00194674],
+        [0.99690735, 0.9898827 , 0.9809824 , ..., 0.01032035, 0.00598422,
+         0.00194674],
+        [0.99690735, 0.9898827 , 0.9809824 , ..., 0.01032035, 0.00598422,
+         0.00194674],
+        ...,
+        [0.99690735, 0.9898827 , 0.9809824 , ..., 0.01032035, 0.00598422,
+         0.00194674],
+        [0.99690735, 0.9898827 , 0.9809824 , ..., 0.01032035, 0.00598422,
+         0.00194674],
+        [0.99690735, 0.9898827 , 0.9809824 , ..., 0.01032035, 0.00598422,
+         0.00194674]],
+  mask=False,
+  fill_value=nan,
+  dtype=float32)
+>>> z0 = z[0].squeeze()
+>>> z0
+<CF Field: ncvar%ZNU(ncdim%bottom_top(50))>
+>>> z0
+<CF Field: ncvar%ZNU(ncdim%bottom_top(50))>
+>>> d = cf.DimensionCoordinate(source=z0)
+>>> d.set_property('standard_name', 'atmosphere_hybrid_sigma_pressure_coordinate')
+>>> d
+<CF DimensionCoordinate: atmosphere_hybrid_sigma_pressure_coordinate(50) >
+>>> z
+<CF Field: ncvar%ZNU(ncdim%Time(61), ncdim%bottom_top(50))>
+>>> t3
+<CF Field: ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))>
+>>> print(t)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+                : air_pressure(ncdim%bottom_top(50), ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[[1021.5154515355825, ..., 51.87520217895508]]]] 100 Pa
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25 hPa
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+>>> print(t3)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), ncdim%bottom_top(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(ncdim%bottom_top(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(ncdim%bottom_top(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25 hPa
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+>>> t3.set_construct(d)
+'dimensioncoordinate2'
+>>> print(t3)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), atmosphere_hybrid_sigma_pressure_coordinate(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : atmosphere_hybrid_sigma_pressure_coordinate(50) = [0.9969073534011841, ..., 0.0019467439269647002]
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25 hPa
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+>>> # Now need to set it on c too
+>>> c = t3.construct("standard_name:atmosphere_hybrid_sigma_pressure_coordinate")
+>>> c
+<CF CoordinateReference: standard_name:atmosphere_hybrid_sigma_pressure_coordinate>
+>>> c.set_coordinate("dimensioncoordinate2")
+>>> 
+>>> c
+<CF CoordinateReference: standard_name:atmosphere_hybrid_sigma_pressure_coordinate>
+>>> print(t3)
+Field: ncvar%T (ncvar%T)
+------------------------
+Data            : ncvar%T(ncdim%Time(61), atmosphere_hybrid_sigma_pressure_coordinate(50), ncdim%south_north(179), ncdim%west_east(139))
+Dimension coords: ncvar%Time(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+                : atmosphere_hybrid_sigma_pressure_coordinate(50) = [0.9969073534011841, ..., 0.0019467439269647002]
+                : ncvar%datetime(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+Auxiliary coords: ncvar%XLAT(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+                : ncvar%XLONG(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+                : ncvar%XTIME(ncdim%Time(61)) = [0.0, ..., 3600.0]
+Coord references: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+Domain ancils   : ncvar%A(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+                : ncvar%B(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.9968656897544861, ..., 0.0]
+                : ncvar%p0() = 1013.25 hPa
+                : ncvar%ps(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+>>> t3.dump()
+------------------------
+Field: ncvar%T (ncvar%T)
+------------------------
+_FillValue = nan
+
+Data(ncdim%Time(61), atmosphere_hybrid_sigma_pressure_coordinate(50), ncdim%south_north(179), ncdim%west_east(139)) = [[[[-8.230499267578125, ..., 228.87506103515625]]]]
+
+Domain Axis: atmosphere_hybrid_sigma_pressure_coordinate(50)
+Domain Axis: key%domainaxis4(1)
+Domain Axis: ncdim%Time(61)
+Domain Axis: ncdim%south_north(179)
+Domain Axis: ncdim%west_east(139)
+
+Dimension coordinate: ncvar%Time
+    calendar = 'proleptic_gregorian'
+    units = 'hours since 2023-07-10 12:00:00'
+    Data(ncdim%Time(61)) = [2023-07-10 12:00:00, ..., 2023-07-13 00:00:00] proleptic_gregorian
+
+Dimension coordinate: ncvar%datetime
+    calendar = 'proleptic_gregorian'
+    units = 'days since 2023-07-10 12:00:00'
+    Data(key%domainaxis4(1)) = [2023-07-10 12:00:00] proleptic_gregorian
+
+Dimension coordinate: atmosphere_hybrid_sigma_pressure_coordinate
+    _FillValue = nan
+    standard_name = 'atmosphere_hybrid_sigma_pressure_coordinate'
+    Data(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.9969073534011841, ..., 0.0019467439269647002]
+
+Auxiliary coordinate: ncvar%XLAT
+    _FillValue = nan
+    Data(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[36.98377990722656, ..., 69.75613403320312]]]
+
+Auxiliary coordinate: ncvar%XLONG
+    _FillValue = nan
+    Data(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[-22.838226318359375, ..., 20.62158203125]]]
+
+Auxiliary coordinate: ncvar%XTIME
+    _FillValue = nan
+    Data(ncdim%Time(61)) = [0.0, ..., 3600.0]
+
+Domain ancillary: ncvar%A
+    _FillValue = nan
+    Data(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.00019427388906478882, ..., 0.05119684338569641]
+
+Domain ancillary: ncvar%B
+    _FillValue = nan
+    Data(atmosphere_hybrid_sigma_pressure_coordinate(50)) = [0.9968656897544861, ..., 0.0]
+
+Domain ancillary: ncvar%p0
+    _FillValue = nan
+    units = 'hPa'
+    Data() = 1013.25 hPa
+
+Domain ancillary: ncvar%ps
+    _FillValue = nan
+    units = 'hPa'
+    Data(ncdim%Time(61), ncdim%south_north(179), ncdim%west_east(139)) = [[[1024.52978515625, ..., 972.4573364257812]]] hPa
+
+Coordinate reference: standard_name:atmosphere_hybrid_sigma_pressure_coordinate
+    Coordinate conversion:computed_standard_name = air_pressure
+    Coordinate conversion:standard_name = atmosphere_hybrid_sigma_pressure_coordinate
+    Coordinate conversion:a = Domain Ancillary: ncvar%A
+    Coordinate conversion:b = Domain Ancillary: ncvar%B
+    Coordinate conversion:p0 = Domain Ancillary: ncvar%p0
+    Coordinate conversion:ps = Domain Ancillary: ncvar%ps
+    Dimension Coordinate: atmosphere_hybrid_sigma_pressure_coordinate
+
+>>> cf.write(t3, 'wrf-with-coord-ref-incl-dim-coord.nc')
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cfdm/decorators.py", line 171, in verbose_override_wrapper
+    return method_with_verbose_kwarg(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cf/read_write/write.py", line 808, in write
+    netcdf.write(
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cfdm/decorators.py", line 171, in verbose_override_wrapper
+    return method_with_verbose_kwarg(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cfdm/read_write/netcdf/netcdfwrite.py", line 4911, in write
+    self._file_io_iteration(
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cfdm/read_write/netcdf/netcdfwrite.py", line 5184, in _file_io_iteration
+    self._write_field_or_domain(f)
+  File "/apps/jasmin/jaspy/miniforge_envs/jaspy3.11/mf3-23.11.0-0/envs/jaspy3.11-mf3-23.11.0-0-r20240508/lib/python3.11/site-packages/cfdm/read_write/netcdf/netcdfwrite.py", line 3326, in _write_field_or_domain
+    self.implementation.set_property(
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CFImplementation' object has no attribute 'set_property'. Did you mean: 'get_property'?
+>>> # Ah, cfdm bug that has been fixed - use conda or do locally... 
+>>> # But otherwise, this would be done!
