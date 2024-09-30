@@ -3,11 +3,9 @@ import copy
 import json
 import logging
 import os
-
 from pprint import pformat
 
 from .constants import CONFIG_DEFAULTS
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,17 +1,15 @@
+import functools
+import logging
+import sys
 from itertools import pairwise  # requires Python 3.10+
 from pprint import pformat
 from time import time
 
-import functools
-import logging
-import numpy as np
-import sys
-
-import cfplot as cfp
 import cf
+import cfplot as cfp
+import numpy as np
 
 from .cli import process_config, validate_config
-
 
 logger = logging.getLogger(__name__)
 
@@ -498,7 +496,8 @@ def subspace_to_spatiotemporal_bounding_box(
     immediate_subspace_works = False
     try:
         model_field_bb_indices = model_field.subspace(
-            "envelope", halo_size, **bb_kwargs)
+            "envelope", halo_size, **bb_kwargs
+        )
         immediate_subspace_works = True
         if verbose:
             logger.critical(
@@ -595,8 +594,7 @@ def subspace_to_spatiotemporal_bounding_box(
             # https://github.com/NCAS-CMS/cf-python/issues/802
             added_vertical = not model_field_w_vertical.equals(model_field)
             if not added_vertical:
-                raise ValueError(
-                    "Couldn't calculate vertical coordinates.")
+                raise ValueError("Couldn't calculate vertical coordinates.")
 
             # If a vertical dim coord was added, we need to use that for our
             # z coordinate from now onwards
