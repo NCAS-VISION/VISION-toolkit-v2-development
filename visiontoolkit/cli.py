@@ -234,6 +234,7 @@ def process_cli_arguments(parser):
 
     return parser.parse_args()
 
+
 def process_config():
     """Process a configuration file.
 
@@ -309,13 +310,9 @@ def process_config_file(config_file):
     with open(config_file) as f:
         try:
             j = json.load(f)
-        except:
+        except (json.decoder.JSONDecodeError, AttributeError):
             raise ValueError("Bad JSON configuration file.")  # TODO better msg
 
     logger.critical(f"Succesfully read-in JSON config. file at: {config_file}")
 
-    # TODO validation on keys
-    # TODO allow YAML config. format as well.
-
     return j
-

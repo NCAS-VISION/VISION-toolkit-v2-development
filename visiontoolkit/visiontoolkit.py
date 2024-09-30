@@ -1,60 +1,16 @@
-"""
-End-to-end model-to-observational field co-location script for the VISION
-flight digital twin, using cf-python and cf-plot.
-
-Demonstration for the TWINE-funded (NCAS-)VISION project.
-
-Requirements to run the script successfully (else the script needs fixes
-so please get in touch with Sadie RE any issues, noting this is a WIP!):
-* environment with versions, at least, Python 3.10 and cf-python 3.16.2;
-* input data conforming to toolkit requirements (documentation TODO).
-
-Note: this script assumes track data from a flight as the observational input,
-where other inputs for the VISION project such as satellite data will be
-considered in future later-stage updates only, so will not yet work for this
-script.
-
-TODOS, SCRIPT-WIDE/GENERAL:
-* document assumptions about data that we use that the input data need
-  to abide by, for it to work (input data quality requirements), and quote
-  that documentation here and in the script run CLI initial print-out.
-* for whole script, consider what is useful to persist (Dask-wise)
-  for efficiency.
-
-"""
-
 from itertools import pairwise  # requires Python 3.10+
 from pprint import pformat
 from time import time
 
-import copy
 import functools
 import logging
 import numpy as np
-import os
 import sys
 
 import cfplot as cfp
 import cf
 
 from .cli import process_config, validate_config
-
-
-def configure_logging():
-    """Configure logging.
-
-    TODO: DETAILED DOCS
-    """
-    # NOTE we use 'CRITICAL' level to avoid seeing cf log level messaging
-    # which is a bit spammy and hides the output from this script.
-    logger = logging.getLogger(__name__)
-    if True:  ###if VERBOSE:  # TODO: SUB-CONFIG.
-        logger.setLevel(logging.CRITICAL)
-    else:
-        logger.setLevel(
-            logging.CRITICAL + 1
-        )  # prevents even critical log messages
-    return logger
 
 
 logger = logging.getLogger(__name__)
@@ -82,6 +38,7 @@ def timeit(func):
 # ----------------------------------------------------------------------------
 # Define custom errors
 # ----------------------------------------------------------------------------
+
 
 class CFComplianceIssue(Exception):
     """Raised for cases of errors caused by lack of CF Compliance."""
@@ -122,7 +79,7 @@ def print_toolkit_banner():
 |     | | / _ \\  / _ \\ | | | |_/ )| |(_   _)   {bfc}|
 |     | || |_| || |_| || | |  _ ( | |  | |_    {bfc}|
 |     |_| \\___/  \\___/  \\_)|_| \\_)|_|   \\__)   {bfc}|
-.______________________________________________.{rsc}                                         
+.______________________________________________.{rsc}
     """
 
     print(banner_text)
@@ -330,8 +287,7 @@ def set_start_datetime(obs_times, obs_t_identifier, new_obs_starttime):
 
 @timeit
 def check_time_coverage(obs_times, model_times):
-    """TODO
-    """
+    """TODO"""
 
     msg_start = (
         "Model data datetimes must cover the whole of the datetime range "
@@ -344,9 +300,7 @@ def check_time_coverage(obs_times, model_times):
     logger.critical(
         f"Model data has maxima {model_max} and minima {model_min}"
     )
-    logger.critical(
-        f"Obs data has maxima {obs_max} and minima {obs_min}"
-    )
+    logger.critical(f"Obs data has maxima {obs_max} and minima {obs_min}")
 
     if model_min > obs_min:
         raise ValueError(
@@ -358,6 +312,7 @@ def check_time_coverage(obs_times, model_times):
             f"{msg_start} maxima of {model_max} for the model < {obs_max} "
             "for the observations."
         )
+
 
 def get_time_coords(obs_field, model_field, return_identifiers=True):
     """Return the relevant time coordinates from the fields.
@@ -418,7 +373,7 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 
     # Change the units on the model (not obs) times since there are fewer
     # data points on those, meaning less converting work.
-    ###model_times.Units = obs_times_units
+    # ##model_times.Units = obs_times_units
 
     logger.critical(f"Unit-conformed model time coord. is: {model_times}")
     same_units = obs_times.data.Units == model_times.data.Units
@@ -445,9 +400,9 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     # Some custom calendar consistency logic, necessary for e.g. WRF data
     before_pg_cutoff = cf.gt(cf.dt(1582, 10, 15))
     if (
-            obs_calendar == "standard" and
-            model_calendar == "proleptic_gregorian" and
-            before_pg_cutoff.evaluate(model_times.minimum())
+        obs_calendar == "standard"
+        and model_calendar == "proleptic_gregorian"
+        and before_pg_cutoff.evaluate(model_times.minimum())
     ):
         # 'A calendar with the Gregorian rules for leap-years extended to
         #  dates before 1582-10-15', see:
@@ -470,7 +425,8 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 
 @timeit
 def subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field, halo_size, verbose):
+    obs_field, model_field, halo_size, verbose
+):
     """Extract only relevant data in the model field via a 4D subspace.
 
     Relevant data is extracted in the form of a field comprising the model
@@ -541,7 +497,8 @@ def subspace_to_spatiotemporal_bounding_box(
     # won't work and we deal with that next...
     immediate_subspace_works = False
     try:
-        model_field_bb_indices = model_field_bb_subspace(**bb_kwargs)
+        model_field_bb_indices = model_field.subspace(
+            "envelope", halo_size, **bb_kwargs)
         immediate_subspace_works = True
         if verbose:
             logger.critical(
@@ -574,21 +531,24 @@ def subspace_to_spatiotemporal_bounding_box(
             f"tight boundaries of (4D: X, Y, Z, T):\n{pformat(bb_kwargs)}\n"
         )
 
+        vertical_sn = None
         # Note: can do the spatial and the temporal subspacing separately, and if
         # want to do this make the call twice for each coordinate arg. Reasons we
         # may want to do this include having separate halo sizes for each
         # coordinate, etc.
         model_field_bb = model_field.subspace(
-            "envelope", halo_size, **bb_kwargs)
+            "envelope", halo_size, **bb_kwargs
+        )
     else:  # more likely case, so be more careful and treat axes separately
         logger.critical("1. Time subspace step")
         time_kwargs = {model_t_id: cf.wi(*t_coord_tight_bounds)}
         # Now we set model_field -> model_field_bb, as this is our
         # last separate subspace.
         # TODO partial also not working here - clues, clues.
-        ###model_field_bb = model_field_bb_subspace(**time_kwargs)
+        # ##model_field_bb = model_field_bb_subspace(**time_kwargs)
         model_field = model_field.subspace(
-            "envelope", halo_size, **time_kwargs)
+            "envelope", halo_size, **time_kwargs
+        )
         logger.critical(
             f"Time ('{model_t_id}') bounding box calculated. It is: "
             f"{model_field}"
@@ -600,7 +560,8 @@ def subspace_to_spatiotemporal_bounding_box(
         # the same field and only at the end create 'model_field_bb' variable
         # We should be safe to do the horizontal subspacing as one
         model_field = model_field.subspace(
-            "envelope", halo_size,
+            "envelope",
+            halo_size,
             X=cf.wi(*x_coord_tight_bounds),
             Y=cf.wi(*y_coord_tight_bounds),
         )
@@ -617,28 +578,34 @@ def subspace_to_spatiotemporal_bounding_box(
         coord_ref = model_field.coordinate_reference(default=None)
         if not coord_ref:  # no parametric coords, simple case
             model_field_bb = model_field.subspace(
-                "envelope", halo_size,
+                "envelope",
+                halo_size,
                 Z=cf.wi(*z_coord_tight_bounds),
             )
             vertical_sn = False
         else:
             logger.critical(
                 "Need to calculate parametric vertical coordinates. "
-                "Attempting...")
-            model_field_w_vertical = model_field.compute_vertical_coordinates()   
+                "Attempting..."
+            )
+            model_field_w_vertical = model_field.compute_vertical_coordinates()
 
             # TODO: see Issue 802, after closure will have better way to know
             # the vertical coordinate added by the calc, if it added it at all:
             # https://github.com/NCAS-CMS/cf-python/issues/802
             added_vertical = not model_field_w_vertical.equals(model_field)
+            if not added_vertical:
+                raise ValueError(
+                    "Couldn't calculate vertical coordinates.")
+
             # If a vertical dim coord was added, we need to use that for our
             # z coordinate from now onwards
             # TODO move vertical calc. out of this method more generally for
             # better processing going forward
             # TODO handle lack of, will currently give ValueError
-            vertical_sn = model_field_w_vertical.coordinate_reference(
-                ).coordinate_conversion.get_parameter(
-                    "computed_standard_name")
+            vertical_sn = model_field_w_vertical.coordinate_reference().coordinate_conversion.get_parameter(
+                "computed_standard_name"
+            )
             new_z_coord = model_field_w_vertical.coordinate(vertical_sn)
             logger.critical(
                 "Added vertical coordinates from parameters: "
@@ -664,9 +631,11 @@ def subspace_to_spatiotemporal_bounding_box(
 
             vert_kwargs = {vertical_sn: cf.wi(*z_coord_tight_bounds)}
             # TODO: partial case commented below is breaking things here! WHY!?
-            ### model_field = model_field_bb_subspace(**vert_kwargs)
+            # ## model_field = model_field_bb_subspace(**vert_kwargs)
             model_field_bb = model_field.subspace(
-                "envelope", halo_size, **vert_kwargs,
+                "envelope",
+                halo_size,
+                **vert_kwargs,
             )
 
         logger.critical(
@@ -683,8 +652,13 @@ def subspace_to_spatiotemporal_bounding_box(
 
 @timeit
 def spatial_interpolation(
-        obs_field, model_field_bb, regrid_method, regrid_z_coord, source_axes,
-        model_t_identifier, vertical_sn
+    obs_field,
+    model_field_bb,
+    regrid_method,
+    regrid_z_coord,
+    source_axes,
+    model_t_identifier,
+    vertical_sn,
 ):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
 
@@ -734,7 +708,8 @@ def spatial_interpolation(
     # TODO could put this in exception code above but nicer out here?
     if not immediate_regrid_works:
         model_bb_t_key, model_bb_t = model_field_bb.coordinate(
-            model_t_identifier, item=True)
+            model_t_identifier, item=True
+        )
 
         # Get the axes positions first before we iterate
         z_coord = model_field_bb.coordinate(vertical_sn)
@@ -748,15 +723,16 @@ def spatial_interpolation(
         model_field_bb.del_construct(vertical_sn)
         # TODO rename vertical_sn to z_id or z_key or similar
         new_vertical_id = model_field_bb.set_construct(
-            new_z_coord, axes=[model_t_identifier, "Z",
-                               source_axes["Y"], source_axes["X"]],
+            new_z_coord,
+            axes=[model_t_identifier, "Z", source_axes["Y"], source_axes["X"]],
         )
         z_coord = model_field_bb.coordinate(new_vertical_id)
-        z_coord.set_property('standard_name', value=vertical_sn)
+        z_coord.set_property("standard_name", value=vertical_sn)
 
         spatially_colocated_fields = cf.FieldList()
-        for time in model_bb_t:
-            kwargs = {model_t_identifier: time}
+
+        for mtime in model_bb_t:
+            kwargs = {model_t_identifier: mtime}
             # TODO what subspace args might we want here?
             model_field_z_per_time = model_field_bb.subspace(**kwargs)
             z_coord_per_time = model_field_z_per_time.coordinate(vertical_sn)
@@ -767,7 +743,8 @@ def spatial_interpolation(
             model_field_z_per_time.del_construct(vertical_sn)
             fin_z_coord = z_coord_per_time.squeeze(time_da_index)
             model_field_z_per_time.set_construct(
-                fin_z_coord, axes=["Z", source_axes["Y"], source_axes["X"]],
+                fin_z_coord,
+                axes=["Z", source_axes["Y"], source_axes["X"]],
             )
 
             logger.critical(
@@ -784,9 +761,12 @@ def spatial_interpolation(
             for a_name in ("ncvar%XLAT", "ncvar%XLONG"):
                 a_coord = model_field_z_per_time.coordinate(a_name)
                 model_field_z_per_time.del_construct(a_name)
-                fin_a_coord = a_coord.squeeze()  # safe - can other dim be size 1?
+                fin_a_coord = (
+                    a_coord.squeeze()
+                )  # safe - can other dim be size 1?
                 model_field_z_per_time.set_construct(
-                    fin_a_coord, axes=[source_axes["Y"], source_axes["X"]],
+                    fin_a_coord,
+                    axes=[source_axes["Y"], source_axes["X"]],
                 )
 
             # Do the regrids weighting operation for the 3D Z in each case
@@ -798,7 +778,7 @@ def spatial_interpolation(
                 src_axes=source_axes,
             )
             logger.critical(
-                f"3D Z colocated field component for {time} is "
+                f"3D Z colocated field component for {mtime} is "
                 f"{spatially_colocated_field_comp} "
             )
             spatially_colocated_fields.append(spatially_colocated_field_comp)
@@ -822,14 +802,18 @@ def spatial_interpolation(
 
 
 def time_subspace_per_segment(
-        index, model_times_len, t1, t2, m, obs_time_key, model_time_key,
-        model_t_identifier
+    index,
+    model_times_len,
+    t1,
+    t2,
+    m,
+    obs_time_key,
+    model_time_key,
+    model_t_identifier,
 ):
     """TODO."""
     # Define the pairwise segment datetime endpoints
-    logger.critical(
-        f"Datetime endpoints for this segment are: {t1}, {t2}.\n"
-    )
+    logger.critical(f"Datetime endpoints for this segment are: {t1}, {t2}.\n")
 
     # Define a query which will find any datetimes within these times
     # to map all observational times to the appropriate segment, later.
@@ -992,8 +976,14 @@ def time_interpolation(
         if permit_null_subspace:
             try:
                 values_weighted = time_subspace_per_segment(
-                    index, model_times_len, t1, t2, m, obs_time_key,
-                    model_time_key, model_t_identifier
+                    index,
+                    model_times_len,
+                    t1,
+                    t2,
+                    m,
+                    obs_time_key,
+                    model_time_key,
+                    model_t_identifier,
                 )
                 v_w.append(values_weighted)
             except IndexError:
@@ -1004,8 +994,14 @@ def time_interpolation(
                 )
         else:
             values_weighted = time_subspace_per_segment(
-                index, model_times_len, t1, t2, m, obs_time_key,
-                model_time_key, model_t_identifier
+                index,
+                model_times_len,
+                t1,
+                t2,
+                m,
+                obs_time_key,
+                model_time_key,
+                model_t_identifier,
             )
             v_w.append(values_weighted)
 
@@ -1156,7 +1152,8 @@ def make_outputs_plots(
         orig_title = cfp_output_general_config.get("title", None)
         if orig_title:
             cfp_output_general_config.update(
-                title=f"{orig_title} {update_title}")
+                title=f"{orig_title} {update_title}"
+            )
         else:
             cfp_output_general_config["title"] = update_title.title()
     cfp.traj(final_result_field, **cfp_output_general_config)
@@ -1216,7 +1213,8 @@ def main():
     if new_obs_starttime:
         # TODO can just do in-place rather than re-assign, might be best?
         obs_times = set_start_datetime(
-            obs_times, obs_t_identifier, new_obs_starttime)
+            obs_times, obs_t_identifier, new_obs_starttime
+        )
 
     # TODO apply obs_t_identifier, model_t_identifier in further logic
     ensure_unit_calendar_consistency(obs_field, model_field)
