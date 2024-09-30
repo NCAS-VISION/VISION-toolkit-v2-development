@@ -11,21 +11,25 @@ def get_dependencies():
     return requirements.read().splitlines()
 
 
-# TODO 1: add further information typical for a setup.py, esp. dependency
-# requirements and package data, but also extras such as keywords,
-# platforms, etc.
-# TODO 2: flesh out author details including emails, etc.
+long_description = (
+    "End-to-end model-to-observational field co-location for flight, "
+    "satellite and other observational data using cf-python and cf-plot, "
+    "for the TWINE-funded (NCAS-)VISION project."
+)
+
+
+# TODO: flesh out author details including emails, etc.
 setup(
     name="vision-toolkit",
     description=(
         "Virtual Integration of Satellite and In-Situ "
         "Observation Networks (VISION) toolkit flight simulator"
     ),
-    url="TODO",
-    long_description="TODO",
+    url="https://github.com/NCAS-VISION/VISION-toolkit-v2-development",
+    long_description=long_description,
     long_description_content_type="text/markdown",
-    author="NCAS, TODO",
-    version="0.1",  # TODO 3: set this when ready, currently pre-release/beta
+    author="National Centre for Atmospheric Science",
+    version="2.0.0.dev1",
     python_requires=">=3.10",
     install_requires=get_dependencies(),
     packages=find_packages(),
@@ -34,4 +38,39 @@ setup(
             "visiontoolkit = visiontoolkit.visiontoolkit:main"
         ]
     },
+    keywords=[
+        "modelling",
+        "modeling",
+        "observations",
+        "data",
+        "science",
+        "oceanography",
+        "meteorology",
+        "climate",
+        "weather",
+        "space",
+        "cf",
+        "netcdf",
+        "UM",
+    ],
+    classifiers=[
+        # For lits of possibilities, see: https://pypi.org/classifiers/
+        "Development Status :: 2 - Pre-Alpha",
+        "Intended Audience :: Science/Research",
+        # "License :: ???",  # TODO: add when add license
+        "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Mathematics",
+        "Topic :: Scientific/Engineering :: Physics",
+        "Topic :: Scientific/Engineering :: Chemistry",
+        "Topic :: Scientific/Engineering :: Atmospheric Science",
+        "Topic :: Scientific/Engineering :: Hydrology",
+        "Topic :: Scientific/Engineering :: Oceanography",
+        "Topic :: Utilities",
+        "Operating System :: POSIX :: Linux",
+        "Operating System :: MacOS",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+    ],
 )
