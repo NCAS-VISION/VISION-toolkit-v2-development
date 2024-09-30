@@ -1,12 +1,10 @@
 """Python packaging setup for the VISION TOOLKIT package."""
-import io
-import os
+
 from setuptools import find_packages, setup
 
 
 def get_dependencies():
-    """Get dependencies for the package, listed in 'requirements.txt'.
-    """
+    """Get dependencies for the package, listed in 'requirements.txt'."""
     requirements = open("requirements.txt", "r")
     return requirements.read().splitlines()
 
@@ -16,6 +14,17 @@ long_description = (
     "satellite and other observational data using cf-python and cf-plot, "
     "for the TWINE-funded (NCAS-)VISION project."
 )
+
+
+tests_require = ()
+extras_require = {
+    # "documentation": [],  # TODO add when add docs
+    "pre-commit hooks": [
+        "pre-commit",
+        "black",
+        "flake8",
+    ],
+}
 
 
 # TODO: flesh out author details including emails, etc.
@@ -32,11 +41,11 @@ setup(
     version="2.0.0.dev1",
     python_requires=">=3.10",
     install_requires=get_dependencies(),
+    # tests_require=tests_require,  # TODO add when add tests
+    extras_require=extras_require,
     packages=find_packages(),
     entry_points={
-        "console_scripts": [
-            "visiontoolkit = visiontoolkit.visiontoolkit:main"
-        ]
+        "console_scripts": ["visiontoolkit = visiontoolkit.visiontoolkit:main"]
     },
     keywords=[
         "modelling",
