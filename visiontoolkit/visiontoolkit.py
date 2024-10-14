@@ -95,38 +95,38 @@ def get_env_and_diagnostics_report():
 
 
 @timeit
-def read_obs_input_data(obs_data_dir):
+def read_obs_input_data(obs_data_path):
     """Read in all observational input data.
 
     TODO: DETAILED DOCS
     """
-    return cf.read(obs_data_dir)
+    return cf.read(obs_data_path)
 
 
 @timeit
-def read_model_input_data(model_data_dir):
+def read_model_input_data(model_data_path):
     """Read in all model input data.
 
     TODO: DETAILED DOCS
     """
-    return cf.read(model_data_dir)
+    return cf.read(model_data_path)
 
 
-def read_input_data(input_data_dir_loc, obs_data_dir, model_data_dir):
+def read_input_data(obs_data_path, model_data_path):
     """Read in all input data.
 
     TODO: DETAILED DOCS
     """
     get_env_and_diagnostics_report()
-    obs_data = read_obs_input_data(obs_data_dir)
-    model_data = read_model_input_data(model_data_dir)
+    obs_data = read_obs_input_data(obs_data_path)
+    model_data = read_model_input_data(model_data_path)
 
     # Reporting
     logger.critical("All input data successfully read in.")
     logger.critical(
         f"\nInput data locations are:\n"
-        f"Observational data: '{obs_data_dir}'\n"
-        f"Model data: '{model_data_dir}'\n"
+        f"Observational data: '{obs_data_path}'\n"
+        f"Model data: '{model_data_path}'\n"
     )
     report_about_input_data(obs_data, model_data)
 
@@ -1173,7 +1173,7 @@ def main():
 
     # Process and validate inputs, including optional flight track preview plot
     obs_data, model_data = read_input_data(
-        args.input_data_dir_loc, args.obs_data_dir, args.model_data_dir
+        args.obs_data_path, args.model_data_path
     )
     obs_field, model_field = get_input_fields_of_interest(
         obs_data, model_data, args.chosen_obs_fields, args.chosen_model_fields

@@ -48,15 +48,23 @@ def process_cli_arguments(parser):
     )
     parser.add_argument(
         "-o",
-        "--obs-data-dir",
+        "--obs-data-path",
         action="store",
-        help="path location of the observational data directory [TODO CLARIFY]",
+        help=(
+            "path location of the observational data, which can be provided "
+            "in any form accepted by the 'cf.read' files argument, see: "
+            "https://ncas-cms.github.io/cf-python/function/cf.read.html"
+        )
     )
     parser.add_argument(
         "-m",
-        "--model-data-dir",
+        "--model-data-path",
         action="store",
-        help="path location of the model data directory [TODO CLARFIY]",
+        help=(
+            "path location of the model data, which can be provided "
+            "in any form accepted by the 'cf.read' files argument, see: "
+            "https://ncas-cms.github.io/cf-python/function/cf.read.html"
+        )
     )
     # Need an index or slice for these next 2, hence integer or slice object,
     # but given argparse isn't degined to handle this, accept as string

@@ -1,7 +1,7 @@
 {
     "start-time-override": "2017-07-13 05:00:00",
-    "obs-data-dir":"../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-    "model-data-dir":"../data/main-workwith-test-ISO-simulator/Model_Input",
+    "obs-data-path":"../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
+    "model-data-path":"../data/main-workwith-test-ISO-simulator/Model_Input",
     "chosen-obs-fields":0,
     "chosen-model-fields":-2,
     "outputs-dir":"cf-script-outputs/um-faam-stanco-2",

@@ -20,9 +20,8 @@ CONFIG_DEFAULTS = {
     #    multiple datetime overrides as a sequence (input API for this TODO)
     "start-time-override": False,
     # *** Input data choices ***
-    "input-data-dir-loc": ".",
-    "obs-data-dir": ".",
-    "model-data-dir": ".",
+    "obs-data-path": ".",
+    "model-data-path": ".",
     # Extract input fields from input FieldList.
     # If these are set to False, then the whole FieldList will be taken.
     # Otherwise should be set to a valid index or slice, to be taken on the
