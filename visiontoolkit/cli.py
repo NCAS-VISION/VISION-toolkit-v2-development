@@ -286,7 +286,7 @@ def process_config():
     # Want config. file input to have identical key names to the CLI ones,
     # namely with underscores as word delimiters, but for processing defaults
     # have to use hyphens since argparse converts to these for valid attr names
-    logger.info(
+    logger.debug(
         f"Default configuration is:\n{pformat(CONFIG_DEFAULTS)}\n"
     )
 

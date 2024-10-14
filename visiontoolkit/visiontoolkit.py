@@ -305,10 +305,10 @@ def check_time_coverage(obs_times, model_times):
     obs_min = obs_times.minimum()
     model_max = model_times.maximum()
     obs_max = obs_times.maximum()
-    logger.info(
+    logger.debug(
         f"Model data has maxima {model_max} and minima {model_min}"
     )
-    logger.info(f"Obs data has maxima {obs_max} and minima {obs_min}")
+    logger.debug(f"Obs data has maxima {obs_max} and minima {obs_min}")
 
     if model_min > obs_min:
         raise ValueError(
@@ -425,7 +425,7 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
         )
         model_times.override_calendar("standard", inplace=True)
 
-    logger.info(
+    logger.debug(
         f"Calendars on observational and model time coords. are the same?: "
         f"{obs_times.calendar == model_times.calendar}\n"
     )
@@ -510,12 +510,12 @@ def subspace_to_spatiotemporal_bounding_box(
         )
         immediate_subspace_works = True
         if verbose:
-            logger.info(
+            logger.debug(
                 "Immediate full indices calculation attempt WORKED, "
                 f"proceeding using {model_field_bb_indices}"
             )
     except Exception as exc:
-        logger.info(
+        logger.debug(
             f"Immediate full subspace attempt FAILED, with '{exc}',"
             "so we will now do it in a more careful way..."
         )
@@ -889,7 +889,7 @@ def time_subspace_per_segment(
     # formulae.
     # NOTE: by the maths, the sum of the two weights should be 1, so there
     #       is no need to divide by that, though confirm with a print-out
-    logger.info(
+    logger.debug(
         "Weights total (should be 1.0, as a validation check) is: "
         f"{(weights_0 + weights_1).array[0]}\n"
     )
@@ -975,7 +975,7 @@ def time_interpolation(
         # (model_times_len - 1) - 1 - (halo_size - 1), and -1+1-1 = -1 overall.
         if index in (halo_size - 1, model_times_len - 1 - halo_size):
             permit_null_subspace = True
-            logger.info(
+            logger.debug(
                 "Allowing potential null-return subspace for segment emerging "
                 f"from halo size of {halo_size}, equivalent halo position in "
                 f"time segment array of: {index + 1}/{model_times_len - 1}"
@@ -995,7 +995,7 @@ def time_interpolation(
                 )
                 v_w.append(values_weighted)
             except IndexError:
-                logger.info(
+                logger.debug(
                     f"Null-return subspce for segment with: {t1}, {t2}.\n"
                     "This is a result of the halo_size set, so not a cause "
                     "for concern!"
