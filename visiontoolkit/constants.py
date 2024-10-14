@@ -4,7 +4,7 @@ CONFIG_DEFAULTS = {
     # as minimal as allows without log control in cf-plot (at present).
     # TODO: Get ESMF logging via cf incoporated into Python logging system,
     # see Issue #286.
-    "verbose": True,
+    "verbose": 0,  # corresponds to a count of 0 (-v would be 1, -vv 2, etc.)
     "skip-all-plotting": False,
     # *** Run mode with time override(s) ***
     # Specify the mode on which to run the E2E, where valid choices are:

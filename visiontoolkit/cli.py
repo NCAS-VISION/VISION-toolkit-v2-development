@@ -22,8 +22,13 @@ def process_cli_arguments(parser):
     parser.add_argument(
         "-v",
         "--verbose",
-        action="store_true",
-        help="provide detailed output [TODO ENABLE VARIOUS LEVELS VIA LOGGING]",
+        action="count",
+        help=(
+            "provide more detailed output, where multiple calls will "
+            "increase the verbosity yet further to a maximum at -vvv "
+            "correpsonding to logging level DEBUG, where no usage "
+            "gives a default of logging level WARNING"
+        ),
     )
     parser.add_argument(
         "-c",
@@ -273,7 +278,7 @@ def process_config():
     # otherwise constant default values as defaults to the CLI arguments
     # to fill in whatever is not provided from the command.
     parsed_args = parser.parse_args()
-    logger.critical(
+    logger.info(
         f"Parsed CLI configuration arguments are:\n{pformat(parsed_args)}\n"
     )
 
@@ -281,7 +286,7 @@ def process_config():
     # Want config. file input to have identical key names to the CLI ones,
     # namely with underscores as word delimiters, but for processing defaults
     # have to use hyphens since argparse converts to these for valid attr names
-    logger.critical(
+    logger.info(
         f"Default configuration is:\n{pformat(CONFIG_DEFAULTS)}\n"
     )
 
@@ -289,7 +294,7 @@ def process_config():
     config_file = parsed_args.config_file
     if config_file:
         config_from_file = process_config_file(config_file)
-    logger.critical(
+    logger.info(
         f"Configuration from file is:\n{pformat(config_from_file)}\n"
     )
 
@@ -305,7 +310,7 @@ def process_config():
     # Re-parse, now we have applied the final defaults (had to parse once first
     # to get the process the config. file from the CLI)
     final_args = parser.parse_args()
-    logger.critical(
+    logger.info(
         "Final input configuration, considering CLI and file inputs (with "
         "CLI overriding the file values) is:"
         f"\n{pformat(final_args)}\n"
@@ -320,7 +325,7 @@ def validate_config(final_config_namespace):
 
     # outputs_dir: create if does not exist
     if not os.path.exists(final_config_namespace.outputs_dir):
-        logger.critical(
+        logger.info(
             "Output directory does not exist, creating it at: "
             f"{final_config_namespace.outputs_dir}"
         )
@@ -338,6 +343,6 @@ def process_config_file(config_file):
         except (json.decoder.JSONDecodeError, AttributeError):
             raise ValueError("Bad JSON configuration file.")  # TODO better msg
 
-    logger.critical(f"Succesfully read-in JSON config. file at: {config_file}")
+    logger.info(f"Succesfully read-in JSON config. file at: {config_file}")
 
     return j

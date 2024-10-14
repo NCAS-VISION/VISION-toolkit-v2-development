@@ -11,7 +11,23 @@ import numpy as np
 
 from .cli import process_config, validate_config
 
+
+# ----------------------------------------------------------------------------
+# Set up timing and logging
+# ----------------------------------------------------------------------------
+
 logger = logging.getLogger(__name__)
+
+
+def setup_logging(verbosity):
+    """Configure the package log level assuming CLI counted '-v' flag input."""
+    # Maximum of 3 (-vvv i.e. -v -v -v) calls to have an effect, use min()
+    # to ensure the log level nevers goes below DEBUG value (10), with a
+    # minimum of ERROR (40)
+    numeric_log_level = 40 - (min(verbosity, 3) * 10)
+    logging.basicConfig()
+    logging.getLogger().setLevel(numeric_log_level)  # root logger e.g. for cf
+    logging.getLogger(__name__).setLevel(numeric_log_level)  # VISION logger
 
 
 def timeit(func):
@@ -88,7 +104,7 @@ def get_env_and_diagnostics_report():
 
     TODO: DETAILED DOCS
     """
-    logger.critical(
+    logger.info(
         "Using Python and CF environment of:\n"
         f"{cf.environment(display=False)}\n"
     )
@@ -122,8 +138,8 @@ def read_input_data(obs_data_path, model_data_path):
     model_data = read_model_input_data(model_data_path)
 
     # Reporting
-    logger.critical("All input data successfully read in.")
-    logger.critical(
+    logger.info("All input data successfully read in.")
+    logger.info(
         f"\nInput data locations are:\n"
         f"Observational data: '{obs_data_path}'\n"
         f"Model data: '{model_data_path}'\n"
@@ -138,13 +154,13 @@ def report_about_input_data(obs_data, model_data):
 
     TODO: DETAILED DOCS
     """
-    logger.critical(f"Observational FieldList is:\n {obs_data}")
-    logger.critical("For example, first observational field is:\n")
-    logger.critical(obs_data[0].dump(display=False))
+    logger.info(f"Observational FieldList is:\n {obs_data}")
+    logger.info("For example, first observational field is:\n")
+    logger.info(obs_data[0].dump(display=False))
 
-    logger.critical(f"Model FieldList is:\n {model_data}")
-    logger.critical("For example, first model field is:\n")
-    logger.critical(model_data[0].dump(display=False))
+    logger.info(f"Model FieldList is:\n {model_data}")
+    logger.info("For example, first model field is:\n")
+    logger.info(model_data[0].dump(display=False))
 
 
 @timeit
@@ -270,7 +286,7 @@ def set_start_datetime(obs_times, obs_t_identifier, new_obs_starttime):
 
     # TODO should we update the metadata to reflect the previous operation?
 
-    logger.critical(
+    logger.info(
         f"Applied override to observational times, now have: {obs_times}, "
         f"with data of: {obs_times.data}"
     )
@@ -289,10 +305,10 @@ def check_time_coverage(obs_times, model_times):
     obs_min = obs_times.minimum()
     model_max = model_times.maximum()
     obs_max = obs_times.maximum()
-    logger.critical(
+    logger.info(
         f"Model data has maxima {model_max} and minima {model_min}"
     )
-    logger.critical(f"Obs data has maxima {obs_max} and minima {obs_min}")
+    logger.info(f"Obs data has maxima {obs_max} and minima {obs_min}")
 
     if model_min > obs_min:
         raise ValueError(
@@ -358,18 +374,18 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     # Ensure the units of the obs and model datetimes are consistent - conform
     # them if they differ (if they don't, Units setting operation is harmless).
     obs_times_units = obs_times.Units
-    logger.critical(f"Units on obs. time coordinate are: {obs_times_units}")
+    logger.info(f"Units on obs. time coordinate are: {obs_times_units}")
 
     model_times_units = model_times.Units
-    logger.critical(f"Units on model time coordinate are: {model_times_units}")
+    logger.info(f"Units on model time coordinate are: {model_times_units}")
 
     # Change the units on the model (not obs) times since there are fewer
     # data points on those, meaning less converting work.
     # ##model_times.Units = obs_times_units
 
-    logger.critical(f"Unit-conformed model time coord. is: {model_times}")
+    logger.info(f"Unit-conformed model time coord. is: {model_times}")
     same_units = obs_times.data.Units == model_times.data.Units
-    logger.critical(
+    logger.info(
         f"Units on observational and model time coords. are the same?: "
         f"{same_units}\n"
     )
@@ -384,10 +400,10 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     # TODO IGNORE FOR NOW (consistent in this case, but will need to generalise
     # for when they are not).
     obs_calendar = obs_times.calendar
-    logger.critical(f"Calendar on obs. time coordinate is: {obs_calendar}")
+    logger.info(f"Calendar on obs. time coordinate is: {obs_calendar}")
 
     model_calendar = model_times.calendar
-    logger.critical(f"Calendar on model time coordinate is: {model_calendar}")
+    logger.info(f"Calendar on model time coordinate is: {model_calendar}")
 
     # Some custom calendar consistency logic, necessary for e.g. WRF data
     before_pg_cutoff = cf.gt(cf.dt(1582, 10, 15))
@@ -402,14 +418,14 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
         # cf-conventions-1.11/cf-conventions.html#calendar
         # so it unless the data is before 1582, e.g. very historical runs,
         # it i equivalent to have 'standard' set (and can match up).
-        logger.critical(
+        logger.info(
             f"Changing {model_times} calendar from '{model_calendar}' to "
             "'standard' (equivalent given all times are after 1582-10-15) "
             "to enable the time co-location to work."
         )
         model_times.override_calendar("standard", inplace=True)
 
-    logger.critical(
+    logger.info(
         f"Calendars on observational and model time coords. are the same?: "
         f"{obs_times.calendar == model_times.calendar}\n"
     )
@@ -494,12 +510,12 @@ def subspace_to_spatiotemporal_bounding_box(
         )
         immediate_subspace_works = True
         if verbose:
-            logger.critical(
+            logger.info(
                 "Immediate full indices calculation attempt WORKED, "
                 f"proceeding using {model_field_bb_indices}"
             )
     except Exception as exc:
-        logger.critical(
+        logger.info(
             f"Immediate full subspace attempt FAILED, with '{exc}',"
             "so we will now do it in a more careful way..."
         )
@@ -519,7 +535,7 @@ def subspace_to_spatiotemporal_bounding_box(
     """
 
     if immediate_subspace_works:
-        logger.critical(
+        logger.info(
             "Set to create 4D bounding box onto model field, based on obs. field "
             f"tight boundaries of (4D: X, Y, Z, T):\n{pformat(bb_kwargs)}\n"
         )
@@ -533,7 +549,7 @@ def subspace_to_spatiotemporal_bounding_box(
             "envelope", halo_size, **bb_kwargs
         )
     else:  # more likely case, so be more careful and treat axes separately
-        logger.critical("1. Time subspace step")
+        logger.info("1. Time subspace step")
         time_kwargs = {model_t_id: cf.wi(*t_coord_tight_bounds)}
         # Now we set model_field -> model_field_bb, as this is our
         # last separate subspace.
@@ -542,13 +558,13 @@ def subspace_to_spatiotemporal_bounding_box(
         model_field = model_field.subspace(
             "envelope", halo_size, **time_kwargs
         )
-        logger.critical(
+        logger.info(
             f"Time ('{model_t_id}') bounding box calculated. It is: "
             f"{model_field}"
         )
 
         # Horizontal
-        logger.critical("2. Horizontal subspace step")
+        logger.info("2. Horizontal subspace step")
         # For this case where we do 3 separate subspaces, we reassign to
         # the same field and only at the end create 'model_field_bb' variable
         # We should be safe to do the horizontal subspacing as one
@@ -558,13 +574,13 @@ def subspace_to_spatiotemporal_bounding_box(
             X=cf.wi(*x_coord_tight_bounds),
             Y=cf.wi(*y_coord_tight_bounds),
         )
-        logger.critical(
+        logger.info(
             "Horizontal ('X' and 'Y') bounding box calculated. It is: "
             f"{model_field}"
         )
 
         # Vertical
-        logger.critical("3. Vertical subspace step")
+        logger.info("3. Vertical subspace step")
         # First, need to calculate the vertical coordinates if there are
         # parametric vertical dimension coordinates to handle.
         # TODO cater for case where are > 1 coord refs (ValueError for now)
@@ -577,7 +593,7 @@ def subspace_to_spatiotemporal_bounding_box(
             )
             vertical_sn = False
         else:
-            logger.critical(
+            logger.info(
                 "Need to calculate parametric vertical coordinates. "
                 "Attempting..."
             )
@@ -599,7 +615,7 @@ def subspace_to_spatiotemporal_bounding_box(
                 "computed_standard_name"
             )
             new_z_coord = model_field_w_vertical.coordinate(vertical_sn)
-            logger.critical(
+            logger.info(
                 "Added vertical coordinates from parameters: "
                 f"{new_z_coord.dump(display=False)}."
             )
@@ -607,7 +623,7 @@ def subspace_to_spatiotemporal_bounding_box(
             # Reset model_field to one with vertical coord now
             # TODO use in-place before so no need to create new one?
             model_field = model_field_w_vertical
-            logger.critical(
+            logger.info(
                 "Model field with vertical coords is: "
                 f"{model_field.dump(display=False)}"
             )
@@ -616,7 +632,7 @@ def subspace_to_spatiotemporal_bounding_box(
             # TODO can deal with further unit conformance using query units
             # for the queries we subspace on!
             new_z_coord.Units = obs_Z.Units
-            logger.critical(
+            logger.info(
                 "Units conformed for computed vertical coordinates:"
                 f"{new_z_coord} with same units as {obs_Z}"
             )
@@ -630,11 +646,11 @@ def subspace_to_spatiotemporal_bounding_box(
                 **vert_kwargs,
             )
 
-        logger.critical(
+        logger.info(
             f"Vertical ('Z') bounding box calculated. It is: {model_field_bb}"
         )
 
-    logger.critical(
+    logger.info(
         "4D bounding box calculated. Model data with bounding box applied is: "
         f"{model_field_bb}"
     )
@@ -662,7 +678,7 @@ def spatial_interpolation(
     """
     # TODO: UGRID grids might need some extra steps/work for this.
 
-    logger.critical(
+    logger.info(
         "Starting spatial interpolation (regridding) step..."
         f"WITH {model_field_bb}"
     )
@@ -739,11 +755,11 @@ def spatial_interpolation(
                 axes=["Z", source_axes["Y"], source_axes["X"]],
             )
 
-            logger.critical(
+            logger.info(
                 f"Squeezed Z coordinate: {z_coord_per_time},"
                 f"{z_coord_per_time.data}"
             )
-            logger.critical(
+            logger.info(
                 f"Model field per time data is: {model_field_z_per_time}"
             )
 
@@ -769,7 +785,7 @@ def spatial_interpolation(
                 ln_z=True,  # TODO should we use a log here in this case?
                 src_axes=source_axes,
             )
-            logger.critical(
+            logger.info(
                 f"3D Z colocated field component for {mtime} is "
                 f"{spatially_colocated_field_comp} "
             )
@@ -779,7 +795,7 @@ def spatial_interpolation(
         spatially_colocated_field = cf.Field.concatenate(
             spatially_colocated_fields
         )
-        logger.critical(
+        logger.info(
             f"Final concatenated field (from 3D Z colocated fields) is "
             f"{spatially_colocated_field} "
         )
@@ -787,8 +803,8 @@ def spatial_interpolation(
     # TODO: consider whether or not to persist the regridded / spatial interp
     # before the next stage, or to do in a fully lazy way.
 
-    logger.critical("\nSpatial interpolation (regridding) complete.\n")
-    logger.critical(f"XYZ-colocated data is:\n {spatially_colocated_field}")
+    logger.info("\nSpatial interpolation (regridding) complete.\n")
+    logger.info(f"XYZ-colocated data is:\n {spatially_colocated_field}")
 
     return spatially_colocated_field
 
@@ -805,14 +821,14 @@ def time_subspace_per_segment(
 ):
     """TODO."""
     # Define the pairwise segment datetime endpoints
-    logger.critical(f"Datetime endpoints for this segment are: {t1}, {t2}.\n")
+    logger.info(f"Datetime endpoints for this segment are: {t1}, {t2}.\n")
 
     # Define a query which will find any datetimes within these times
     # to map all observational times to the appropriate segment, later.
     q = cf.wi(
         cf.dt(t1), cf.dt(t2), open_upper=True
     )  # TODO is cf.dt wrapping necessary?
-    logger.critical(f"Querying with query: {q} on field:\n{m}\n")
+    logger.info(f"Querying with query: {q} on field:\n{m}\n")
 
     # Subspace the observational times to match the segments above,
     # namely using the query created above.
@@ -824,7 +840,7 @@ def time_subspace_per_segment(
         obs_time_key: q,
         model_time_key: [index],
     }
-    logger.critical(
+    logger.info(
         f"\nUsing subspace arguments for i=0 of: {s0_subspace_args}\n"
     )
     s0 = m.subspace(**s0_subspace_args)
@@ -833,7 +849,7 @@ def time_subspace_per_segment(
         obs_time_key: q,
         model_time_key: [index + 1],
     }
-    logger.critical(
+    logger.info(
         f"Using subspace arguments for i=1 of: {s1_subspace_args}\n"
     )
     s1 = m.subspace(**s1_subspace_args)
@@ -873,7 +889,7 @@ def time_subspace_per_segment(
     # formulae.
     # NOTE: by the maths, the sum of the two weights should be 1, so there
     #       is no need to divide by that, though confirm with a print-out
-    logger.critical(
+    logger.info(
         "Weights total (should be 1.0, as a validation check) is: "
         f"{(weights_0 + weights_1).array[0]}\n"
     )
@@ -904,7 +920,7 @@ def time_interpolation(
 
     TODO: DETAILED DOCS
     """
-    logger.critical("Starting time interpolation step.\n")
+    logger.info("Starting time interpolation step.\n")
 
     # Setup ready for iteration...
     m = spatially_colocated_field.copy()
@@ -923,12 +939,12 @@ def time_interpolation(
     model_times_len = len(model_times.data)
     obs_times_len = len(obs_times.data)
 
-    logger.critical(
+    logger.info(
         f"Number of model time data points: {model_times_len}\n"
         f"Number of observational time sample data points: {obs_times_len}\n"
     )
-    logger.critical(f"Observational (aux) coord. time key is: {obs_time_key}")
-    logger.critical(f"Model (dim) time key is: {model_time_key}\n")
+    logger.info(f"Observational (aux) coord. time key is: {obs_time_key}")
+    logger.info(f"Model (dim) time key is: {model_time_key}\n")
 
     # Empty objects ready to populate - TODO make these FieldLists if approp.?
     v_w = []
@@ -937,14 +953,14 @@ def time_interpolation(
     # Chop the flight path up into these *segments* and do a weighted merge
     # of data from segments adjacent in the model times to form the final
     # time-interpolated value.
-    logger.critical(
+    logger.info(
         "*** Begin iteration over pairwise 'segments'. ***\n"
         f"Segments to loop over are, pairwise: {model_times.datetime_array}"
     )
     # Note the length of (pairwise(model_times.datetime_array) is equal to
     # model_times_len - 1 by its nature, e.g. A, B, C -> (A, B), (B, C)).
     for index, (t1, t2) in enumerate(pairwise(model_times.datetime_array)):
-        logger.critical(f"\n*** Segment {index} ***\n")
+        logger.info(f"\n*** Segment {index} ***\n")
         # Rarely, when we apply a halo and the start or end time is on the
         # boundary where there is a model time point, there will be no
         # points captured by the outermost subspaces. Therefore, for the
@@ -959,7 +975,7 @@ def time_interpolation(
         # (model_times_len - 1) - 1 - (halo_size - 1), and -1+1-1 = -1 overall.
         if index in (halo_size - 1, model_times_len - 1 - halo_size):
             permit_null_subspace = True
-            logger.critical(
+            logger.info(
                 "Allowing potential null-return subspace for segment emerging "
                 f"from halo size of {halo_size}, equivalent halo position in "
                 f"time segment array of: {index + 1}/{model_times_len - 1}"
@@ -979,7 +995,7 @@ def time_interpolation(
                 )
                 v_w.append(values_weighted)
             except IndexError:
-                logger.critical(
+                logger.info(
                     f"Null-return subspce for segment with: {t1}, {t2}.\n"
                     "This is a result of the halo_size set, so not a cause "
                     "for concern!"
@@ -1004,13 +1020,13 @@ def time_interpolation(
     #       Eventually we will add an extrapolation option whereby user can
     #       choose to extrapolate as well as interpolate, and therefore assign
     #       values to the masked ones.
-    logger.critical("Final per-segment weighted value arrays are:")
-    logger.critical(pformat(v_w))
+    logger.info("Final per-segment weighted value arrays are:")
+    logger.info(pformat(v_w))
 
     # Concatenate the data values found above from each segment, to finally
     # get the full set of model-to-obs co-located data.
     concatenated_weighted_values = cf.Data.concatenate(v_w)
-    logger.critical(
+    logger.info(
         "\nFinal concatenated weighted value array is: "
         f"{concatenated_weighted_values.array}, with length: "
         f"{len(concatenated_weighted_values)}\n"
@@ -1021,7 +1037,7 @@ def time_interpolation(
         len(concatenated_weighted_values)
         - concatenated_weighted_values.count()
     ).array[0]
-    logger.critical(
+    logger.info(
         f"Masking: {concatenated_weighted_values.count().array[0]} "
         f"non-masked values vs. {masked_value_count} masked."
     )
@@ -1045,19 +1061,19 @@ def time_interpolation(
         " ~ " + history_message
     )  # include divider to previous info
     final_result_field.set_property("history", history_details)
-    logger.critical(
+    logger.info(
         "\nNew history message reads: "
         f"{final_result_field.get_property('history')}\n"
     )
 
-    logger.critical("\nFinal result field is:\n" f"\n{final_result_field}\n")
-    logger.critical("The final result field has data statistics of:\n")
-    logger.critical(pformat(final_result_field.data.stats()))
+    logger.info("\nFinal result field is:\n" f"\n{final_result_field}\n")
+    logger.info("The final result field has data statistics of:\n")
+    logger.info(pformat(final_result_field.data.stats()))
 
     # TODO: consider whether or not to persist the regridded / time interp.
     # before the next stage, or to do in a fully lazy way.
 
-    logger.critical("\nTime interpolation complete.")
+    logger.info("\nTime interpolation complete.")
 
     return final_result_field
 
@@ -1088,7 +1104,7 @@ def write_output_data(final_result_field, output_path_name):
     # Write final field result out to file on-disk
     cf.write(final_result_field, output_path_name)
 
-    logger.critical("Writing of output file complete.")
+    logger.info("Writing of output file complete.")
 
 
 @timeit
@@ -1151,7 +1167,7 @@ def make_outputs_plots(
     cfp.traj(final_result_field, **cfp_output_general_config)
     cfp.gclose()
 
-    logger.critical("Plot created.")
+    logger.info("Plot created.")
 
 
 @timeit
@@ -1170,6 +1186,9 @@ def main():
     verbose = args.verbose
     halo_size = args.halo_size
     skip_all_plotting = args.skip_all_plotting
+
+    # Configure logging
+    setup_logging(verbose)
 
     # Process and validate inputs, including optional flight track preview plot
     obs_data, model_data = read_input_data(
