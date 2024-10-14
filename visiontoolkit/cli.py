@@ -240,14 +240,25 @@ def process_cli_arguments(parser):
         ),
     )
 
-    return parser.parse_args()
-
 
 def process_config():
-    """Process a configuration file.
+    """Process all configuration, from CLI, file or a default if neither set.
 
-    TODO: DETAILED DOCS
+    Order values are set in:
+      1. Defaults set first, to ensure everything has a valid value, then...
+      2. Overidden by any config. file specifications, which are in turn...
+      3. Overidden by any CLI options provided, which are aways applied over
+         the former.
+
+    Overwrite any config. specified in the config. file given with the CLI
+    --config-file argument with any other CLI options given, excluding the
+    config. file option, processed above. This means that the CLI is the
+    overriding input, e.g. for a config. file with
+    '"halo-size": 1' set and a CLI option of 'halo-size=2', the value 2
+    will be taken and used.
+
     """
+    # 0. Set up parser and get args
     parser = argparse.ArgumentParser(
         prog="VISION TOOLKIT",
         description=(
@@ -255,46 +266,52 @@ def process_config():
             "Networks (VISION) toolkit flight simulator"
         ),
     )
+    process_cli_arguments(parser)
 
-    # Set CLI defaults for anything not specified via CLI
-    #
+    # First parse: just to get the config file specification so we can
+    # process that, we then re-parse later to apply the config. file
+    # otherwise constant default values as defaults to the CLI arguments
+    # to fill in whatever is not provided from the command.
+    parsed_args = parser.parse_args()
+    logger.critical(
+        f"Parsed CLI configuration arguments are:\n{pformat(parsed_args)}\n"
+    )
+
+    # 1. Defaults
     # Want config. file input to have identical key names to the CLI ones,
     # namely with underscores as word delimiters, but for processing defaults
     # have to use hyphens since argparse converts to these for valid attr names
-    config_cli_input = {
-        k.replace("-", "_"): v for k, v in CONFIG_DEFAULTS.items()
-    }
-    parser.set_defaults(**config_cli_input)
-
-    args = process_cli_arguments(parser)
-    # Can't print pre-parsed config. until here, else this logging message
-    # will appear to spam the '--help' option output.
     logger.critical(
-        f"Default configuration is:\n{pformat(config_cli_input)}\n"
-    )
-    logger.critical(
-        f"Parsed CLI configuration arguments are:\n{pformat(args)}\n"
+        f"Default configuration is:\n{pformat(CONFIG_DEFAULTS)}\n"
     )
 
-    config_file = args.config_file
+    # 2.  Get configuration from file
+    config_file = parsed_args.config_file
     if config_file:
         config_from_file = process_config_file(config_file)
-
-    # Overwrite config. provided via the CLI with any config. specified by
-    # in the config. file given with --config-file argument:
-    final_config_namespace = copy.copy(args)
-    for key, value in vars(args).items():
-        match_key = key.replace("_", "-")
-        if match_key in config_from_file:
-            setattr(final_config_namespace, key, config_from_file[match_key])
-
     logger.critical(
-        "Final input configuration, considering CLI inputs including "
-        "application of config from specified config. file via "
-        "--config-file is:"
-        f"\n{pformat(final_config_namespace)}\n"
+        f"Configuration from file is:\n{pformat(config_from_file)}\n"
     )
-    return final_config_namespace
+
+    # Combining 1 and 2: apply config. file values to override defaults
+    pre_cli_config = {**CONFIG_DEFAULTS, **config_from_file}  # keeps leftmost
+    pre_cli_config_replace = {
+        k.replace("-", "_"): v for k, v in pre_cli_config.items()
+    }
+
+    # 3. Finally, apply the config and defaults as values wherever a CLI
+    # option has not been set explicitly:
+    parser.set_defaults(**pre_cli_config_replace)
+    # Re-parse, now we have applied the final defaults (had to parse once first
+    # to get the process the config. file from the CLI)
+    final_args = parser.parse_args()
+    logger.critical(
+        "Final input configuration, considering CLI and file inputs (with "
+        "CLI overriding the file values) is:"
+        f"\n{pformat(final_args)}\n"
+    )
+
+    return final_args
 
 
 def validate_config(final_config_namespace):
