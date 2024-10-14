@@ -47,12 +47,6 @@ def process_cli_arguments(parser):
         ),
     )
     parser.add_argument(
-        "-i",
-        "--input-data-dir-loc",
-        action="store",
-        help="path location of the top-level data directory [TODO CLARIFY]",
-    )
-    parser.add_argument(
         "-o",
         "--obs-data-dir",
         action="store",

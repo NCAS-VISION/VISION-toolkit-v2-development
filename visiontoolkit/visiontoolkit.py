@@ -95,23 +95,21 @@ def get_env_and_diagnostics_report():
 
 
 @timeit
-def read_obs_input_data(input_data_dir_loc, obs_data_dir):
+def read_obs_input_data(obs_data_dir):
     """Read in all observational input data.
 
     TODO: DETAILED DOCS
     """
-    obs_data_loc = f"{input_data_dir_loc}/{obs_data_dir}"
-    return cf.read(obs_data_loc), obs_data_loc
+    return cf.read(obs_data_dir)
 
 
 @timeit
-def read_model_input_data(input_data_dir_loc, model_data_dir):
+def read_model_input_data(model_data_dir):
     """Read in all model input data.
 
     TODO: DETAILED DOCS
     """
-    model_data_loc = f"{input_data_dir_loc}/{model_data_dir}"
-    return cf.read(model_data_loc), model_data_loc
+    return cf.read(model_data_dir)
 
 
 def read_input_data(input_data_dir_loc, obs_data_dir, model_data_dir):
@@ -120,19 +118,15 @@ def read_input_data(input_data_dir_loc, obs_data_dir, model_data_dir):
     TODO: DETAILED DOCS
     """
     get_env_and_diagnostics_report()
-    obs_data, obs_data_loc = read_obs_input_data(
-        input_data_dir_loc, obs_data_dir
-    )
-    model_data, model_data_loc = read_model_input_data(
-        input_data_dir_loc, model_data_dir
-    )
+    obs_data = read_obs_input_data(obs_data_dir)
+    model_data = read_model_input_data(model_data_dir)
 
     # Reporting
     logger.critical("All input data successfully read in.")
     logger.critical(
         f"\nInput data locations are:\n"
-        f"Observational data: '{obs_data_loc}'\n"
-        f"Model data: '{model_data_loc}'\n"
+        f"Observational data: '{obs_data_dir}'\n"
+        f"Model data: '{model_data_dir}'\n"
     )
     report_about_input_data(obs_data, model_data)
 
