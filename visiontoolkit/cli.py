@@ -88,6 +88,14 @@ def process_cli_arguments(parser):
         ),
     )
     parser.add_argument(
+        "--skip-all-plotting",
+        action="store_true",
+        help=(
+            "Do not generate plots to preview the input or show the output "
+            "fields"
+        ),
+    )
+    parser.add_argument(
         "-d",
         "--outputs-dir",
         action="store",
