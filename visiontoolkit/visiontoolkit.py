@@ -268,6 +268,11 @@ def satellite_plugin(fieldlist):
     s.set_construct(cf.AuxiliaryCoordinate(source=time))
     s.set_property("featureType", "trajectory")
 
+    logging.critical(
+        f"Final pre-processed field from satellite plugin is {s}")
+
+    return s
+
 
 @timeit
 def ensure_cf_compliance(field, plugin):
@@ -303,7 +308,8 @@ def ensure_cf_compliance(field, plugin):
         logging.critical("Starting satellite pre-processing plugin.")
         # Use as a function now
         # TODO move out to pre-processing directory and run from import
-        satellite_plugin(field)
+        final_field = satellite_plugin(field)
+        return final_field
 
 
 @timeit
@@ -1244,11 +1250,12 @@ def main():
         obs_data, model_data, args.chosen_obs_fields, args.chosen_model_fields
     )
 
-    # Apply any specified pre-processing
+    # Apply any specified pre-processing: use returned fields since the
+    # input may be a FieldList which gets reduced to less fields or to one
     if preprocess_obs:
-        ensure_cf_compliance(obs_field, preprocess_obs)
+        obs_field = ensure_cf_compliance(obs_field, preprocess_obs)
     if preprocess_model:
-        ensure_cf_compliance(model_field, preprocess_model)
+        model_field = ensure_cf_compliance(model_field, preprocess_model)
 
     # TODO: this has too many parameters for one function, separate out
     if not skip_all_plotting:
