@@ -7,7 +7,19 @@ from pprint import pformat
 
 from .constants import CONFIG_DEFAULTS
 
+
 logger = logging.getLogger(__name__)
+
+
+def setup_logging(verbosity):
+    """Configure the package log level assuming CLI counted '-v' flag input."""
+    # Maximum of 3 (-vvv i.e. -v -v -v) calls to have an effect, use min()
+    # to ensure the log level nevers goes below DEBUG value (10), with a
+    # minimum of ERROR (40)
+    numeric_log_level = 40 - (min(verbosity, 3) * 10)
+    logging.basicConfig()
+    logging.getLogger().setLevel(numeric_log_level)  # root logger e.g. for cf
+    logging.getLogger(__name__).setLevel(numeric_log_level)  # VISION logger
 
 
 def process_cli_arguments(parser):
@@ -278,6 +290,11 @@ def process_config():
     # otherwise constant default values as defaults to the CLI arguments
     # to fill in whatever is not provided from the command.
     parsed_args = parser.parse_args()
+
+    # Configure logging - do this now since otherwise folowing log messages
+    # get missed!
+    setup_logging(parsed_args.verbose)
+
     logger.info(
         f"Parsed CLI configuration arguments are:\n{pformat(parsed_args)}\n"
     )
@@ -289,6 +306,8 @@ def process_config():
     logger.debug(
         f"Default configuration is:\n{pformat(CONFIG_DEFAULTS)}\n"
     )
+
+
 
     # 2.  Get configuration from file
     config_file = parsed_args.config_file

@@ -20,17 +20,6 @@ from .constants import toolkit_banner
 logger = logging.getLogger(__name__)
 
 
-def setup_logging(verbosity):
-    """Configure the package log level assuming CLI counted '-v' flag input."""
-    # Maximum of 3 (-vvv i.e. -v -v -v) calls to have an effect, use min()
-    # to ensure the log level nevers goes below DEBUG value (10), with a
-    # minimum of ERROR (40)
-    numeric_log_level = 40 - (min(verbosity, 3) * 10)
-    logging.basicConfig()
-    logging.getLogger().setLevel(numeric_log_level)  # root logger e.g. for cf
-    logging.getLogger(__name__).setLevel(numeric_log_level)  # VISION logger
-
-
 def timeit(func):
     """A decorator to measure and report function execution time."""
 
@@ -1153,9 +1142,6 @@ def main():
     halo_size = args.halo_size
     skip_all_plotting = args.skip_all_plotting
 
-    # Configure logging
-    setup_logging(verbose)
-
     # Process and validate inputs, including optional flight track preview plot
     obs_data, model_data = read_input_data(
         args.obs_data_path, args.model_data_path
@@ -1163,6 +1149,8 @@ def main():
     obs_field, model_field = get_input_fields_of_interest(
         obs_data, model_data, args.chosen_obs_fields, args.chosen_model_fields
     )
+
+    ensure_cf_compliance(obs_field, model_field)  # TODO currently does nothing
 
     # TODO: this has too many parameters for one function, separate out
     if not skip_all_plotting:
@@ -1179,7 +1167,7 @@ def main():
             args.cfp_input_general_config,
             verbose,
         )
-    ensure_cf_compliance(obs_field, model_field)  # TODO currently does nothing
+
 
     # Time coordinate considerations, pre-colocation
     times, time_identifiers = get_time_coords(obs_field, model_field)
