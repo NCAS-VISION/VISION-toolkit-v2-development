@@ -90,3 +90,39 @@ CONFIG_DEFAULTS = {
         "title": "Result: model co-located onto observational path",
     },
 }
+
+
+def toolkit_banner():
+    """Provide an optional report of environment and diagnostics.
+
+    TODO: DETAILED DOCS
+    """
+    # Use short variable names here to not clog up ASCII art preview below
+    bhc = "\033[31m"  # bhc == banner_highlight_colour
+    bfc = "\33[34m"  # bfc == banner_foreground_colour
+    # Leave this at end so that the toolkit STDOUT gets this colour to
+    # distinguish from other terminal text.
+    rsc = "\33[32m"
+
+    # ASCII text art was created using: http://www.patorjk.com/software/taag
+    # Note '\' characters need to be escaped twice to avoid a warning of:
+    # 'SyntaxWarning: invalid escape sequence', which makes the preview
+    # less clear as to the overall ASCII art output, but is necessary.
+    banner_text = f"""{bfc}
+.______________________________________________.
+|{bhc}   _     _  _   ______  _  _______  _______   {bfc}|
+|{bhc}  (_)   (_)| | / _____)| |(_______)(_______)  {bfc}|
+|{bhc}   _     _ | |( (____  | | _     _  _     _   {bfc}|
+|{bhc}  | |   | || | \\____ \\ | || |   | || |   | |  {bfc}|
+|{bhc}   \\ \\ / / | | _____) )| || |___| || |   | |  {bfc}|
+|{bhc}    \\___/  |_|(______/ |_| \\_____/ |_|   |_|  {bfc}|
+|   _______             _   _      _           {bfc}|
+|  (_______)           | | | |    (_)   _      {bfc}|
+|      _   ___    ___  | | | |  _  _  _| |_    {bfc}|
+|     | | / _ \\  / _ \\ | | | |_/ )| |(_   _)   {bfc}|
+|     | || |_| || |_| || | |  _ ( | |  | |_    {bfc}|
+|     |_| \\___/  \\___/  \\_)|_| \\_)|_|   \\__)   {bfc}|
+.______________________________________________.{rsc}
+    """
+
+    return banner_text
