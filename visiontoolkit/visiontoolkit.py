@@ -424,24 +424,26 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
         obs_field, model_field, return_identifiers=False
     )
 
-    # Ensure the units of the obs and model datetimes are consistent - conform
-    # them if they differ (if they don't, Units setting operation is harmless).
-    obs_times_units = obs_times.Units
+    obs_times_units = obs_times.get_property("units", None)
     logger.info(f"Units on obs. time coordinate are: {obs_times_units}")
-
-    model_times_units = model_times.Units
+    model_times_units = model_times.get_property("units", None)
     logger.info(f"Units on model time coordinate are: {model_times_units}")
 
-    # Change the units on the model (not obs) times since there are fewer
-    # data points on those, meaning less converting work.
-    # ##model_times.Units = obs_times_units
+    # Ensure the units of the obs and model datetimes are consistent - conform
+    # them if they differ.
+    if obs_times_units and model_times_units:
+        same = obs_times.Units.equals(model_times.Units)
+        if not same:
+            # Change the units on the model (not obs) times since there are
+            # fewer data points on those, meaning less converting work.
+            # Will raise its own error here if units are not equivalent.
+            model_times.Units = obs_times.Units
+            logger.info(f"Unit-conformed model time coord. is: {model_times}")
 
-    logger.info(f"Unit-conformed model time coord. is: {model_times}")
-    same_units = obs_times.data.Units == model_times.data.Units
-    logger.info(
-        f"Units on observational and model time coords. are the same?: "
-        f"{same_units}\n"
-    )
+        logger.debug(
+            f"Units on observational and model time coords. are the same: "
+            f"{same}\n"
+        )
 
     # Ensure calendars are consistent, if not convert to equivalent.
     #
@@ -452,36 +454,40 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     # same).
     # TODO IGNORE FOR NOW (consistent in this case, but will need to generalise
     # for when they are not).
-    obs_calendar = obs_times.calendar
+
+    obs_calendar = obs_times.get_property("calendar", None)
     logger.info(f"Calendar on obs. time coordinate is: {obs_calendar}")
 
-    model_calendar = model_times.calendar
+    model_calendar = model_times.get_property("calendar", None)
     logger.info(f"Calendar on model time coordinate is: {model_calendar}")
 
-    # Some custom calendar consistency logic, necessary for e.g. WRF data
-    before_pg_cutoff = cf.gt(cf.dt(1582, 10, 15))
-    if (
-        obs_calendar == "standard"
-        and model_calendar == "proleptic_gregorian"
-        and before_pg_cutoff.evaluate(model_times.minimum())
-    ):
-        # 'A calendar with the Gregorian rules for leap-years extended to
-        #  dates before 1582-10-15', see:
-        # https://cfconventions.org/Data/cf-conventions/
-        # cf-conventions-1.11/cf-conventions.html#calendar
-        # so it unless the data is before 1582, e.g. very historical runs,
-        # it i equivalent to have 'standard' set (and can match up).
-        logger.info(
-            f"Changing {model_times} calendar from '{model_calendar}' to "
-            "'standard' (equivalent given all times are after 1582-10-15) "
-            "to enable the time co-location to work."
-        )
-        model_times.override_calendar("standard", inplace=True)
+    # If both have calendars defined, we need to check for consistency
+    # between these, else the datetimes aren't comparable
+    if obs_calendar and model_calendar:
+        # Some custom calendar consistency logic, necessary for e.g. WRF data
+        before_pg_cutoff = cf.gt(cf.dt(1582, 10, 15))
+        if (
+            obs_calendar == "standard"
+            and model_calendar == "proleptic_gregorian"
+            and before_pg_cutoff.evaluate(model_times.minimum())
+        ):
+            # 'A calendar with the Gregorian rules for leap-years extended to
+            #  dates before 1582-10-15', see:
+            # https://cfconventions.org/Data/cf-conventions/
+            # cf-conventions-1.11/cf-conventions.html#calendar
+            # so it unless the data is before 1582, e.g. very historical runs,
+            # it i equivalent to have 'standard' set (and can match up).
+            logger.info(
+                f"Changing {model_times} calendar from '{model_calendar}' to "
+                "'standard' (equivalent given all times are after 1582-10-15) "
+                "to enable the time co-location to work."
+            )
+            model_times.override_calendar("standard", inplace=True)
 
-    logger.debug(
-        f"Calendars on observational and model time coords. are the same?: "
-        f"{obs_times.calendar == model_times.calendar}\n"
-    )
+        logger.debug(
+            f"Calendars on observational and model time coords. are the same?: "
+            f"{obs_times.calendar == model_times.calendar}\n"
+        )
 
 
 @timeit
