@@ -126,11 +126,11 @@ def get_input_fields_of_interest(
 
     TODO: DETAILED DOCS
     """
-    if chosen_obs_fields:
+    if chosen_obs_fields is not False:  # distinguish from 0 etc.
         # Take only relevant fields from the list of fields read in
         obs_data = obs_data[chosen_obs_fields]
 
-    if chosen_model_fields:
+    if chosen_model_fields is not False:
         model_data = model_data[chosen_model_fields]
 
     return obs_data, model_data
@@ -197,6 +197,9 @@ def make_preview_plots(
 def satellite_plugin(fieldlist):
     """Pre-processing of a field from a satellite swath.
     """
+    logging.critical(
+        f"Before pre-processing, fieldlist to satellite plugin is {fieldlist}")
+
     plugin_config = {
         "latitude": "latitude",
         "longitude": "longitude",
@@ -209,7 +212,7 @@ def satellite_plugin(fieldlist):
         "npi": "npi",
     }
 
-    s0 = fieldlist.select("air_temperature")[0]
+    s0 = fieldlist.select_by_identity("air_temperature")[0]
 
     # Remove the vertical axis
     index = []
@@ -295,21 +298,23 @@ def ensure_cf_compliance(field, plugin):
     # * Get orography data, separate input, as per Maria's dir.
     #
     # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT
-    if plugin == "UM":
-        raise NotImplementedError(
-            "UM pre-processing plugin yet to be finalised.")
-    if plugin == "WRF":
-        raise NotImplementedError(
-            "WRF pre-processing plugin yet to be finalised.")
-    if plugin == "flight":
-        raise NotImplementedError(
-            "Flight pre-processing plugin yet to be finalised.")
     if plugin == "satellite":
         logging.critical("Starting satellite pre-processing plugin.")
         # Use as a function now
         # TODO move out to pre-processing directory and run from import
         final_field = satellite_plugin(field)
         return final_field
+    elif plugin == "flight":
+        raise NotImplementedError(
+            "Flight pre-processing plugin yet to be finalised.")
+    elif plugin == "UM":
+        raise NotImplementedError(
+            "UM pre-processing plugin yet to be finalised.")
+    elif plugin == "WRF":
+        raise NotImplementedError(
+            "WRF pre-processing plugin yet to be finalised.")
+    else:
+        return field
 
 
 @timeit
