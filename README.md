@@ -34,7 +34,7 @@ repository as its canonical home and marked as Version 2.0 of the toolkit.) :war
       * https://ncas-cms.github.io/cf-plot/build/download.html#to-install-cf-plot
 
    3. You need the latest version of cf-plot on a specific branch where a special
-      bug-fix patch has bene applied, so use the `generalise-traj` branch required
+      bug-fix patch has been applied, so use the `generalise-traj` branch required
       using the following command:
       `pip install git+https://github.com/NCAS-CMS/cf-plot.git@generalise-traj`
 
@@ -42,7 +42,7 @@ repository as its canonical home and marked as Version 2.0 of the toolkit.) :war
 ### Running the toolkit
 
 The script has now been given minimal packaging so it can be
-run as a command after installation as per the abov instructions. See the available
+run as a command after installation as per the above instructions. See the available
 CLI from running:
 
 ```console
