@@ -18,7 +18,8 @@ def setup_logging(verbosity):
     # minimum of ERROR (40)
     numeric_log_level = 40 - (min(verbosity, 3) * 10)
     logging.basicConfig()
-    logging.getLogger().setLevel(numeric_log_level)  # root logger e.g. for cf
+    # Dev tip - comment the first line below out to shut the cf logger up!
+    # logging.getLogger().setLevel(numeric_log_level)  # root logger e.g. for cf
     logging.getLogger(__name__).setLevel(numeric_log_level)  # VISION logger
 
 
@@ -34,6 +35,7 @@ def process_cli_arguments(parser):
     parser.add_argument(
         "-v",
         "--verbose",
+        default=0,  # in this case can't set default later else NoneType issues
         action="count",
         help=(
             "provide more detailed output, where multiple calls will "
@@ -50,6 +52,27 @@ def process_cli_arguments(parser):
             "configuration file in JSON format to supply configuration, "
             "which overrides any configuration provided by other "
             "command-line options, if duplication of input occurs"
+        ),
+    )
+    parser.add_argument(
+        "-p",
+        "--preprocess-mode-obs",
+        action="store",
+        help=(
+            "specify a pre-processing mode so a set plugin is applied "
+            "to pre-process the observational data in an apprpriate way, "
+            "current options being 'flight' and 'satellite' where by default "
+            "we apply no pre-processing"
+        ),
+    )
+    parser.add_argument(
+        "--preprocess-mode-model",
+        action="store",
+        help=(
+            "specify a pre-processing mode so a set plugin is applied "
+            "to pre-process the model data in an apprpriate way, current "
+            "options being 'UM' and 'WRF' where by default we apply no "
+            "pre-processing"
         ),
     )
     parser.add_argument(
@@ -166,7 +189,6 @@ def process_cli_arguments(parser):
         help="initial text to use in the names of all plots generated",
     )
     parser.add_argument(
-        "-p",
         "--show-plot-of-input-obs",
         action="store_true",
         help=(

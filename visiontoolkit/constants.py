@@ -26,8 +26,12 @@ CONFIG_DEFAULTS = {
     # If these are set to False, then the whole FieldList will be taken.
     # Otherwise should be set to a valid index or slice, to be taken on the
     # FieldList.
+    # TODO allow this to be a filter keyword, too! If is a string assume this?
     "chosen-obs-fields": False,
     "chosen-model-fields": False,
+    # Pre-processing modes
+    "preprocess-mode-obs": None,
+    "preprocess-mode-model": None,
     # *** Output choices ***
     # A given directory must exist already, if specified.
     "outputs-dir": ".",

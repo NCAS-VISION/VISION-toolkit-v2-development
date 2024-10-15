@@ -126,11 +126,14 @@ def get_input_fields_of_interest(
 
     TODO: DETAILED DOCS
     """
-    # Take only relevant fields from the list of fields read in
-    obs_field = obs_data[chosen_obs_fields]
-    model_field = model_data[chosen_model_fields]
+    if chosen_obs_fields:
+        # Take only relevant fields from the list of fields read in
+        obs_data = obs_data[chosen_obs_fields]
 
-    return obs_field, model_field
+    if chosen_model_fields:
+        model_data = model_data[chosen_model_fields]
+
+    return obs_data, model_data
 
 
 @timeit
@@ -191,7 +194,83 @@ def make_preview_plots(
 
 
 @timeit
-def ensure_cf_compliance(obs_field, model_field):
+def satellite_plugin(fieldlist):
+    """Pre-processing of a field from a satellite swath.
+    """
+    plugin_config = {
+        "latitude": "latitude",
+        "longitude": "longitude",
+        "sensingtime": "sensingtime",
+        "do_retrieval": "do_retrieval",
+        "sensingtime_msec": "sensingtime_msec",
+        "sensingtime_day": "sensingtime_day",
+        "sensingtime": "sensingtime",
+        "npres": "npres",
+        "npi": "npi",
+    }
+
+    s0 = fieldlist.select("air_temperature")[0]
+
+    # Remove the vertical axis
+    index = []
+    for i, key in enumerate(s0.get_data_axes()):
+        if s0.domain_axis(key).nc_get_dimension() == plugin_config["npres"]:
+            index.append(slice(None))
+            npres_position = i
+        else:
+            index.append(0)
+
+    if len(index) != s0.ndim:
+        raise ValueError("Unexpected dimensions. TODO EXPAND")
+
+    s = s0[tuple(index)].squeeze()
+
+    # Satellite time
+    time_of_day =  fieldlist.select_field(
+        f"ncvar%{plugin_config['sensingtime_msec']}")
+    time_of_day.override_units("ms", inplace=True)
+    time_of_day.dtype = float
+
+    day = fieldlist.select_field(f"ncvar%{plugin_config['sensingtime_day']}")
+    day.override_units("day since 2000-01-01", inplace=True)
+    day.dtype = float
+
+    time = day.copy()
+    time.data += time_of_day.data
+
+    time.clear_properties()
+    time.set_property("standard_name", "time")
+
+    # Satelite latitude and longitude
+    lat = fieldlist.select_field(f"ncvar%{plugin_config['latitude']}")
+    lon = fieldlist.select_field(f"ncvar%{plugin_config['longitude']}")
+
+    # Check for spatial subsetting
+    if lat.size == s.size:
+        do_retrival = fieldlist.select_field("ncvar%do_retrieval")
+        mask = do_retrival.data.where(1, None, cf.masked).mask.persist()
+
+        for f in (time, lat, lon):
+            f.where(mask, cf.masked, inplace=True)
+            data = f.del_data()
+            data.compressed(inplace=True)
+            if data.size != s.size:
+                raise ValueError("Incompatible sizes. TODO EXPAND")
+
+            f.domain_axis().set_size(s.size)
+            f.set_data(data.compressed())
+
+        del mask
+
+    # Create satelite "trajectory"
+    s.set_construct(cf.AuxiliaryCoordinate(source=lat))
+    s.set_construct(cf.AuxiliaryCoordinate(source=lon))
+    s.set_construct(cf.AuxiliaryCoordinate(source=time))
+    s.set_property("featureType", "trajectory")
+
+
+@timeit
+def ensure_cf_compliance(field, plugin):
     """Ensure the chosen fields are CF compliant with the correct format.
 
     TODO: DETAILED DOCS
@@ -211,7 +290,20 @@ def ensure_cf_compliance(obs_field, model_field):
     # * Get orography data, separate input, as per Maria's dir.
     #
     # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT
-    pass
+    if plugin == "UM":
+        raise NotImplementedError(
+            "UM pre-processing plugin yet to be finalised.")
+    if plugin == "WRF":
+        raise NotImplementedError(
+            "WRF pre-processing plugin yet to be finalised.")
+    if plugin == "flight":
+        raise NotImplementedError(
+            "Flight pre-processing plugin yet to be finalised.")
+    if plugin == "satellite":
+        logging.critical("Starting satellite pre-processing plugin.")
+        # Use as a function now
+        # TODO move out to pre-processing directory and run from import
+        satellite_plugin(field)
 
 
 @timeit
@@ -435,7 +527,7 @@ def subspace_to_spatiotemporal_bounding_box(
     #     * a time 1D T subspace to bound it in time i.e. cover only
     #       relevant times
 
-    # Note: this requires a 'halo' config. feature introduced in
+    # Note: this requires a 'halo' plugin_config. feature introduced in
     #       cf-python 3.16.2.
     # TODO SLB: need to think about possible compications of cyclicity, etc.,
     #           and account for those.
@@ -1141,6 +1233,8 @@ def main():
     verbose = args.verbose
     halo_size = args.halo_size
     skip_all_plotting = args.skip_all_plotting
+    preprocess_obs = args.preprocess_mode_obs
+    preprocess_model = args.preprocess_mode_model
 
     # Process and validate inputs, including optional flight track preview plot
     obs_data, model_data = read_input_data(
@@ -1150,7 +1244,11 @@ def main():
         obs_data, model_data, args.chosen_obs_fields, args.chosen_model_fields
     )
 
-    ensure_cf_compliance(obs_field, model_field)  # TODO currently does nothing
+    # Apply any specified pre-processing
+    if preprocess_obs:
+        ensure_cf_compliance(obs_field, preprocess_obs)
+    if preprocess_model:
+        ensure_cf_compliance(model_field, preprocess_model)
 
     # TODO: this has too many parameters for one function, separate out
     if not skip_all_plotting:
