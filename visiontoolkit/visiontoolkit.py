@@ -200,6 +200,8 @@ def satellite_plugin(fieldlist):
     logging.critical(
         f"Before pre-processing, fieldlist to satellite plugin is {fieldlist}")
 
+    # TODO work out what is useful here and make mapping keys clearer as to
+    # the purpose (leaving as same as test data values for now)
     plugin_config = {
         "latitude": "latitude",
         "longitude": "longitude",
@@ -228,7 +230,7 @@ def satellite_plugin(fieldlist):
 
     s = s0[tuple(index)].squeeze()
 
-    # Satellite time
+    # Satellite time - applying standard units
     time_of_day =  fieldlist.select_field(
         f"ncvar%{plugin_config['sensingtime_msec']}")
     time_of_day.override_units("ms", inplace=True)
@@ -344,7 +346,7 @@ def set_start_datetime(obs_times, obs_t_identifier, new_obs_starttime):
 
     # TODO should we update the metadata to reflect the previous operation?
 
-    logger.info(
+    logger.critical(
         f"Applied override to observational times, now have: {obs_times}, "
         f"with data of: {obs_times.data}"
     )
@@ -497,7 +499,7 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 
 @timeit
 def subspace_to_spatiotemporal_bounding_box(
-    obs_field, model_field, halo_size, verbose
+        obs_field, model_field, halo_size, verbose, no_vertical=False
 ):
     """Extract only relevant data in the model field via a 4D subspace.
 
@@ -526,7 +528,8 @@ def subspace_to_spatiotemporal_bounding_box(
     # For a DSG, the spatial coordinates will always be auxiliary:
     obs_X = obs_field.auxiliary_coordinate("X")
     obs_Y = obs_field.auxiliary_coordinate("Y")
-    obs_Z = obs_field.auxiliary_coordinate("Z")
+    if not no_vertical:
+        obs_Z = obs_field.auxiliary_coordinate("Z")
 
     # Prep. towards the temporal BB component.
     # TODO: are we assuming the model and obs data are strictly increasing, as
@@ -553,16 +556,18 @@ def subspace_to_spatiotemporal_bounding_box(
 
     x_coord_tight_bounds = obs_X.data.minimum(), obs_X.data.maximum()
     y_coord_tight_bounds = obs_Y.data.minimum(), obs_Y.data.maximum()
-    z_coord_tight_bounds = obs_Z.data.minimum(), obs_Z.data.maximum()
+    if not no_vertical:
+        z_coord_tight_bounds = obs_Z.data.minimum(), obs_Z.data.maximum()
     t_coord_tight_bounds = obs_times.data.minimum(), obs_times.data.maximum()
 
     bb_kwargs = {
         "X": cf.wi(*x_coord_tight_bounds),
         "Y": cf.wi(*y_coord_tight_bounds),
-        "Z": cf.wi(*z_coord_tight_bounds),
         # Can't just use 'T' here since we might have a different name
         model_t_id: cf.wi(*t_coord_tight_bounds),
     }
+    if not no_vertical:
+        bb_kwargs["Z"] = cf.wi(*z_coord_tight_bounds)
 
     # Attempt to do a full bounding box subspace immediately (if indices call
     # works, the subspace call will work) - if it works, great! But probably it
@@ -632,6 +637,10 @@ def subspace_to_spatiotemporal_bounding_box(
         # For this case where we do 3 separate subspaces, we reassign to
         # the same field and only at the end create 'model_field_bb' variable
         # We should be safe to do the horizontal subspacing as one
+
+        # TODO do we need to ensure cyclicity set correctly, or should that
+        # be guaranteed by pre-proc or compliance reqs?
+
         model_field = model_field.subspace(
             "envelope",
             halo_size,
@@ -643,76 +652,80 @@ def subspace_to_spatiotemporal_bounding_box(
             f"{model_field}"
         )
 
-        # Vertical
-        logger.info("3. Vertical subspace step")
-        # First, need to calculate the vertical coordinates if there are
-        # parametric vertical dimension coordinates to handle.
-        # TODO cater for case where are > 1 coord refs (ValueError for now)
-        coord_ref = model_field.coordinate_reference(default=None)
-        if not coord_ref:  # no parametric coords, simple case
-            model_field_bb = model_field.subspace(
-                "envelope",
-                halo_size,
-                Z=cf.wi(*z_coord_tight_bounds),
-            )
+        if no_vertical:
+            model_field_bb = model_field
             vertical_sn = False
         else:
+            # Vertical, if appropriate
+            logger.info("3. Vertical subspace step")
+            # First, need to calculate the vertical coordinates if there are
+            # parametric vertical dimension coordinates to handle.
+            # TODO cater for case where are > 1 coord refs (ValueError for now)
+            coord_ref = model_field.coordinate_reference(default=None)
+            if not coord_ref:  # no parametric coords, simple case
+                model_field_bb = model_field.subspace(
+                    "envelope",
+                    halo_size,
+                    Z=cf.wi(*z_coord_tight_bounds),
+                )
+                vertical_sn = False
+            else:
+                logger.info(
+                    "Need to calculate parametric vertical coordinates. "
+                    "Attempting..."
+                )
+                model_field_w_vertical = model_field.compute_vertical_coordinates()
+
+                # TODO: see Issue 802, after closure will have better way to know
+                # the vertical coordinate added by the calc, if it added it at all:
+                # https://github.com/NCAS-CMS/cf-python/issues/802
+                added_vertical = not model_field_w_vertical.equals(model_field)
+                if not added_vertical:
+                    raise ValueError("Couldn't calculate vertical coordinates.")
+
+                # If a vertical dim coord was added, we need to use that for our
+                # z coordinate from now onwards
+                # TODO move vertical calc. out of this method more generally for
+                # better processing going forward
+                # TODO handle lack of, will currently give ValueError
+                vertical_sn = model_field_w_vertical.coordinate_reference().coordinate_conversion.get_parameter(
+                    "computed_standard_name"
+                )
+                new_z_coord = model_field_w_vertical.coordinate(vertical_sn)
+                logger.info(
+                    "Added vertical coordinates from parameters: "
+                    f"{new_z_coord.dump(display=False)}."
+                )
+
+                # Reset model_field to one with vertical coord now
+                # TODO use in-place before so no need to create new one?
+                model_field = model_field_w_vertical
+                logger.info(
+                    "Model field with vertical coords is: "
+                    f"{model_field.dump(display=False)}"
+                )
+
+                # Unit conforming: convert units on new cal'd Z to obs Z units
+                # TODO can deal with further unit conformance using query units
+                # for the queries we subspace on!
+                new_z_coord.Units = obs_Z.Units
+                logger.info(
+                    "Units conformed for computed vertical coordinates:"
+                    f"{new_z_coord} with same units as {obs_Z}"
+                )
+
+                vert_kwargs = {vertical_sn: cf.wi(*z_coord_tight_bounds)}
+                # TODO: partial case commented below is breaking things here! WHY!?
+                # ## model_field = model_field_bb_subspace(**vert_kwargs)
+                model_field_bb = model_field.subspace(
+                    "envelope",
+                    halo_size,
+                    **vert_kwargs,
+                )
+
             logger.info(
-                "Need to calculate parametric vertical coordinates. "
-                "Attempting..."
+                f"Vertical ('Z') bounding box calculated. It is: {model_field_bb}"
             )
-            model_field_w_vertical = model_field.compute_vertical_coordinates()
-
-            # TODO: see Issue 802, after closure will have better way to know
-            # the vertical coordinate added by the calc, if it added it at all:
-            # https://github.com/NCAS-CMS/cf-python/issues/802
-            added_vertical = not model_field_w_vertical.equals(model_field)
-            if not added_vertical:
-                raise ValueError("Couldn't calculate vertical coordinates.")
-
-            # If a vertical dim coord was added, we need to use that for our
-            # z coordinate from now onwards
-            # TODO move vertical calc. out of this method more generally for
-            # better processing going forward
-            # TODO handle lack of, will currently give ValueError
-            vertical_sn = model_field_w_vertical.coordinate_reference().coordinate_conversion.get_parameter(
-                "computed_standard_name"
-            )
-            new_z_coord = model_field_w_vertical.coordinate(vertical_sn)
-            logger.info(
-                "Added vertical coordinates from parameters: "
-                f"{new_z_coord.dump(display=False)}."
-            )
-
-            # Reset model_field to one with vertical coord now
-            # TODO use in-place before so no need to create new one?
-            model_field = model_field_w_vertical
-            logger.info(
-                "Model field with vertical coords is: "
-                f"{model_field.dump(display=False)}"
-            )
-
-            # Unit conforming: convert units on new cal'd Z to obs Z units
-            # TODO can deal with further unit conformance using query units
-            # for the queries we subspace on!
-            new_z_coord.Units = obs_Z.Units
-            logger.info(
-                "Units conformed for computed vertical coordinates:"
-                f"{new_z_coord} with same units as {obs_Z}"
-            )
-
-            vert_kwargs = {vertical_sn: cf.wi(*z_coord_tight_bounds)}
-            # TODO: partial case commented below is breaking things here! WHY!?
-            # ## model_field = model_field_bb_subspace(**vert_kwargs)
-            model_field_bb = model_field.subspace(
-                "envelope",
-                halo_size,
-                **vert_kwargs,
-            )
-
-        logger.info(
-            f"Vertical ('Z') bounding box calculated. It is: {model_field_bb}"
-        )
 
     logger.info(
         "4D bounding box calculated. Model data with bounding box applied is: "
@@ -731,6 +744,7 @@ def spatial_interpolation(
     source_axes,
     model_t_identifier,
     vertical_sn,
+    no_vertical,
 ):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
 
@@ -746,6 +760,19 @@ def spatial_interpolation(
         "Starting spatial interpolation (regridding) step..."
         f"WITH {model_field_bb}"
     )
+
+    if no_vertical:
+        logging.critical(
+            f"Doing spatial regridding without using vertical levels.")
+        spatially_colocated_field = model_field_bb.regrids(
+            obs_field,
+            method=regrid_method,
+            src_axes=source_axes,
+        )
+        logger.info("\nSpatial interpolation (regridding) complete.\n")
+        logger.info(f"XY-colocated data is:\n {spatially_colocated_field}")
+
+        return spatially_colocated_field
 
     # Creating the spatial bounding box may have made some of the spatial
     # dimensions singular, which would lead to an error or:
@@ -1304,11 +1331,22 @@ def main():
     # obs track - else we can't go forward - if so inform about this clearly
     check_time_coverage(obs_times, model_times)
 
-    # Subspacing to remove irrelavant information, pre-colocation
-    # TODO tidy passing through of computer vertical coord identifier
-    model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field, halo_size, verbose
-    )
+    # For the satellite swath cases, ignore vertical height since it is
+    # dealt with by the averaging kernel.
+    # TODO how do we account for the averging kernel work in this case?
+    no_vertical = False
+    if preprocess_obs == "satellite":
+        no_vertical = True
+
+    if not no_vertical:
+        # Subspacing to remove irrelavant information, pre-colocation
+        # TODO tidy passing through of computer vertical coord identifier
+        model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
+            obs_field, model_field, halo_size, verbose, no_vertical=no_vertical
+        )
+    else:
+        # Skip for now. TODO eventually add BB logic in for satellite too
+        model_field_bb, vertical_sn = model_field, None
 
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
@@ -1319,6 +1357,7 @@ def main():
         args.source_axes,
         model_t_identifier,
         vertical_sn,
+        no_vertical,
     )
     final_result_field = time_interpolation(
         obs_times,

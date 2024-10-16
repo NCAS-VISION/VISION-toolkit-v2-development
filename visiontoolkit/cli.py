@@ -18,8 +18,7 @@ def setup_logging(verbosity):
     # minimum of ERROR (40)
     numeric_log_level = 40 - (min(verbosity, 3) * 10)
     logging.basicConfig()
-    # Dev tip - comment the first line below out to shut the cf logger up!
-    # logging.getLogger().setLevel(numeric_log_level)  # root logger e.g. for cf
+    logging.getLogger().setLevel(numeric_log_level)  # root logger e.g. for cf
     logging.getLogger(__name__).setLevel(numeric_log_level)  # VISION logger
 
 
