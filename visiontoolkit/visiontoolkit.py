@@ -1246,6 +1246,7 @@ def make_outputs_plots(
     new_obs_starttime,
     cfp_output_general_config,
     verbose,
+    preprocess_model=False,
 ):
     """Generate plots of the flight track for a pre-colocation preview.
 
@@ -1270,7 +1271,11 @@ def make_outputs_plots(
     #       it has a trajectory dimension leading, which can be dropped.
     aux_coor_t = final_result_field.auxiliary_coordinate(obs_t_identifier)
     dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
-    final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
+
+    # WRF ONLY, TODO move underlying logic to pre-processing so as not to
+    # clog up main module
+    if preprocess_model == "WRF":
+        final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
 
     # Set levels for plotting of data in a colourmap
     # Min, max as determined using final_result_field.min(), .max():
@@ -1293,6 +1298,8 @@ def make_outputs_plots(
             )
         else:
             cfp_output_general_config["title"] = update_title.title()
+
+
     cfp.traj(final_result_field, **cfp_output_general_config)
     cfp.gclose()
 
@@ -1433,6 +1440,7 @@ def main():
             new_obs_starttime,
             args.cfp_output_general_config,
             verbose,
+            preprocess_model,
         )
 
 
