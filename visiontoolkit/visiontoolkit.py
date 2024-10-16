@@ -5,8 +5,9 @@ from itertools import pairwise  # requires Python 3.10+
 from pprint import pformat
 from time import time
 
-import cf
+# NOTE: keep this order (cfp then cf imported) to avoid Seg Fault issues
 import cfplot as cfp
+import cf
 import numpy as np
 
 from .cli import process_config, validate_config
@@ -1134,6 +1135,10 @@ def time_interpolation(
         # HACK, getting all 19 air pressure values for now, take first one as
         # case whilst get working generally
         concatenated_weighted_values = v_w[0]  ###[0, :]
+        # Note that 0th index here gives all 0 values - maybe they are all masked
+        # for that and some other indices?
+        concatenated_weighted_values = concatenated_weighted_values[
+            10, :].squeeze()
 
     # Report on number of masked and unmasked data points for info/debugging
     masked_value_count = (
@@ -1150,16 +1155,13 @@ def time_interpolation(
     # reflect the new context so that the field with data set is contextually
     # correct.
     final_result_field = obs_field.copy()
-    print("FRF")   ###, obs_field)
+    print("FRF")
     obs_field.dump()
     print(
         "weighted data before indexing", concatenated_weighted_values,
         len(concatenated_weighted_values)
     )
 
-    # Note that 0th index here gives all 0 values - maybe they are all masked
-    # for that and some other indices?
-    concatenated_weighted_values = concatenated_weighted_values[10, :].squeeze()
 
     print(
         "weighted data after indexing", concatenated_weighted_values,
