@@ -912,14 +912,14 @@ def time_subspace_per_segment(
 ):
     """TODO."""
     # Define the pairwise segment datetime endpoints
-    logger.info(f"Datetime endpoints for this segment are: {t1}, {t2}.\n")
+    logger.critical(f"Datetime endpoints for this segment are: {t1}, {t2}.\n")
 
     # Define a query which will find any datetimes within these times
     # to map all observational times to the appropriate segment, later.
     q = cf.wi(
         cf.dt(t1), cf.dt(t2), open_upper=True
     )  # TODO is cf.dt wrapping necessary?
-    logger.info(f"Querying with query: {q} on field:\n{m}\n")
+    logger.critical(f"Querying with query: {q} on field:\n{m}\n")
 
     # Subspace the observational times to match the segments above,
     # namely using the query created above.
@@ -931,7 +931,7 @@ def time_subspace_per_segment(
         obs_time_key: q,
         model_time_key: [index],
     }
-    logger.info(
+    logger.critical(
         f"\nUsing subspace arguments for i=0 of: {s0_subspace_args}\n"
     )
     s0 = m.subspace(**s0_subspace_args)
@@ -940,7 +940,7 @@ def time_subspace_per_segment(
         obs_time_key: q,
         model_time_key: [index + 1],
     }
-    logger.info(
+    logger.critical(
         f"Using subspace arguments for i=1 of: {s1_subspace_args}\n"
     )
     s1 = m.subspace(**s1_subspace_args)
@@ -1000,6 +1000,7 @@ def time_interpolation(
     halo_size,
     spatially_colocated_field,
     history_message,
+    split_segments=False,
 ):
     """Interpolate the flight path temporally (in time T).
 
@@ -1011,7 +1012,9 @@ def time_interpolation(
 
     TODO: DETAILED DOCS
     """
-    logger.info("Starting time interpolation step.\n")
+    logger.critical("Starting time interpolation step.")
+    if split_segments:
+        logger.critical("Using split segments.\n")
 
     # Setup ready for iteration...
     m = spatially_colocated_field.copy()
@@ -1030,12 +1033,12 @@ def time_interpolation(
     model_times_len = len(model_times.data)
     obs_times_len = len(obs_times.data)
 
-    logger.info(
+    logger.critical(
         f"Number of model time data points: {model_times_len}\n"
         f"Number of observational time sample data points: {obs_times_len}\n"
     )
-    logger.info(f"Observational (aux) coord. time key is: {obs_time_key}")
-    logger.info(f"Model (dim) time key is: {model_time_key}\n")
+    logger.critical(f"Observational (aux) coord. time key is: {obs_time_key}")
+    logger.critical(f"Model (dim) time key is: {model_time_key}\n")
 
     # Empty objects ready to populate - TODO make these FieldLists if approp.?
     v_w = []
@@ -1044,14 +1047,14 @@ def time_interpolation(
     # Chop the flight path up into these *segments* and do a weighted merge
     # of data from segments adjacent in the model times to form the final
     # time-interpolated value.
-    logger.info(
+    logger.critical(
         "*** Begin iteration over pairwise 'segments'. ***\n"
         f"Segments to loop over are, pairwise: {model_times.datetime_array}"
     )
     # Note the length of (pairwise(model_times.datetime_array) is equal to
     # model_times_len - 1 by its nature, e.g. A, B, C -> (A, B), (B, C)).
     for index, (t1, t2) in enumerate(pairwise(model_times.datetime_array)):
-        logger.info(f"\n*** Segment {index} ***\n")
+        logger.critical(f"\n*** Segment {index} ***\n")
         # Rarely, when we apply a halo and the start or end time is on the
         # boundary where there is a model time point, there will be no
         # points captured by the outermost subspaces. Therefore, for the
@@ -1111,24 +1114,24 @@ def time_interpolation(
     #       Eventually we will add an extrapolation option whereby user can
     #       choose to extrapolate as well as interpolate, and therefore assign
     #       values to the masked ones.
-    logger.info("Final per-segment weighted value arrays are:")
-    logger.info(pformat(v_w))
+    logger.critical("Final per-segment weighted value arrays are:")
+    logger.critical(pformat(v_w))
 
     # Concatenate the data values found above from each segment, to finally
     # get the full set of model-to-obs co-located data.
     concatenated_weighted_values = cf.Data.concatenate(v_w)
-    logger.info(
+    logger.critical(
         "\nFinal concatenated weighted value array is: "
         f"{concatenated_weighted_values.array}, with length: "
         f"{len(concatenated_weighted_values)}\n"
     )
 
-    # For info, report on number of masked and unmasked data points
+    # Report on number of masked and unmasked data points for info/debugging
     masked_value_count = (
         len(concatenated_weighted_values)
         - concatenated_weighted_values.count()
     ).array[0]
-    logger.info(
+    logger.debug(
         f"Masking: {concatenated_weighted_values.count().array[0]} "
         f"non-masked values vs. {masked_value_count} masked."
     )
@@ -1150,21 +1153,21 @@ def time_interpolation(
     history_details = final_result_field.get_property("history", default="")
     history_details += (
         " ~ " + history_message
-    )  # include divider to previous info
+    )  # include divider to previous critical
     final_result_field.set_property("history", history_details)
-    logger.info(
+    logger.critical(
         "\nNew history message reads: "
         f"{final_result_field.get_property('history')}\n"
     )
 
-    logger.info("\nFinal result field is:\n" f"\n{final_result_field}\n")
-    logger.info("The final result field has data statistics of:\n")
-    logger.info(pformat(final_result_field.data.stats()))
+    logger.critical("\nFinal result field is:\n" f"\n{final_result_field}\n")
+    logger.critical("The final result field has data statistics of:\n")
+    logger.critical(pformat(final_result_field.data.stats()))
 
     # TODO: consider whether or not to persist the regridded / time interp.
     # before the next stage, or to do in a fully lazy way.
 
-    logger.info("\nTime interpolation complete.")
+    logger.critical("\nTime interpolation complete.")
 
     return final_result_field
 
@@ -1359,6 +1362,14 @@ def main():
         vertical_sn,
         no_vertical,
     )
+
+    # For such cases as satellite swaths, the times can straddle model points
+    # so we need to chop these up into ones on each side of a model time
+    # segmentm as per our approach below.
+    split_segments = False
+    if preprocess_obs == "satellite":
+        split_segments = True
+
     final_result_field = time_interpolation(
         obs_times,
         model_times,
@@ -1369,6 +1380,7 @@ def main():
         halo_size,
         spatially_colocated_field,
         args.history_message,
+        split_segments=split_segments,
     )
 
     # Create and process outputs
