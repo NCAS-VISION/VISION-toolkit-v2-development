@@ -5,8 +5,9 @@ from itertools import pairwise  # requires Python 3.10+
 from pprint import pformat
 from time import time
 
-import cf
+# NOTE: keep this order (cfp then cf imported) to avoid Seg Fault issues
 import cfplot as cfp
+import cf
 import numpy as np
 
 from .cli import process_config, validate_config
@@ -1067,7 +1068,8 @@ def time_interpolation(
         # second item in the tuple uses length of pairwise iterator being
         # equal to model_times_len - 1, so is:
         # (model_times_len - 1) - 1 - (halo_size - 1), and -1+1-1 = -1 overall.
-        if index in (halo_size - 1, model_times_len - 1 - halo_size):
+        # HACK
+        if True:  ####index in (halo_size - 1, model_times_len - 1 - halo_size):
             permit_null_subspace = True
             logger.debug(
                 "Allowing potential null-return subspace for segment emerging "
@@ -1117,14 +1119,26 @@ def time_interpolation(
     logger.critical("Final per-segment weighted value arrays are:")
     logger.critical(pformat(v_w))
 
+    if not v_w:
+        raise ValueError("Empty weights array, something went wrong!")
     # Concatenate the data values found above from each segment, to finally
     # get the full set of model-to-obs co-located data.
-    concatenated_weighted_values = cf.Data.concatenate(v_w)
-    logger.critical(
-        "\nFinal concatenated weighted value array is: "
-        f"{concatenated_weighted_values.array}, with length: "
-        f"{len(concatenated_weighted_values)}\n"
-    )
+    if len(v_w) > 1:  # TODO is this just a hack?
+        concatenated_weighted_values = cf.Data.concatenate(v_w)
+        logger.critical(
+            "\nFinal concatenated weighted value array is: "
+            f"{concatenated_weighted_values.array}, with length: "
+            f"{len(concatenated_weighted_values)}\n"
+        )
+    else:
+        print("OOP", v_w[0], type(v_w), type(v_w[0]))
+        # HACK, getting all 19 air pressure values for now, take first one as
+        # case whilst get working generally
+        concatenated_weighted_values = v_w[0]  ###[0, :]
+        # Note that 0th index here gives all 0 values - maybe they are all masked
+        # for that and some other indices?
+        concatenated_weighted_values = concatenated_weighted_values[
+            10, :].squeeze()
 
     # Report on number of masked and unmasked data points for info/debugging
     masked_value_count = (
@@ -1141,7 +1155,28 @@ def time_interpolation(
     # reflect the new context so that the field with data set is contextually
     # correct.
     final_result_field = obs_field.copy()
-    final_result_field.set_data(concatenated_weighted_values)
+    print("FRF")
+    obs_field.dump()
+    print(
+        "weighted data before indexing", concatenated_weighted_values,
+        len(concatenated_weighted_values)
+    )
+
+
+    print(
+        "weighted data after indexing", concatenated_weighted_values,
+        len(concatenated_weighted_values)
+    )
+
+    try:
+        final_result_field.set_data(
+            concatenated_weighted_values, inplace=True)
+    except:
+        print("HOLA")
+        final_result_field.set_data(
+            concatenated_weighted_values, ###axes=["domainaxis0"],
+            inplace=True, set_axes=False)
+    print("EEP", final_result_field, final_result_field.data)
 
     # Finally, re-set the properties on the final result field so it has model
     # data properties not obs preoprties.
@@ -1211,6 +1246,7 @@ def make_outputs_plots(
     new_obs_starttime,
     cfp_output_general_config,
     verbose,
+    preprocess_model=False,
 ):
     """Generate plots of the flight track for a pre-colocation preview.
 
@@ -1235,7 +1271,11 @@ def make_outputs_plots(
     #       it has a trajectory dimension leading, which can be dropped.
     aux_coor_t = final_result_field.auxiliary_coordinate(obs_t_identifier)
     dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
-    final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
+
+    # WRF ONLY, TODO move underlying logic to pre-processing so as not to
+    # clog up main module
+    if preprocess_model == "WRF":
+        final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
 
     # Set levels for plotting of data in a colourmap
     # Min, max as determined using final_result_field.min(), .max():
@@ -1258,6 +1298,8 @@ def make_outputs_plots(
             )
         else:
             cfp_output_general_config["title"] = update_title.title()
+
+
     cfp.traj(final_result_field, **cfp_output_general_config)
     cfp.gclose()
 
@@ -1398,6 +1440,7 @@ def main():
             new_obs_starttime,
             args.cfp_output_general_config,
             verbose,
+            preprocess_model,
         )
 
 
