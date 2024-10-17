@@ -498,6 +498,11 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
         )
 
 
+def bounding_box_query(model_field, time_kwargs):
+    """TODO."""
+    pass
+
+
 @timeit
 def subspace_to_spatiotemporal_bounding_box(
         obs_field, model_field, halo_size, verbose, no_vertical=False
@@ -619,15 +624,25 @@ def subspace_to_spatiotemporal_bounding_box(
             "envelope", halo_size, **bb_kwargs
         )
     else:  # more likely case, so be more careful and treat axes separately
+        # Time
         logger.info("1. Time subspace step")
         time_kwargs = {model_t_id: cf.wi(*t_coord_tight_bounds)}
-        # Now we set model_field -> model_field_bb, as this is our
-        # last separate subspace.
+
         # TODO partial also not working here - clues, clues.
-        # ##model_field_bb = model_field_bb_subspace(**time_kwargs)
-        model_field = model_field.subspace(
-            "envelope", halo_size, **time_kwargs
-        )
+        try:
+            # For the time subspace (only), we don't need a halo
+            model_field = model_field.subspace(
+                "envelope", **time_kwargs
+            )
+        except ValueError:
+            # Both times may sit inside between one model time and another
+            # and the time subspace may fail then, and we can't solve this
+            # with a halo because the subspace doesn't know what point to
+            # 'halo' around. So we need to be more clever.
+            # TODO we decided to write this into this module then move it out
+            # as a new query to cf eventually.
+            model_field = bounding_box_query(model_field, time_kwargs)
+
         logger.info(
             f"Time ('{model_t_id}') bounding box calculated. It is: "
             f"{model_field}"
@@ -653,11 +668,13 @@ def subspace_to_spatiotemporal_bounding_box(
             f"{model_field}"
         )
 
+        # Vertical, if appropriate
+        # Now we set model_field -> model_field_bb, as this is our
+        # last separate subspace.
         if no_vertical:
             model_field_bb = model_field
             vertical_sn = False
         else:
-            # Vertical, if appropriate
             logger.info("3. Vertical subspace step")
             # First, need to calculate the vertical coordinates if there are
             # parametric vertical dimension coordinates to handle.
@@ -1269,12 +1286,12 @@ def make_outputs_plots(
     #       massive red herring. In which case, generalise it so that the input
     #       can be a field with a 2D *or* a 1D array to plot. If 1D, it means
     #       it has a trajectory dimension leading, which can be dropped.
-    aux_coor_t = final_result_field.auxiliary_coordinate(obs_t_identifier)
-    dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
 
     # WRF ONLY, TODO move underlying logic to pre-processing so as not to
     # clog up main module
     if preprocess_model == "WRF":
+        aux_coor_t = final_result_field.auxiliary_coordinate(obs_t_identifier)
+        dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
         final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
 
     # Set levels for plotting of data in a colourmap
@@ -1287,6 +1304,8 @@ def make_outputs_plots(
     #       between the two scatter marker points, if preferable?
     cfp.gopen(file=f"{outputs_dir}/{plotname_start}_final_colocated_field.png")
 
+    # TODO issue with 'cfp_output_general_config', causes blank plot output
+    # when set - fix!
     cfp_output_general_config.update(verbose=verbose)
     # Note the set start time of the obs on the plot title as key info.
     if new_obs_starttime:
@@ -1298,7 +1317,6 @@ def make_outputs_plots(
             )
         else:
             cfp_output_general_config["title"] = update_title.title()
-
 
     cfp.traj(final_result_field, **cfp_output_general_config)
     cfp.gclose()
@@ -1383,15 +1401,11 @@ def main():
     if preprocess_obs == "satellite":
         no_vertical = True
 
-    if not no_vertical:
-        # Subspacing to remove irrelavant information, pre-colocation
-        # TODO tidy passing through of computer vertical coord identifier
-        model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
-            obs_field, model_field, halo_size, verbose, no_vertical=no_vertical
-        )
-    else:
-        # Skip for now. TODO eventually add BB logic in for satellite too
-        model_field_bb, vertical_sn = model_field, None
+    # Subspacing to remove irrelavant information, pre-colocation
+    # TODO tidy passing through of computed vertical coord identifier
+    model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
+        obs_field, model_field, halo_size, verbose, no_vertical=no_vertical
+    )
 
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
