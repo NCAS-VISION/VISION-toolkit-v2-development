@@ -532,23 +532,35 @@ def bounding_box_query(
     # instead of argmin/max but that will be less efficient(?)
 
     lower_index = np.argmin(min_query_result)
-    upper_index = np.argmax(max_query_result) + 1
+    upper_index = np.argmax(max_query_result)
     # Remove 1 *only* if the index is not the first one already, else we
     # get an index of 0-1=-1 which is the last value and will mess things up!
     # And the same for the final index.
     # TODO check for cyclicity considerations.
-    if lower_index != 0:
-        lower_index -= 1
-    if upper_index != model_coord.size:
-        upper_index += 1
+    flip_wi_args = False
+    if lower_index == 0:
+        # Here index will be -1, higher than the upper_index, so want to
+        # therefore flip so do (upper, lower) and not (lower, upper)
+        flip_wi_args = True
+        #lower_index -= 1
+    if upper_index == model_coord.size:
+        #upper_index += 1
+        flip_wi_args = True
+        print("FLIPPING INDICES")
 
-    logger.info(
+    slice_on = [lower_index - 1, upper_index + 1]
+    if flip_wi_args:
+        print("YEAH")
+        slice_on.reverse()
+
+    print(
         f"Bounding box indices are min {lower_index} and max {upper_index}")
     # Now can do a subspace using these indices
     model_field_after_bb = model_field.subspace(
-        "envelope", **{model_id: slice(lower_index, upper_index)})
+        "envelope", **{model_id: slice(*tuple(slice_on))})
 
-    logger.info("FINAL TIME BB BIT IS", model_field_after_bb)
+    #logger.info("FINAL TIME BB BIT IS {model_field_after_bb}")
+    print("FINAL TIME BB BIT IS", model_field_after_bb)
     # TODO update output result
     return model_field_after_bb
 
