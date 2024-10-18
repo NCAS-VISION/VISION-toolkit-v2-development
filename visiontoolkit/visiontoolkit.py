@@ -177,8 +177,7 @@ def make_preview_plots(
             # Not configurable, always use since it gives red for zero values
             cfp.cscale("scale28")
             cfp.gopen(
-                file=f"{outputs_dir}/{plotname_start}_obs_track_only.png"
-            )
+                file=f"{outputs_dir}/{plotname_start}_obs_track_only.png")
             cfp_input_track_only_config.update(verbose=verbose)
             cfp.traj(equal_data_obs_field, **cfp_input_track_only_config)
             cfp.gclose()
@@ -512,24 +511,39 @@ def bounding_box_query(
     # are inside or outside the region of relevance for the model field
     # TODO use greater/less than or equal to (e.g. 'gt' or 'ge')?
     # TODO could combine into one 'wo' to simplify, probably?
+    # Note we can't do 'wo' since for these cases there wouldn't be
+    # want zeros.
     min_query_result = cf.lt(obs_time_min) == model_coord
     max_query_result = cf.gt(obs_time_max) == model_coord
 
+    print("MIN QUERY RESULT", min_query_result.array)
+    print("MAX QUERY RESULT", max_query_result.array)
     # Get indices of last case of index being outside of the range of the
     # obs times fr below, and the first of it being outside from above in terms
     # of position. +/1 will ensure we take the values immediately around.
-    # Need initial '0' index to unpack from size-one array.
-    # TODO do we need +/- 1 here?
-    lower_index = np.where(min_query_result)[0][-1] - 1   #[-1] - 1
-    upper_index = np.where(max_query_result)[0][0] + 1  #[0] + 1
-    print("INDEX BITS ARE", lower_index, upper_index)
+    # Method based on the below logic, want 2 and 4 as resulting indices:
+    #    >>> a = [1, 1, 1, 0, 0, 0, 0, 0]
+    #    >>> b = [0, 0, 0, 0, 1, 1, 1, 1]
+    #    >>> np.argmin(a)
+    #    3
+    #    >>> np.argmax(b)
+    #    4
+    # Note: originally tried np.where(a)[0][-1] and np.where(b)[0][0][5]
+    # instead of argmin/max but that will be less efficient(?)
 
-    print("INDICES ARE", lower_index, upper_index)
+    # TODO cyclic handling logic - if not the 0th only then deduct 1,
+    # else get -1 which maps to last value
+
+    lower_index = np.argmin(min_query_result) - 1
+    upper_index = np.argmax(max_query_result) + 1
+
+    logger.info(
+        f"Bounding box indices are min {lower_index} and max {upper_index}")
     # Now can do a subspace using these indices
     model_field_after_bb = model_field.subspace(
         "envelope", **{model_id: slice(lower_index, upper_index)})
 
-    print("FINAL TIME BB BIT IS", model_field_after_bb)
+    logger.info("FINAL TIME BB BIT IS", model_field_after_bb)
     # TODO update output result
     return model_field_after_bb
 
@@ -693,7 +707,7 @@ def subspace_to_spatiotemporal_bounding_box(
             model_field = model_field.subspace(
                 "envelope",
                 halo_size,
-                ###X=cf.wi(*x_coord_tight_bounds), HACK TODO fix below
+                X=cf.wi(*x_coord_tight_bounds),
                 Y=cf.wi(*y_coord_tight_bounds),
             )
             logger.info(
@@ -1347,7 +1361,9 @@ def make_outputs_plots(
     # Make and open the final plot
     # NOTE: can try 'legend_lines=True' for the lines plotted with average
     #       between the two scatter marker points, if preferable?
-    cfp.gopen(file=f"{outputs_dir}/{plotname_start}_final_colocated_field.png")
+    cfp.gopen(
+        file=f"{outputs_dir}/{plotname_start}_final_colocated_field.png",
+    )
 
     # TODO issue with 'cfp_output_general_config', causes blank plot output
     # when set - fix!
