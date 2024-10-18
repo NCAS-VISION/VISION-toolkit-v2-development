@@ -532,7 +532,8 @@ def bounding_box_query(
     # instead of argmin/max but that will be less efficient(?)
 
     lower_index = np.argmin(min_query_result)
-    upper_index = np.argmax(max_query_result) + 1
+    upper_index = np.argmax(max_query_result)
+
     # Remove 1 *only* if the index is not the first one already, else we
     # get an index of 0-1=-1 which is the last value and will mess things up!
     # And the same for the final index.
@@ -542,13 +543,15 @@ def bounding_box_query(
     if upper_index != model_coord.size:
         upper_index += 1
 
+    slice_on = [lower_index, upper_index]
+
     logger.info(
         f"Bounding box indices are min {lower_index} and max {upper_index}")
     # Now can do a subspace using these indices
     model_field_after_bb = model_field.subspace(
-        "envelope", **{model_id: slice(lower_index, upper_index)})
+        "envelope", **{model_id: slice(*tuple(slice_on))})
 
-    logger.info("FINAL TIME BB BIT IS", model_field_after_bb)
+    logger.info("FINAL TIME BB BIT IS {model_field_after_bb}")
     # TODO update output result
     return model_field_after_bb
 
@@ -702,13 +705,14 @@ def subspace_to_spatiotemporal_bounding_box(
         # Horizontal
         logger.info("2. Horizontal subspace step")
         # For this case where we do 3 separate subspaces, we reassign to
-        # the same field and only at the end create 'model_field_bb' variable
+        # the same field and only at the end create 'model_field_bb' variable.
         # We should be safe to do the horizontal subspacing as one
 
         # TODO do we need to ensure cyclicity set correctly, or should that
         # be guaranteed by pre-proc or compliance reqs?
 
         try:
+            print("MIN/MAX FOR X", x_coord_tight_bounds, y_coord_tight_bounds)
             model_field = model_field.subspace(
                 "envelope",
                 halo_size,
@@ -720,17 +724,45 @@ def subspace_to_spatiotemporal_bounding_box(
                 f"{model_field}"
             )
         except ValueError:
-            # Similar to above, in case all sit within two X or two Y points,
-            # or both.
-            # TODO not working still!
-            model_field = bounding_box_query(
-                model_field, "X", x_coord_tight_bounds,
-                model_field.coordinate("X")
-            )
-            model_field = bounding_box_query(
-                model_field, "Y", y_coord_tight_bounds,
-                model_field.coordinate("Y")
-            )
+            # Two possible issues here: it could be that all of the X and/or
+            # all of the Y points sit within two model X or Y points, such
+            # that we need to do a bounding box query one either or both of
+            # these OR it could be that, usually for data defined at either
+            # of the poles, the subspace is hitting a bug in cf-python whereby
+            # slices which act on cyclic axes which have near-full coverage
+            # of the possible axes values, such as cf.wi(-179, 179) for the
+            # longitude will fail. In the latter case, nothing (much) would be
+            # subspaced out anyway, so it is safe and alomost equivalent to
+            # not perform the subpace along that axes anyway.
+            #
+            # To distinguish these two cases, for now until the latter/bug is
+            # fixed, check the extent of outside of the query.
+
+            # X axis case separately
+            X = model_field.coordinate("X")
+            wo_query_x = cf.wo(*x_coord_tight_bounds) == X
+            wo_count_x = np.sum(wo_query_x.array)
+            # TODO choose right < value here, should probably be 1 but check
+            # how halo effects might influence
+            if wo_count_x < 3:  # extend by 1 each side to acount for halo effect
+                model_field = bounding_box_query(
+                    model_field, "X", x_coord_tight_bounds, X
+                )
+            # Else it is the latter/bug case so we are good to continue without
+            # the x axis subspace.
+
+            # Y axis case separately
+            Y = model_field.coordinate("Y")
+            wo_query_y = cf.wo(*y_coord_tight_bounds) == Y
+            wo_count_y = np.sum(wo_query_y.array)
+            # TODO choose right < value here, should probably be 1 but check
+            # how halo effects might influence
+            if wo_count_y < 3:  # extend by 1 each side to acount for halo effect
+                model_field = bounding_box_query(
+                    model_field, "Y", y_coord_tight_bounds, X
+                )
+            # Else it is the latter/bug case so we are good to continue without
+            # the x axis subspace.
 
         # Vertical, if appropriate
         # Now we set model_field -> model_field_bb, as this is our
