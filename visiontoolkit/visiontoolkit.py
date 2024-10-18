@@ -531,11 +531,16 @@ def bounding_box_query(
     # Note: originally tried np.where(a)[0][-1] and np.where(b)[0][0][5]
     # instead of argmin/max but that will be less efficient(?)
 
-    # TODO cyclic handling logic - if not the 0th only then deduct 1,
-    # else get -1 which maps to last value
-
-    lower_index = np.argmin(min_query_result) - 1
+    lower_index = np.argmin(min_query_result)
     upper_index = np.argmax(max_query_result) + 1
+    # Remove 1 *only* if the index is not the first one already, else we
+    # get an index of 0-1=-1 which is the last value and will mess things up!
+    # And the same for the final index.
+    # TODO check for cyclicity considerations.
+    if lower_index != 0:
+        lower_index -= 1
+    if upper_index != model_coord.size:
+        upper_index += 1
 
     logger.info(
         f"Bounding box indices are min {lower_index} and max {upper_index}")
