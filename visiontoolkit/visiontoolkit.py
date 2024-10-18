@@ -498,14 +498,45 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
         )
 
 
-def bounding_box_query(model_field, time_kwargs):
+def bounding_box_query(
+        model_field, model_id, coord_tight_bounds, model_coord):
     """TODO."""
-    pass
+    print(
+        "%%%%%" * 10, "TRYING BB QUERY METHOD WITH", model_field,
+        coord_tight_bounds)
+
+    obs_time_min, obs_time_max = coord_tight_bounds
+    # **{model_t_id: cf.wi(*t_coord_tight_bounds)}
+
+    # Get an array with truth values representing whether the obs values
+    # are inside or outside the region of relevance for the model field
+    # TODO use greater/less than or equal to (e.g. 'gt' or 'ge')?
+    # TODO could combine into one 'wo' to simplify, probably?
+    min_query_result = cf.lt(obs_time_min) == model_coord
+    max_query_result = cf.gt(obs_time_max) == model_coord
+
+    # Get indices of last case of index being outside of the range of the
+    # obs times fr below, and the first of it being outside from above in terms
+    # of position. +/1 will ensure we take the values immediately around.
+    # Need initial '0' index to unpack from size-one array.
+    # TODO do we need +/- 1 here?
+    lower_index = np.where(min_query_result)[0][-1] - 1   #[-1] - 1
+    upper_index = np.where(max_query_result)[0][0] + 1  #[0] + 1
+    print("INDEX BITS ARE", lower_index, upper_index)
+
+    print("INDICES ARE", lower_index, upper_index)
+    # Now can do a subspace using these indices
+    model_field_after_bb = model_field.subspace(
+        "envelope", **{model_id: slice(lower_index, upper_index)})
+
+    print("FINAL TIME BB BIT IS", model_field_after_bb)
+    # TODO update output result
+    return model_field_after_bb
 
 
 @timeit
 def subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field, halo_size, verbose, no_vertical=False
+        obs_field, model_field, halo_size, verbose, no_vertical=False,
 ):
     """Extract only relevant data in the model field via a 4D subspace.
 
@@ -641,7 +672,8 @@ def subspace_to_spatiotemporal_bounding_box(
             # 'halo' around. So we need to be more clever.
             # TODO we decided to write this into this module then move it out
             # as a new query to cf eventually.
-            model_field = bounding_box_query(model_field, time_kwargs)
+            model_field = bounding_box_query(
+                model_field, model_t_id, t_coord_tight_bounds, model_times)
 
         logger.info(
             f"Time ('{model_t_id}') bounding box calculated. It is: "
@@ -657,16 +689,29 @@ def subspace_to_spatiotemporal_bounding_box(
         # TODO do we need to ensure cyclicity set correctly, or should that
         # be guaranteed by pre-proc or compliance reqs?
 
-        model_field = model_field.subspace(
-            "envelope",
-            halo_size,
-            X=cf.wi(*x_coord_tight_bounds),
-            Y=cf.wi(*y_coord_tight_bounds),
-        )
-        logger.info(
-            "Horizontal ('X' and 'Y') bounding box calculated. It is: "
-            f"{model_field}"
-        )
+        try:
+            model_field = model_field.subspace(
+                "envelope",
+                halo_size,
+                ###X=cf.wi(*x_coord_tight_bounds), HACK TODO fix below
+                Y=cf.wi(*y_coord_tight_bounds),
+            )
+            logger.info(
+                "Horizontal ('X' and 'Y') bounding box calculated. It is: "
+                f"{model_field}"
+            )
+        except ValueError:
+            # Similar to above, in case all sit within two X or two Y points,
+            # or both.
+            # TODO not working still!
+            model_field = bounding_box_query(
+                model_field, "X", x_coord_tight_bounds,
+                model_field.coordinate("X")
+            )
+            model_field = bounding_box_query(
+                model_field, "Y", y_coord_tight_bounds,
+                model_field.coordinate("Y")
+            )
 
         # Vertical, if appropriate
         # Now we set model_field -> model_field_bb, as this is our
@@ -1404,7 +1449,7 @@ def main():
     # Subspacing to remove irrelavant information, pre-colocation
     # TODO tidy passing through of computed vertical coord identifier
     model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field, halo_size, verbose, no_vertical=no_vertical
+        obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
     )
 
     # Perform spatial and then temporal interpolation to colocate
