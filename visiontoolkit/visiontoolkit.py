@@ -8,6 +8,7 @@ from time import time
 # NOTE: keep this order (cfp then cf imported) to avoid Seg Fault issues
 import cfplot as cfp
 import cf
+
 import numpy as np
 
 from .cli import process_config, validate_config
