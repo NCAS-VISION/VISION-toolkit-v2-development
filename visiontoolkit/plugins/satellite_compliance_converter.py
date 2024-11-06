@@ -4,27 +4,48 @@ import logging
 
 import cf
 
+
 logger = logging.getLogger(__name__)
 
 
-def satellite_compliance_plugin(fieldlist):
-    """The converter."""
-    logging.critical(
+# Configuration based on variable names etc. These defaults are used unless
+# the user specifies any config. to override this
+PLUGIN_CONFIG_DEFAULTS = {
+    "latitude": "latitude",
+    "longitude": "longitude",
+    "sensingtime": "sensingtime",
+    "do_retrieval": "do_retrieval",
+    "sensingtime_msec": "sensingtime_msec",
+    "sensingtime_day": "sensingtime_day",
+    "sensingtime": "sensingtime",
+    "npres": "npres",
+    "npi": "npi",
+}
+
+
+def satellite_compliance_plugin(fieldlist, **config):
+    """The converter.
+
+    Configuration may be provided to override the defaults.
+    """
+    logging.info(
         f"Before pre-processing, fieldlist to satellite plugin is {fieldlist}")
 
-    # TODO work out what is useful here and make mapping keys clearer as to
-    # the purpose (leaving as same as test data values for now)
-    plugin_config = {
-        "latitude": "latitude",
-        "longitude": "longitude",
-        "sensingtime": "sensingtime",
-        "do_retrieval": "do_retrieval",
-        "sensingtime_msec": "sensingtime_msec",
-        "sensingtime_day": "sensingtime_day",
-        "sensingtime": "sensingtime",
-        "npres": "npres",
-        "npi": "npi",
-    }
+    if not config:
+        plugin_config = PLUGIN_CONFIG_DEFAULTS
+    else:
+        # Basic validation of input as dict of keys
+        try:
+            plugin_config = dict(config)
+        except TypeError:
+            raise TypeError(
+                f"Bad configuration, require dictionary but got: {config}")
+        for config_key, config_value in config.items():
+            if config_key in plugin_config:
+                plugin_config[config_key] = config_value
+
+    logging.critical(
+        f"Final configuration for satellite plugin is {plugin_config}")
 
     s0 = fieldlist.select_by_identity("air_temperature")[0]
 
