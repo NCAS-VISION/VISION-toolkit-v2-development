@@ -32,7 +32,7 @@ setup(
     name="vision-toolkit",
     description=(
         "Virtual Integration of Satellite and In-Situ "
-        "Observation Networks (VISION) toolkit flight simulator"
+        "Observation Networks (VISION) toolkit simulator"
     ),
     url="https://github.com/NCAS-VISION/VISION-toolkit-v2-development",
     long_description=long_description,
@@ -43,7 +43,10 @@ setup(
     install_requires=get_dependencies(),
     # tests_require=tests_require,  # TODO add when add tests
     extras_require=extras_require,
-    packages=find_packages(),
+    packages=[
+        "visiontoolkit",
+        "visiontoolkit.plugins",
+    ],
     entry_points={
         "console_scripts": ["visiontoolkit = visiontoolkit.visiontoolkit:main"]
     },
