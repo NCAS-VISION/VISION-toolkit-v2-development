@@ -276,6 +276,20 @@ def process_cli_arguments(parser):
             "https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars"
             "[TODO CLARIFY/SEPARATE SETVARS AND PLOT CALL CONFIG.]"
         ),
+    ),
+    # Plugin specific config. items - each has no effect if not applying
+    # the relevant plugin through setting the relevant string value for
+    # the preprocess-mode-obs and/or
+    # preprocess-mode-model plugin specifying configuration items.
+    parser.add_argument(
+        "--satellite-plugin-config",
+        action="store",
+        help=(
+            "dictionary to set the configuration values for the satellite "
+            "plugin, where valid keys to set are 'latitude', 'longitude', "
+            "'sensingtime', 'do_retrieval', 'sensingtime_msec', "
+            "'sensingtime_day', 'npres' and 'npi'."
+        ),
     )
 
 

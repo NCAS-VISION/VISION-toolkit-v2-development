@@ -196,16 +196,16 @@ def make_preview_plots(
 
 
 @timeit
-def satellite_plugin(fieldlist):
+def satellite_plugin(fieldlist, config=None):
     """Pre-processing of a field from a satellite swath.
 
     Define this is own function so we can apply the timing decorator.
     """
-    return satellite_compliance_plugin(fieldlist)
+    return satellite_compliance_plugin(fieldlist, config=config)
 
 
 @timeit
-def ensure_cf_compliance(field, plugin):
+def ensure_cf_compliance(field, plugin, satellite_plugin_config=None):
     """Ensure the chosen fields are CF compliant with the correct format.
 
     TODO: DETAILED DOCS
@@ -226,20 +226,23 @@ def ensure_cf_compliance(field, plugin):
     #
     # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT
     if plugin == "satellite":
-        logging.critical("Starting satellite pre-processing plugin.")
-        # Use as a function now
-        # TODO move out to pre-processing directory and run from import
-        final_field = satellite_plugin(field)
-        return final_field
+        logging.info("Starting satellite pre-processing plugin.")
+
+        # If no config is provided (None), the plugin will apply defaults
+        return satellite_plugin(field, config=satellite_plugin_config)
+
     elif plugin == "flight":
         raise NotImplementedError(
             "Flight pre-processing plugin yet to be finalised.")
+
     elif plugin == "UM":
         raise NotImplementedError(
             "UM pre-processing plugin yet to be finalised.")
+
     elif plugin == "WRF":
         raise NotImplementedError(
             "WRF pre-processing plugin yet to be finalised.")
+
     else:
         return field
 
@@ -1377,7 +1380,8 @@ def main():
     # Apply any specified pre-processing: use returned fields since the
     # input may be a FieldList which gets reduced to less fields or to one
     if preprocess_obs:
-        obs_field = ensure_cf_compliance(obs_field, preprocess_obs)
+        obs_field = ensure_cf_compliance(
+            obs_field, preprocess_obs, args.satellite_plugin_config)
     if preprocess_model:
         model_field = ensure_cf_compliance(model_field, preprocess_model)
 

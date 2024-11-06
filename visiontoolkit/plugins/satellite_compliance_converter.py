@@ -2,6 +2,8 @@
 
 import logging
 
+from pprint import pformat
+
 import cf
 
 
@@ -23,29 +25,36 @@ PLUGIN_CONFIG_DEFAULTS = {
 }
 
 
-def satellite_compliance_plugin(fieldlist, **config):
+def satellite_compliance_plugin(fieldlist, config=None):
     """The converter.
 
     Configuration may be provided to override the defaults.
     """
     logging.info(
-        f"Before pre-processing, fieldlist to satellite plugin is {fieldlist}")
+        f"Before pre-processing, fieldlist to satellite plugin is {fieldlist}"
+    )
 
-    if not config:
-        plugin_config = PLUGIN_CONFIG_DEFAULTS
-    else:
+    plugin_config = PLUGIN_CONFIG_DEFAULTS
+    if config:
         # Basic validation of input as dict of keys
         try:
-            plugin_config = dict(config)
+            dict(config)
         except TypeError:
             raise TypeError(
                 f"Bad configuration, require dictionary but got: {config}")
+
+        # Only update keys which will do something, else warn of irrelevance
         for config_key, config_value in config.items():
             if config_key in plugin_config:
                 plugin_config[config_key] = config_value
+            else:
+                logging.warning(
+                    f"Unrecognised satellite plugin config. item: {config_key}"
+                )
 
-    logging.critical(
-        f"Final configuration for satellite plugin is {plugin_config}")
+    logging.info(
+        f"Final configuration for satellite plugin is {pformat(plugin_config)}"
+    )
 
     s0 = fieldlist.select_by_identity("air_temperature")[0]
 
