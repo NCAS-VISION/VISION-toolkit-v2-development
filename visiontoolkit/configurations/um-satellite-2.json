@@ -7,7 +7,6 @@
     "chosen-model-fields":-2,
     "outputs-dir":"cf-script-outputs/um-satellite-2",
     "output-file-name":"um_satellite_2_vision_result.nc",
-    "regrid-z-coord":"air_pressure",
     "skip-all-plotting":false,
     "cfp-mapset-config":{
         "resolution":"10m"

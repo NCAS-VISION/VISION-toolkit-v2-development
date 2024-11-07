@@ -6,7 +6,7 @@
     "chosen-model-fields": 0,
     "outputs-dir": "cf-script-outputs/wrf-faam-stanco-4",
     "output-file-name": "wrf_faam_stanco_4_vision_result.nc",
-    "regrid-z-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
+    "vertical-colocation-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
     "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
     "show-plot-of-input-obs": false,
     "cfp-mapset-config": {

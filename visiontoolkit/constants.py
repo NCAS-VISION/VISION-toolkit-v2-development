@@ -44,13 +44,16 @@ CONFIG_DEFAULTS = {
     # *** Subspacing options ***
     "halo-size": 1,
     # *** Regridding options, to configure the 4D interpolation ***
+    # TODO rename this, with deprecation, to interpolation-method
     "regrid-method": "linear",
     # Note this option except in rare cases won't be required, as should almost
     # always be able to determine what z-coordinate want given it must be
     # present in both the model and the observational data, so match those.
     # Only if both data have more than one of identical z-coord do we need
     # to ask for this info.
-    "regrid-z-coord": None,  # default to None given above note
+    # Pressure will always be the ideal case, so that is our default and if
+    # it can't be found, we look for other ways forward for the vertical.
+    "vertical-colocation-coord": "air_pressure",
     "source-axes": False,
     # *** Plotting: what to plot and how to minimally configure it ***
     "plotname-start": "vision_toolkit",
