@@ -155,12 +155,15 @@ def process_cli_arguments(parser):
         ),
     )
     parser.add_argument(
-        "-r",
-        "--regrid-method",
+        "-i",
+        "--spatial-colocation-method",
         action="store",
+        # Note: the temporal colocation is always linear, even if the spatial
+        # colocation isn't, so there is no equivalent option for temporal case
         help=(
-            "regridding interpolation method to apply, see 'method' "
-            "parameter to 'cf.regrids' method for options: "
+            "interpolation method to apply for the spatial colocation, see "
+            "'method' parameter to "
+            "'cf.regrids' method used under-the-hood to do this for options: "
             "https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html"
         ),
     )
@@ -296,7 +299,8 @@ def process_cli_arguments(parser):
     # Effectively deprecated CLI input names - these have been replaced by
     # better names for the same item, but to allow folk to continue to use
     # the under-development toolkit at a 'frozen API' stage, keep them as
-    # working alternatives (the logic accepts either at present)
+    # working alternatives (the logic accepts either at present). Before the
+    # first proper release these will be removed as possibilities.
     parser.add_argument(
         "--regrid-z-coord",
         action="store",
@@ -304,6 +308,17 @@ def process_cli_arguments(parser):
             "NOW DEPRECATED: use '--vertical-colocation-coord' instead. "
             "[vertical (z) coordinate to use as the vertical component in "
             "the spatial interpolation step]"
+        ),
+    )
+    parser.add_argument(
+        "-r",
+        "--regrid-method",
+        action="store",
+        help=(
+            "NOW DEPRECATED: use '--spatial-colocation-method' instead. "
+            "regridding interpolation method to apply, see 'method' "
+            "parameter to 'cf.regrids' method for options: "
+            "https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html"
         ),
     )
 

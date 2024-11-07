@@ -44,8 +44,7 @@ CONFIG_DEFAULTS = {
     # *** Subspacing options ***
     "halo-size": 1,
     # *** Regridding options, to configure the 4D interpolation ***
-    # TODO rename this, with deprecation, to interpolation-method
-    "regrid-method": "linear",
+    "spatial-colocation-method": "linear",
     # Note this option except in rare cases won't be required, as should almost
     # always be able to determine what z-coordinate want given it must be
     # present in both the model and the observational data, so match those.

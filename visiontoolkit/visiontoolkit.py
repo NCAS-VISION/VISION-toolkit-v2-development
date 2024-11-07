@@ -779,8 +779,8 @@ def subspace_to_spatiotemporal_bounding_box(
 def spatial_interpolation(
     obs_field,
     model_field_bb,
-    regrid_method,
-    regrid_z_coord,
+    interpolation_method,
+    interpolation_z_coord,
     source_axes,
     model_t_identifier,
     vertical_sn,
@@ -798,7 +798,6 @@ def spatial_interpolation(
 
     logger.info(
         "Starting spatial interpolation (regridding) step..."
-        f"WITH {model_field_bb}"
     )
 
     if no_vertical:
@@ -806,7 +805,7 @@ def spatial_interpolation(
             f"Doing spatial regridding without using vertical levels.")
         spatially_colocated_field = model_field_bb.regrids(
             obs_field,
-            method=regrid_method,
+            method=interpolation_method,
             src_axes=source_axes,
         )
         logger.info("\nSpatial interpolation (regridding) complete.\n")
@@ -833,7 +832,7 @@ def spatial_interpolation(
     try:
         spatially_colocated_field = model_field_bb.regrids(
             obs_field,
-            method=regrid_method,
+            method=interpolation_method,
             z=regrid_z_coord,
             ln_z=True,
             src_axes=source_axes,
@@ -911,7 +910,7 @@ def spatial_interpolation(
             # Do the regrids weighting operation for the 3D Z in each case
             spatially_colocated_field_comp = model_field_z_per_time.regrids(
                 obs_field,
-                method=regrid_method,
+                method=interpolation_method,
                 z=vertical_sn,
                 ln_z=True,  # TODO should we use a log here in this case?
                 src_axes=source_axes,
@@ -1357,12 +1356,13 @@ def main():
     skip_all_plotting = args.skip_all_plotting
     preprocess_obs = args.preprocess_mode_obs
     preprocess_model = args.preprocess_mode_model
-
     # TODO: eventually remove the deprecated alternatives, but for now
     # accept both (see cli.py end of process_cli_arguments for the listing
     # of any deprecated options)
     # Note that e.g. "A" or "B" evaluates to "A"
     colocation_z_coord = args.vertical_colocation_coord or args.regrid_z_coord
+    interpolation_method = (
+        args.spatial_colocation_method or args.regrid_method)
 
     # Process and validate inputs, including optional flight track preview plot
     obs_data, model_data = read_input_data(
@@ -1433,7 +1433,7 @@ def main():
     spatially_colocated_field = spatial_interpolation(
         obs_field,
         model_field_bb,
-        args.regrid_method,
+        interpolation_method,
         colocation_z_coord,
         args.source_axes,
         model_t_identifier,
