@@ -428,9 +428,10 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 def bounding_box_query(
         model_field, model_id, coord_tight_bounds, model_coord):
     """TODO."""
-    print(
-        "%%%%%" * 10, "TRYING BB QUERY METHOD WITH", model_field,
-        coord_tight_bounds)
+    logging.info(
+        f"Starting a bounding box query for {coord_tight_bounds} on "
+        f"{model_coord} of {model_field} "
+    )
 
     obs_time_min, obs_time_max = coord_tight_bounds
     # **{model_t_id: cf.wi(*t_coord_tight_bounds)}
@@ -444,8 +445,6 @@ def bounding_box_query(
     min_query_result = cf.lt(obs_time_min) == model_coord
     max_query_result = cf.gt(obs_time_max) == model_coord
 
-    print("MIN QUERY RESULT", min_query_result.array)
-    print("MAX QUERY RESULT", max_query_result.array)
     # Get indices of last case of index being outside of the range of the
     # obs times fr below, and the first of it being outside from above in terms
     # of position. +/1 will ensure we take the values immediately around.
@@ -640,7 +639,6 @@ def subspace_to_spatiotemporal_bounding_box(
         # be guaranteed by pre-proc or compliance reqs?
 
         try:
-            print("MIN/MAX FOR X", x_coord_tight_bounds, y_coord_tight_bounds)
             model_field = model_field.subspace(
                 "envelope",
                 halo_size,
@@ -1172,10 +1170,9 @@ def time_interpolation(
             f"{len(concatenated_weighted_values)}\n"
         )
     else:
-        print("OOP", v_w[0], type(v_w), type(v_w[0]))
         # HACK, getting all 19 air pressure values for now, take first one as
         # case whilst get working generally
-        concatenated_weighted_values = v_w[0]  ###[0, :]
+        concatenated_weighted_values = v_w[0]
         # Note that 0th index here gives all 0 values - maybe they are all masked
         # for that and some other indices?
         concatenated_weighted_values = concatenated_weighted_values[
@@ -1196,28 +1193,20 @@ def time_interpolation(
     # reflect the new context so that the field with data set is contextually
     # correct.
     final_result_field = obs_field.copy()
-    print("FRF")
+
     obs_field.dump()
-    print(
-        "weighted data before indexing", concatenated_weighted_values,
-        len(concatenated_weighted_values)
-    )
-
-
-    print(
-        "weighted data after indexing", concatenated_weighted_values,
-        len(concatenated_weighted_values)
+    logging.info(
+        f"Concatenated weighted values are: {concatenated_weighted_values}"
     )
 
     try:
         final_result_field.set_data(
             concatenated_weighted_values, inplace=True)
     except:
-        print("HOLA")
         final_result_field.set_data(
-            concatenated_weighted_values, ###axes=["domainaxis0"],
-            inplace=True, set_axes=False)
-    print("EEP", final_result_field, final_result_field.data)
+            concatenated_weighted_values,
+            inplace=True, set_axes=False
+        )
 
     # Finally, re-set the properties on the final result field so it has model
     # data properties not obs preoprties.
@@ -1369,6 +1358,12 @@ def main():
     preprocess_obs = args.preprocess_mode_obs
     preprocess_model = args.preprocess_mode_model
 
+    # TODO: eventually remove the deprecated alternatives, but for now
+    # accept both (see cli.py end of process_cli_arguments for the listing
+    # of any deprecated options)
+    # Note that e.g. "A" or "B" evaluates to "A"
+    colocation_z_coord = args.vertical_colocation_coord or args.regrid_z_coord
+
     # Process and validate inputs, including optional flight track preview plot
     obs_data, model_data = read_input_data(
         args.obs_data_path, args.model_data_path
@@ -1439,7 +1434,7 @@ def main():
         obs_field,
         model_field_bb,
         args.regrid_method,
-        args.regrid_z_coord,
+        colocation_z_coord,
         args.source_axes,
         model_t_identifier,
         vertical_sn,

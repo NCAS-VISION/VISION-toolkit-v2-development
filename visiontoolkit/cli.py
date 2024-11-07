@@ -166,11 +166,12 @@ def process_cli_arguments(parser):
     )
     parser.add_argument(
         "-z",
-        "--regrid-z-coord",
+        "--vertical-colocation-coord",
         action="store",
         help=(
             "vertical (z) coordinate to use as the vertical component in "
-            "the spatial interpolation step"
+            "the spatial interpolation step of colocation, where either "
+            "a pressure or an altitude CF standard name is expected"
         ),
     )
     parser.add_argument(
@@ -289,6 +290,20 @@ def process_cli_arguments(parser):
             "plugin, where valid keys to set are 'latitude', 'longitude', "
             "'sensingtime', 'do_retrieval', 'sensingtime_msec', "
             "'sensingtime_day', 'npres' and 'npi'."
+        ),
+    )
+
+    # Effectively deprecated CLI input names - these have been replaced by
+    # better names for the same item, but to allow folk to continue to use
+    # the under-development toolkit at a 'frozen API' stage, keep them as
+    # working alternatives (the logic accepts either at present)
+    parser.add_argument(
+        "--regrid-z-coord",
+        action="store",
+        help=(
+            "NOW DEPRECATED: use '--vertical-colocation-coord' instead. "
+            "[vertical (z) coordinate to use as the vertical component in "
+            "the spatial interpolation step]"
         ),
     )
 
