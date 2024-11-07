@@ -1,19 +1,19 @@
 {
-    "start-time-override": "2017-07-17 03:14:15",
-    "show-plot-of-input-obs": false,
-    "obs-data-path":"../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc",
+    "start-time-override": "2017-07-17 12:00:00",
+    "obs-data-path":"../data/marias-satellite-example-data/satellite-data-leap-second/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20161231234157z_20170101012357z_100_149-v1000.nc",
     "model-data-path":"../data/main-workwith-test-ISO-simulator/Model_Input",
     "preprocess-mode-obs":"satellite",
     "chosen-obs-fields":false,
     "chosen-model-fields":-2,
-    "outputs-dir":"cf-script-outputs/um-satellite-1",
-    "output-file-name":"um_satellite_1_vision_result.nc",
+    "outputs-dir":"cf-script-outputs/um-satellite-6",
+    "output-file-name":"um_satellite_6_vision_result.nc",
     "skip-all-plotting":false,
     "cfp-mapset-config":{
         "resolution":"10m",
-        "proj":"spstere",
-        "boundinglat":-60,
-        "lon_0":0
+        "lonmin":125,
+        "lonmax":165,
+        "latmin":10,
+        "latmax":45
     },
     "cfp-input-levs-config":{
         "min":-5,
