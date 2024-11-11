@@ -1315,7 +1315,7 @@ def write_output_data(final_result_field, output_path_name):
 
 
 @timeit
-def make_outputs_plots(
+def make_outputs_plot(
     final_result_field,
     obs_t_identifier,
     cfp_output_levs_config,
@@ -1326,9 +1326,9 @@ def make_outputs_plots(
     verbose,
     preprocess_model=False,
 ):
-    """Generate plots of the flight track for a pre-colocation preview.
+    """Generate a post-colocation result plot of the track or swath.
 
-    The plots may optionally be displayed duering script execution, else
+    The plots may optionally be displayed during script execution, else
     saved to disk.
 
     TODO: DETAILED DOCS
@@ -1382,8 +1382,51 @@ def make_outputs_plots(
             cfp_output_general_config["title"] = update_title.title()
 
     cfp.traj(final_result_field, **cfp_output_general_config)
-    cfp.gclose()
 
+    cfp.gclose()
+    logger.info("Plot created.")
+
+
+@timeit
+def make_compound_outputs_plot(
+    output,
+    obs_t_identifier,
+    cfp_output_levs_config,
+    outputs_dir,
+    plotname_start,
+    new_obs_starttime,
+    cfp_output_general_config,
+    verbose,
+    preprocess_model=False,
+):
+    """Generate post-colocation result plot of (a) compound satellite orbit(s).
+
+    The plot may optionally be displayed during script execution, else
+    saved to disk.
+
+    TODO: DETAILED DOCS
+    """
+    cfp.gopen(
+        file=f"{outputs_dir}/{plotname_start}_final_all_colocated_fields.png",
+    )
+    cfp.mapset()
+    if cfp_output_levs_config:
+        cfp.levs(**cfp_output_levs_config)
+
+    """
+
+
+    print("1111 IS", output_fields)
+    for outfield in output_fields:
+        try:
+            print("2222 IS", outfield)
+            print("2222 IS", cfp_output_general_config)
+        cfp.traj(outfield, **cfp_output_general_config)
+        except:
+            print(f"WARNING: skipped plot for {outfield} which errored.")
+    """
+    cfp.traj(output, **cfp_output_general_config)
+    cfp.gclose()
     logger.info("Plot created.")
 
 
@@ -1535,45 +1578,53 @@ def main():
         print(f"End of colocation iteration with file: {file_to_colocate}")
         output_fields.append(final_result_field)
 
-    print(
+    # 3. Post-processing of co-located results and prepare outputs
+    if not output_fields:
+        raise ValueError("Empty resulting FieldList: something went wrong!")
+
+    compound_output = len(output_fields) > 1
+    if compound_output:
+        # Concatenate the fields now since they should all constitute one
+        # DSG feature.
+        output = output_fields.concatenate()
+        print(
+            f"Have compound output, a FieldList of length {len(output_fields)}"
+        )
+    else:
+        output = output_fields[0]  # unpack to field in this case
+        print(
+            "Have singular output i.e. just one result field."
+        )
+        print(
         "Final pre-concatenated fieldlist from colocation of all inputs "
         f"from specified observational data path is: {output_fields}"
     )
 
-    # Temp to get full-orbit plot in satellite case.
-    # if len(output_fields) > 1:
-    #     output_fields = output_fields.concatenate()
-    # print(
-    #     "Final fieldlist from colocation of all inputs from specified "
-    #     f"observational data path is: {output_fields}"
-    # )
-    # cf.write(output_fields, "all_output_fields_one_swath.nc")
-    # cfp.gopen(
-    #     file=f"{outputs_dir}/{plotname_start}_final_colocated_field_ALL.png",
-    # )
-    # cfp.levs()
-    # cfp.mapset()
-
-    # for outfield in output_fields:
-    #     cfp.levs(min=2e-08, max=16e-08, step=2e-08)
-    #     cfp.traj(outfield, **args.cfp_output_general_config)
-
-    # cfp.gclose()
-
-    # 3. Post-processing of co-located results and prepare outputs
-
-    # TODO SB possible iteration happened if list of files to colocate was not
-    # just size 1, so adapt the below for possibility of fieldlist over size 1
+    print(
+        "Final Field(List) from colocation of all inputs from specified "
+        f"observational data path is: {output}"
+    )
 
     # Create and process outputs
     create_cra_outputs()  # TODO currently does nothing
 
     # TODO improve path handling with PathLib library
     output_path_name = f"{outputs_dir}/{args.output_file_name}"
-    write_output_data(output_fields, output_path_name)
+    write_output_data(output, output_path_name)
+
     if not skip_all_plotting:
-        make_outputs_plots(
-            output_fields,
+        if compound_output:
+            # Here need the individual fields from the FieldList before
+            # its concatentation into 'output' to write to file, since we
+            # need to pl
+            # TODO
+            plot_call = make_compound_outputs_plot
+        else:
+            plot_call = make_outputs_plot
+
+        # Plot the outputs
+        plot_call(
+            output,
             obs_t_identifier,
             args.cfp_output_levs_config,
             outputs_dir,
