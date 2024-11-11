@@ -1316,7 +1316,7 @@ def write_output_data(final_result_field, output_path_name):
 
 @timeit
 def make_outputs_plot(
-    final_result_field,
+    output,
     obs_t_identifier,
     cfp_output_levs_config,
     outputs_dir,
@@ -1326,9 +1326,9 @@ def make_outputs_plot(
     verbose,
     preprocess_model=False,
 ):
-    """Generate a post-colocation result plot of the track or swath.
+    """Generate a post-colocation result plot of the track(s) or swath(s).
 
-    The plots may optionally be displayed during script execution, else
+    The plot may optionally be displayed during script execution, else
     saved to disk.
 
     TODO: DETAILED DOCS
@@ -1351,14 +1351,9 @@ def make_outputs_plot(
     # WRF ONLY, TODO move underlying logic to pre-processing so as not to
     # clog up main module
     if preprocess_model == "WRF":
-        aux_coor_t = final_result_field.auxiliary_coordinate(obs_t_identifier)
+        aux_coor_t = output.auxiliary_coordinate(obs_t_identifier)
         dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
-        final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
-
-    # Set levels for plotting of data in a colourmap
-    # Min, max as determined using final_result_field.min(), .max():
-    if cfp_output_levs_config:
-        cfp.levs(**cfp_output_levs_config)
+        output.set_construct(dim_coor_t, axes="ncdim%obs")
 
     # Make and open the final plot
     # NOTE: can try 'legend_lines=True' for the lines plotted with average
@@ -1366,6 +1361,11 @@ def make_outputs_plot(
     cfp.gopen(
         file=f"{outputs_dir}/{plotname_start}_final_colocated_field.png",
     )
+
+    # Set levels for plotting of data in a colourmap
+    # Min, max as determined using output.min(), .max():
+    if cfp_output_levs_config:
+        cfp.levs(**cfp_output_levs_config)
 
     # TODO issue with 'cfp_output_general_config', causes blank plot output
     # when set - fix!
@@ -1381,51 +1381,8 @@ def make_outputs_plot(
         else:
             cfp_output_general_config["title"] = update_title.title()
 
-    cfp.traj(final_result_field, **cfp_output_general_config)
-
-    cfp.gclose()
-    logger.info("Plot created.")
-
-
-@timeit
-def make_compound_outputs_plot(
-    output,
-    obs_t_identifier,
-    cfp_output_levs_config,
-    outputs_dir,
-    plotname_start,
-    new_obs_starttime,
-    cfp_output_general_config,
-    verbose,
-    preprocess_model=False,
-):
-    """Generate post-colocation result plot of (a) compound satellite orbit(s).
-
-    The plot may optionally be displayed during script execution, else
-    saved to disk.
-
-    TODO: DETAILED DOCS
-    """
-    cfp.gopen(
-        file=f"{outputs_dir}/{plotname_start}_final_all_colocated_fields.png",
-    )
-    cfp.mapset()
-    if cfp_output_levs_config:
-        cfp.levs(**cfp_output_levs_config)
-
-    """
-
-
-    print("1111 IS", output_fields)
-    for outfield in output_fields:
-        try:
-            print("2222 IS", outfield)
-            print("2222 IS", cfp_output_general_config)
-        cfp.traj(outfield, **cfp_output_general_config)
-        except:
-            print(f"WARNING: skipped plot for {outfield} which errored.")
-    """
     cfp.traj(output, **cfp_output_general_config)
+
     cfp.gclose()
     logger.info("Plot created.")
 
@@ -1613,17 +1570,8 @@ def main():
     write_output_data(output, output_path_name)
 
     if not skip_all_plotting:
-        if compound_output:
-            # Here need the individual fields from the FieldList before
-            # its concatentation into 'output' to write to file, since we
-            # need to pl
-            # TODO
-            plot_call = make_compound_outputs_plot
-        else:
-            plot_call = make_outputs_plot
-
-        # Plot the outputs
-        plot_call(
+        # Plot the output
+        make_outputs_plot(
             output,
             obs_t_identifier,
             args.cfp_output_levs_config,
