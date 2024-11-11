@@ -1,6 +1,9 @@
 import functools
 import logging
+import os
 import sys
+
+from glob import glob
 from itertools import pairwise  # requires Python 3.10+
 from pprint import pformat
 from time import time
@@ -66,6 +69,54 @@ def get_env_and_diagnostics_report():
         "Using Python and CF environment of:\n"
         f"{cf.environment(display=False)}\n"
     )
+
+
+@timeit
+def get_files_to_individually_colocate(path):
+    """TODO."""
+
+    # Basically copying logic here from cf-python read globbing,
+    # because we need to get a list of files to separately loop through
+    # to do colocation on, but once a globbed read is done the fields are
+    # all put into one fieldlist so we can't do a globbed read and go from
+    # there. But we do need to check the list of files to read are valid
+    # up-front, so use the same logic as cf-python (I have taken the liberty
+    # of improving the variable names and adding some commenting.)
+    files = glob(path)
+    for filesystem_item in files:
+        if os.path.isdir(filesystem_item):
+            # Keep as ptint until address TODO
+            # TODO deal with sub-directories under read glob
+            print(
+                "Warning, read directory includes a sub-directory. "
+                "Ignoring sub-directory cases for now."
+            )
+
+    readable_files = []
+    # TODO for now we assume that all of the files under the given
+    # path are valid files to read, e.g. netCDF or PP. If they can't be read,
+    # assume they are not relevant. We can update this to a better way later.
+    for filename in files:
+        logger.info(f"Found file name from glob: {filename}")
+        readable = True
+
+        # TODO this method to read to check will be slow, find a better way
+        try:
+            # Turn off verbosity since this is just a preliminary/test read
+            with cf.log_level(0):
+                cf.read(filename)
+        except:
+            readable = False
+            logger.warning(
+                f"Glob includes file {filename} which cannot be read by cf.")
+        if readable:
+            readable_files.append(filename)
+
+
+    logging.info(
+        f"Globbed list of files to read with cf is: {pformat(readable_files)}")
+
+    return readable_files
 
 
 @timeit
@@ -434,7 +485,6 @@ def bounding_box_query(
     )
 
     obs_time_min, obs_time_max = coord_tight_bounds
-    # **{model_t_id: cf.wi(*t_coord_tight_bounds)}
 
     # Get an array with truth values representing whether the obs values
     # are inside or outside the region of relevance for the model field
@@ -478,8 +528,8 @@ def bounding_box_query(
     model_field_after_bb = model_field.subspace(
         "envelope", **{model_id: slice(*tuple(slice_on))})
 
-    logger.info("FINAL TIME BB BIT IS {model_field_after_bb}")
-    # TODO update output result
+    logger.info(f"Results from bounding box query is: {model_field_after_bb}")
+
     return model_field_after_bb
 
 
@@ -1193,7 +1243,6 @@ def time_interpolation(
     # correct.
     final_result_field = obs_field.copy()
 
-    obs_field.dump()
     logging.info(
         f"Concatenated weighted values are: {concatenated_weighted_values}"
     )
@@ -1341,6 +1390,8 @@ def make_outputs_plots(
 @timeit
 def main():
     """Perform end-to-end model-to-observational co-location."""
+
+    # 1. Prepare inputs and config. ready for possibly-iterative co-location
     print(toolkit_banner())
 
     # Manage inputs from CLI and from configuration file, if present.
@@ -1364,111 +1415,165 @@ def main():
     interpolation_method = (
         args.spatial_colocation_method or args.regrid_method)
 
-    # Process and validate inputs, including optional flight track preview plot
-    obs_data, model_data = read_input_data(
-        args.obs_data_path, args.model_data_path
-    )
-    obs_field, model_field = get_input_fields_of_interest(
-        obs_data, model_data, args.chosen_obs_fields, args.chosen_model_fields
-    )
+    # 2. Start colocating the indivdual files to read (which may just be one
+    # file in many cases)
+    read_file_list = get_files_to_individually_colocate(args.obs_data_path)
+    length_read_file_list = len(read_file_list)
+    #logging.info(
+    print(f"Read file list has length: {length_read_file_list}")
+    if not read_file_list:
+        raise ValueError(
+            f"Bad path, nothing readable by cf: {args.obs_data_path}")
 
-    # Apply any specified pre-processing: use returned fields since the
-    # input may be a FieldList which gets reduced to less fields or to one
-    if preprocess_obs:
-        obs_field = ensure_cf_compliance(
-            obs_field, preprocess_obs, args.satellite_plugin_config)
-    if preprocess_model:
-        model_field = ensure_cf_compliance(model_field, preprocess_model)
+    output_fields = cf.FieldList()
+    for index, file_to_colocate in enumerate(read_file_list):
+        #logging.info
+        print(
+            "\n_____ Start of colocation iteration with file number "
+            f"{index + 1} of total {length_read_file_list}: "
+            f"{file_to_colocate} _____\n")
 
-    # TODO: this has too many parameters for one function, separate out
-    if not skip_all_plotting:
-        make_preview_plots(
+        # Process and validate inputs, including optional preview plot
+        obs_data, model_data = read_input_data(
+            file_to_colocate, args.model_data_path
+        )
+        obs_field, model_field = get_input_fields_of_interest(
+            obs_data, model_data, args.chosen_obs_fields,
+            args.chosen_model_fields
+        )
+
+        # Apply any specified pre-processing: use returned fields since the
+        # input may be a FieldList which gets reduced to less fields or to one
+        if preprocess_obs:
+            obs_field = ensure_cf_compliance(
+                obs_field, preprocess_obs, args.satellite_plugin_config)
+        if preprocess_model:
+            model_field = ensure_cf_compliance(model_field, preprocess_model)
+
+        # TODO: this has too many parameters for one function, separate out
+        if not skip_all_plotting:
+            make_preview_plots(
+                obs_field,
+                args.show_plot_of_input_obs,
+                args.plot_of_input_obs_track_only,
+                outputs_dir,
+                plotname_start,
+                args.cfp_mapset_config,
+                args.cfp_cscale,
+                args.cfp_input_levs_config,
+                args.cfp_input_track_only_config,
+                args.cfp_input_general_config,
+                verbose,
+            )
+
+
+        # Time coordinate considerations, pre-colocation
+        times, time_identifiers = get_time_coords(obs_field, model_field)
+        obs_times, model_times = times
+        obs_t_identifier, model_t_identifier = time_identifiers
+
+        new_obs_starttime = args.start_time_override
+        if new_obs_starttime:
+            # TODO can just do in-place rather than re-assign, might be best?
+            obs_times = set_start_datetime(
+                obs_times, obs_t_identifier, new_obs_starttime
+            )
+
+        # TODO apply obs_t_identifier, model_t_identifier in further logic
+        ensure_unit_calendar_consistency(obs_field, model_field)
+
+        # Ensure the model time axes covers the entire time axes span of the
+        # obs track, else we can't go forward - if so inform about this clearly
+        check_time_coverage(obs_times, model_times)
+
+        # For the satellite swath cases, ignore vertical height since it is
+        # dealt with by the averaging kernel.
+        # TODO how do we account for the averging kernel work in this case?
+        no_vertical = False
+        if preprocess_obs == "satellite":
+            no_vertical = True
+
+        # Subspacing to remove irrelavant information, pre-colocation
+        # TODO tidy passing through of computed vertical coord identifier
+        model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
+            obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
+        )
+
+        # Perform spatial and then temporal interpolation to colocate
+        spatially_colocated_field = spatial_interpolation(
             obs_field,
-            args.show_plot_of_input_obs,
-            args.plot_of_input_obs_track_only,
-            outputs_dir,
-            plotname_start,
-            args.cfp_mapset_config,
-            args.cfp_cscale,
-            args.cfp_input_levs_config,
-            args.cfp_input_track_only_config,
-            args.cfp_input_general_config,
-            verbose,
+            model_field_bb,
+            interpolation_method,
+            colocation_z_coord,
+            args.source_axes,
+            model_t_identifier,
+            vertical_sn,
+            no_vertical,
         )
 
+        # For such cases as satellite swaths, the times can straddle model points
+        # so we need to chop these up into ones on each side of a model time
+        # segmentm as per our approach below.
+        split_segments = False
+        if preprocess_obs == "satellite":
+            split_segments = True
 
-    # Time coordinate considerations, pre-colocation
-    times, time_identifiers = get_time_coords(obs_field, model_field)
-    obs_times, model_times = times
-    obs_t_identifier, model_t_identifier = time_identifiers
-
-    new_obs_starttime = args.start_time_override
-    if new_obs_starttime:
-        # TODO can just do in-place rather than re-assign, might be best?
-        obs_times = set_start_datetime(
-            obs_times, obs_t_identifier, new_obs_starttime
+        final_result_field = time_interpolation(
+            obs_times,
+            model_times,
+            obs_t_identifier,
+            model_t_identifier,
+            obs_field,
+            model_field,
+            halo_size,
+            spatially_colocated_field,
+            args.history_message,
+            split_segments=split_segments,
         )
 
-    # TODO apply obs_t_identifier, model_t_identifier in further logic
-    ensure_unit_calendar_consistency(obs_field, model_field)
+        #logging.info
+        print(f"End of colocation iteration with file: {file_to_colocate}")
+        output_fields.append(final_result_field)
 
-    # Ensure the model time axes covers the entire time axes span of the
-    # obs track - else we can't go forward - if so inform about this clearly
-    check_time_coverage(obs_times, model_times)
-
-    # For the satellite swath cases, ignore vertical height since it is
-    # dealt with by the averaging kernel.
-    # TODO how do we account for the averging kernel work in this case?
-    no_vertical = False
-    if preprocess_obs == "satellite":
-        no_vertical = True
-
-    # Subspacing to remove irrelavant information, pre-colocation
-    # TODO tidy passing through of computed vertical coord identifier
-    model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
+    print(
+        "Final pre-concatenated fieldlist from colocation of all inputs "
+        f"from specified observational data path is: {output_fields}"
     )
 
-    # Perform spatial and then temporal interpolation to colocate
-    spatially_colocated_field = spatial_interpolation(
-        obs_field,
-        model_field_bb,
-        interpolation_method,
-        colocation_z_coord,
-        args.source_axes,
-        model_t_identifier,
-        vertical_sn,
-        no_vertical,
-    )
+    # Temp to get full-orbit plot in satellite case.
+    # if len(output_fields) > 1:
+    #     output_fields = output_fields.concatenate()
+    # print(
+    #     "Final fieldlist from colocation of all inputs from specified "
+    #     f"observational data path is: {output_fields}"
+    # )
+    # cf.write(output_fields, "all_output_fields_one_swath.nc")
+    # cfp.gopen(
+    #     file=f"{outputs_dir}/{plotname_start}_final_colocated_field_ALL.png",
+    # )
+    # cfp.levs()
+    # cfp.mapset()
 
-    # For such cases as satellite swaths, the times can straddle model points
-    # so we need to chop these up into ones on each side of a model time
-    # segmentm as per our approach below.
-    split_segments = False
-    if preprocess_obs == "satellite":
-        split_segments = True
+    # for outfield in output_fields:
+    #     cfp.levs(min=2e-08, max=16e-08, step=2e-08)
+    #     cfp.traj(outfield, **args.cfp_output_general_config)
 
-    final_result_field = time_interpolation(
-        obs_times,
-        model_times,
-        obs_t_identifier,
-        model_t_identifier,
-        obs_field,
-        model_field,
-        halo_size,
-        spatially_colocated_field,
-        args.history_message,
-        split_segments=split_segments,
-    )
+    # cfp.gclose()
+
+    # 3. Post-processing of co-located results and prepare outputs
+
+    # TODO SB possible iteration happened if list of files to colocate was not
+    # just size 1, so adapt the below for possibility of fieldlist over size 1
 
     # Create and process outputs
     create_cra_outputs()  # TODO currently does nothing
+
     # TODO improve path handling with PathLib library
     output_path_name = f"{outputs_dir}/{args.output_file_name}"
-    write_output_data(final_result_field, output_path_name)
+    write_output_data(output_fields, output_path_name)
     if not skip_all_plotting:
         make_outputs_plots(
-            final_result_field,
+            output_fields,
             obs_t_identifier,
             args.cfp_output_levs_config,
             outputs_dir,

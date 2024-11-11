@@ -43,7 +43,7 @@ CONFIG_DEFAULTS = {
     ),
     # *** Subspacing options ***
     "halo-size": 1,
-    # *** Regridding options, to configure the 4D interpolation ***
+    # *** Interpolation options, to configure the 4D interpolation ***
     "spatial-colocation-method": "linear",
     # Note this option except in rare cases won't be required, as should almost
     # always be able to determine what z-coordinate want given it must be

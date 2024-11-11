@@ -30,9 +30,10 @@ def satellite_compliance_plugin(fieldlist, config=None):
 
     Configuration may be provided to override the defaults.
     """
-    logging.info(
-        f"Before pre-processing, fieldlist to satellite plugin is {fieldlist}"
-    )
+    # print(
+    #     #logging.info(
+    #     f"Before pre-processing, fieldlist to satellite plugin is {fieldlist}"
+    # )
 
     plugin_config = PLUGIN_CONFIG_DEFAULTS
     if config:
@@ -73,6 +74,7 @@ def satellite_compliance_plugin(fieldlist, config=None):
     s = s0[tuple(index)].squeeze()
 
     # Satellite time - applying standard units
+    # TODO could use select_by_ncvar, but should check is size one fieldlist?
     time_of_day =  fieldlist.select_field(
         f"ncvar%{plugin_config['sensingtime_msec']}")
     time_of_day.override_units("ms", inplace=True)
@@ -88,7 +90,7 @@ def satellite_compliance_plugin(fieldlist, config=None):
     time.clear_properties()
     time.set_property("standard_name", "time")
 
-    # Satelite latitude and longitude
+    # Satellite latitude and longitude
     lat = fieldlist.select_field(f"ncvar%{plugin_config['latitude']}")
     lon = fieldlist.select_field(f"ncvar%{plugin_config['longitude']}")
 
@@ -109,7 +111,7 @@ def satellite_compliance_plugin(fieldlist, config=None):
 
         del mask
 
-    # Create satelite "trajectory"
+    # Create satellite "trajectory"
     s.set_construct(cf.AuxiliaryCoordinate(source=lat))
     s.set_construct(cf.AuxiliaryCoordinate(source=lon))
     s.set_construct(cf.AuxiliaryCoordinate(source=time))
