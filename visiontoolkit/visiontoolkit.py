@@ -883,7 +883,8 @@ def spatial_interpolation(
         spatially_colocated_field = model_field_bb.regrids(
             obs_field,
             method=interpolation_method,
-            z=regrid_z_coord,
+            z=interpolation_z_coord,
+            # TODO, guess we set ln_z if z is altitude not pressure?
             ln_z=True,
             src_axes=source_axes,
         )
