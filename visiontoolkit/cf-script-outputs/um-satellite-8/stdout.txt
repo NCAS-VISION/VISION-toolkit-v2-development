@@ -1,0 +1,2105 @@
+[34m
+.______________________________________________.
+|[31m   _     _  _   ______  _  _______  _______   [34m|
+|[31m  (_)   (_)| | / _____)| |(_______)(_______)  [34m|
+|[31m   _     _ | |( (____  | | _     _  _     _   [34m|
+|[31m  | |   | || | \____ \ | || |   | || |   | |  [34m|
+|[31m   \ \ / / | | _____) )| || |___| || |   | |  [34m|
+|[31m    \___/  |_|(______/ |_| \_____/ |_|   |_|  [34m|
+|   _______             _   _      _           [34m|
+|  (_______)           | | | |    (_)   _      [34m|
+|      _   ___    ___  | | | |  _  _  _| |_    [34m|
+|     | | / _ \  / _ \ | | | |_/ )| |(_   _)   [34m|
+|     | || |_| || |_| || | |  _ ( | |  | |_    [34m|
+|     |_| \___/  \___/  \_)|_| \_)|_|   \__)   [34m|
+.______________________________________________.[32m
+    
+Parsed CLI configuration arguments are:
+Namespace(verbose=3, config_file='configurations/um-satellite-8.json', preprocess_mode_obs=None, preprocess_mode_model=None, start_time_override=None, obs_data_path=None, model_data_path=None, chosen_obs_fields=None, chosen_model_fields=None, skip_all_plotting=False, outputs_dir=None, output_file_name=None, history_message=None, spatial_colocation_method=None, vertical_colocation_coord=None, source_axes=None, plotname_start=None, show_plot_of_input_obs=False, plot_of_input_obs_track_only=False, cfp_cscale=None, cfp_mapset_config=None, cfp_input_levs_config=None, cfp_input_general_config=None, cfp_input_track_only_config=None, cfp_output_levs_config=None, cfp_output_general_config=None, satellite_plugin_config=None, regrid_z_coord=None, regrid_method=None)
+
+Default configuration is:
+{'cfp-cscale': 'plasma',
+ 'cfp-input-general-config': {'legend': True,
+                              'linewidth': 0.4,
+                              'markersize': 5,
+                              'title': 'Input: observational field (path, to '
+                                       'be used for co-location, with its '
+                                       'corresponding data, to be ignored)'},
+ 'cfp-input-levs-config': {},
+ 'cfp-input-track-only-config': {'colorbar': False,
+                                 'legend': True,
+                                 'linewidth': 0,
+                                 'markersize': 0.5,
+                                 'title': 'Input: flight track from '
+                                          'observational field to co-locate '
+                                          'model field onto'},
+ 'cfp-mapset-config': {},
+ 'cfp-output-general-config': {'legend': True,
+                               'linewidth': 0.4,
+                               'markersize': 5,
+                               'title': 'Result: model co-located onto '
+                                        'observational path'},
+ 'cfp-output-levs-config': {},
+ 'chosen-model-fields': False,
+ 'chosen-obs-fields': False,
+ 'halo-size': 1,
+ 'history-message': 'Processed using the NCAS VISION Toolkit to colocate from '
+                    'model data to the observational data spatio-temporal '
+                    'location.',
+ 'model-data-path': '.',
+ 'obs-data-path': '.',
+ 'output-file-name': 'vision_toolkit_result_field.nc',
+ 'outputs-dir': '.',
+ 'plot-of-input-obs-track-only': True,
+ 'plotname-start': 'vision_toolkit',
+ 'preprocess-mode-model': None,
+ 'preprocess-mode-obs': None,
+ 'show-plot-of-input-obs': True,
+ 'skip-all-plotting': False,
+ 'source-axes': False,
+ 'spatial-colocation-method': 'linear',
+ 'start-time-override': False,
+ 'verbose': 0,
+ 'vertical-colocation-coord': 'air_pressure'}
+
+Succesfully read-in JSON config. file at: configurations/um-satellite-8.json
+Configuration from file is:
+{'cfp-cscale': 'plasma',
+ 'cfp-input-levs-config': {'max': 55, 'min': -5, 'step': 5},
+ 'cfp-mapset-config': {'resolution': '10m'},
+ 'cfp-output-levs-config': {'max': 1.6e-07, 'min': 2e-08, 'step': 2e-08},
+ 'chosen-model-fields': -2,
+ 'chosen-obs-fields': False,
+ 'model-data-path': '../data/main-workwith-test-ISO-simulator/Model_Input',
+ 'obs-data-path': '../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_*.nc',
+ 'output-file-name': 'um_satellite_8_vision_result.nc',
+ 'outputs-dir': 'cf-script-outputs/um-satellite-8',
+ 'preprocess-mode-obs': 'satellite',
+ 'skip-all-plotting': False,
+ 'start-time-override': '2017-07-21 00:00:00'}
+
+Final input configuration, considering CLI and file inputs (with CLI overriding the file values) is:
+Namespace(verbose=3, config_file='configurations/um-satellite-8.json', preprocess_mode_obs='satellite', preprocess_mode_model=None, start_time_override='2017-07-21 00:00:00', obs_data_path='../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_*.nc', model_data_path='../data/main-workwith-test-ISO-simulator/Model_Input', chosen_obs_fields=False, chosen_model_fields=-2, skip_all_plotting=False, outputs_dir='cf-script-outputs/um-satellite-8', output_file_name='um_satellite_8_vision_result.nc', history_message='Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.', spatial_colocation_method='linear', vertical_colocation_coord='air_pressure', source_axes=False, plotname_start='vision_toolkit', show_plot_of_input_obs=True, plot_of_input_obs_track_only=True, cfp_cscale='plasma', cfp_mapset_config={'resolution': '10m'}, cfp_input_levs_config={'min': -5, 'max': 55, 'step': 5}, cfp_input_general_config={'legend': True, 'markersize': 5, 'linewidth': 0.4, 'title': 'Input: observational field (path, to be used for co-location, with its corresponding data, to be ignored)'}, cfp_input_track_only_config={'legend': True, 'colorbar': False, 'markersize': 0.5, 'linewidth': 0, 'title': 'Input: flight track from observational field to co-locate model field onto'}, cfp_output_levs_config={'min': 2e-08, 'max': 1.6e-07, 'step': 2e-08}, cfp_output_general_config={'legend': True, 'markersize': 5, 'linewidth': 0.4, 'title': 'Result: model co-located onto observational path'}, satellite_plugin_config=None, regrid_z_coord=None, regrid_method=None, halo_size=1)
+
+Found file name from glob: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_250_299-v1000.nc
+
+_____ Time taken (in s) for 'get_files_to_individually_colocate' to run: 1.923 _____
+
+Read file list has length: 15
+
+_____ Start of colocation iteration with file number 1 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_250_299-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1302 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.7873 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-38.8714485168457, ..., -55.99214553833008] degree_north
+                : longitude(ncdim%npres(6000)) = [-164.52804565429688, ..., 158.3148193359375] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 20:45:18, ..., 2017-07-03 20:51:56]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.4373 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.4373 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 1.8459 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.0987 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0009 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.2581 _____
+
+Halo reduced to keep subspace within axis limits
+Halo reduced to keep subspace within axis limits
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.7615 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.1847 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-38.8714485168457, ..., -55.99214553833008] degree_north
+                : longitude(ncdim%npres(6000)) = [-164.52804565429688, ..., 158.3148193359375] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-38.8714485168457, ..., -55.99214553833008] degree_north
+                : longitude(ncdim%npres(6000)) = [-164.52804565429688, ..., 158.3148193359375] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[5.769598996286158e-08, ..., 1.3004967738672385e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-38.8714485168457, ..., -55.99214553833008] degree_north
+                : longitude(ncdim%npres(6000)) = [-164.52804565429688, ..., 158.3148193359375] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 7.900258697308401e-08,
+ 'mean': 6.060928808167699e-08,
+ 'median': 5.870779510160866e-08,
+ 'mid_range': 6.704724760948633e-08,
+ 'minimum': 5.5091908245888654e-08,
+ 'range': 2.391067872719536e-08,
+ 'root_mean_square': 6.081911769456416e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 5.047700008670725e-09}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.3413 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_250_299-v1000.nc
+
+_____ Start of colocation iteration with file number 2 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_500_549-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1323 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.5288 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-25.879701614379883, ..., 1.220100998878479] degree_north
+                : longitude(ncdim%npres(6000)) = [-3.3370931148529053, ..., 9.663345336914062] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 21:18:38, ..., 2017-07-03 21:25:16]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.4845 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.4845 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.3541 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.0995 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.001 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.2113 _____
+
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.8081 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.1072 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-25.879701614379883, ..., 1.220100998878479] degree_north
+                : longitude(ncdim%npres(6000)) = [-3.3370931148529053, ..., 9.663345336914062] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-25.879701614379883, ..., 1.220100998878479] degree_north
+                : longitude(ncdim%npres(6000)) = [-3.3370931148529053, ..., 9.663345336914062] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[6.219072689377505e-08, ..., 2.999162775196408e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-25.879701614379883, ..., 1.220100998878479] degree_north
+                : longitude(ncdim%npres(6000)) = [-3.3370931148529053, ..., 9.663345336914062] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 1.8994141461721066e-07,
+ 'mean': 8.293029226113996e-08,
+ 'median': 7.35841281823247e-08,
+ 'mid_range': 1.2296460045095295e-07,
+ 'minimum': 5.5987786284695234e-08,
+ 'range': 1.3395362833251542e-07,
+ 'root_mean_square': 8.74897994767891e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 2.7875287226693706e-08}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.3188 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_500_549-v1000.nc
+
+_____ Start of colocation iteration with file number 3 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_000_049-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.122 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.5695 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [70.2000732421875, ..., 58.221038818359375] degree_north
+                : longitude(ncdim%npres(6000)) = [-98.28284454345703, ..., -165.58937072753906] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 20:11:58, ..., 2017-07-03 20:18:36]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.5086 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.5087 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.3647 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.1213 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0014 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.235 _____
+
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.803 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.1226 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [70.2000732421875, ..., 58.221038818359375] degree_north
+                : longitude(ncdim%npres(6000)) = [-98.28284454345703, ..., -165.58937072753906] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [70.2000732421875, ..., 58.221038818359375] degree_north
+                : longitude(ncdim%npres(6000)) = [-98.28284454345703, ..., -165.58937072753906] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[5.0156028405509094e-08, ..., 1.482241278505548e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [70.2000732421875, ..., 58.221038818359375] degree_north
+                : longitude(ncdim%npres(6000)) = [-98.28284454345703, ..., -165.58937072753906] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 1.1434357265089642e-07,
+ 'mean': 8.245478860534829e-08,
+ 'median': 8.007435281949024e-08,
+ 'mid_range': 8.622176516531609e-08,
+ 'minimum': 5.809995767973576e-08,
+ 'range': 5.624361497116066e-08,
+ 'root_mean_square': 8.343441549523808e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 1.274792238285704e-08}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.3028 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_000_049-v1000.nc
+
+_____ Start of colocation iteration with file number 4 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_200_249-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1605 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.6405 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-15.6161527633667, ..., -34.411888122558594] degree_north
+                : longitude(ncdim%npres(6000)) = [-160.61048889160156, ..., 173.57003784179688] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 20:38:38, ..., 2017-07-03 20:45:16]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.5054 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.5054 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.4057 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.1288 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.001 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.249 _____
+
+Halo reduced to keep subspace within axis limits
+Halo reduced to keep subspace within axis limits
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.7294 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.1769 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-15.6161527633667, ..., -34.411888122558594] degree_north
+                : longitude(ncdim%npres(6000)) = [-160.61048889160156, ..., 173.57003784179688] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-15.6161527633667, ..., -34.411888122558594] degree_north
+                : longitude(ncdim%npres(6000)) = [-160.61048889160156, ..., 173.57003784179688] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[5.3859397372679624e-08, ..., 1.9168102616842383e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-15.6161527633667, ..., -34.411888122558594] degree_north
+                : longitude(ncdim%npres(6000)) = [-160.61048889160156, ..., 173.57003784179688] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 8.239370559764006e-08,
+ 'mean': 5.970310820110239e-08,
+ 'median': 5.868733560827711e-08,
+ 'mid_range': 6.689006584600299e-08,
+ 'minimum': 5.138642609436591e-08,
+ 'range': 3.1007279503274155e-08,
+ 'root_mean_square': 6.006613919934254e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 6.593932775078654e-09}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.2353 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_200_249-v1000.nc
+
+_____ Start of colocation iteration with file number 5 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1302 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.6107 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-84.9181137084961, ..., -64.42240142822266] degree_north
+                : longitude(ncdim%npres(6000)) = [-165.8921356201172, ..., 49.57024002075195] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 20:58:38, ..., 2017-07-03 21:05:16]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.4799 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.48 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.3817 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.1209 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0012 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.2551 _____
+
+Halo reduced to keep subspace within axis limits
+Halo reduced to keep subspace within axis limits
+Halo reduced to keep subspace within axis limits
+Halo reduced to keep subspace within axis limits
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.7826 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.1768 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-84.9181137084961, ..., -64.42240142822266] degree_north
+                : longitude(ncdim%npres(6000)) = [-165.8921356201172, ..., 49.57024002075195] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-84.9181137084961, ..., -64.42240142822266] degree_north
+                : longitude(ncdim%npres(6000)) = [-165.8921356201172, ..., 49.57024002075195] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[0.0, ..., 1.6101411358239507e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-84.9181137084961, ..., -64.42240142822266] degree_north
+                : longitude(ncdim%npres(6000)) = [-165.8921356201172, ..., 49.57024002075195] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 6.063088040089106e-08,
+ 'mean': 5.8307160203725015e-08,
+ 'median': 5.8268446522821504e-08,
+ 'mid_range': 5.892337268541214e-08,
+ 'minimum': 5.721586496993323e-08,
+ 'range': 3.415015430957826e-09,
+ 'root_mean_square': 5.831147681791156e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 7.095052240706408e-10}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.217 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc
+
+_____ Start of colocation iteration with file number 6 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_300_349-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1335 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.6505 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-61.97477722167969, ..., -71.37745666503906] degree_north
+                : longitude(ncdim%npres(6000)) = [-167.63230895996094, ..., 114.1983642578125] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 20:51:58, ..., 2017-07-03 20:58:36]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.6197 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.6198 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.3854 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.1077 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0014 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.2447 _____
+
+Halo reduced to keep subspace within axis limits
+Halo reduced to keep subspace within axis limits
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.7763 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.1706 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-61.97477722167969, ..., -71.37745666503906] degree_north
+                : longitude(ncdim%npres(6000)) = [-167.63230895996094, ..., 114.1983642578125] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-61.97477722167969, ..., -71.37745666503906] degree_north
+                : longitude(ncdim%npres(6000)) = [-167.63230895996094, ..., 114.1983642578125] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[0.0, ..., 1.5317342828203038e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-61.97477722167969, ..., -71.37745666503906] degree_north
+                : longitude(ncdim%npres(6000)) = [-167.63230895996094, ..., 114.1983642578125] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 6.246257094753359e-08,
+ 'mean': 5.8903347977036235e-08,
+ 'median': 5.8720556109881115e-08,
+ 'mid_range': 5.976375671419035e-08,
+ 'minimum': 5.706494248084711e-08,
+ 'range': 5.397628466686481e-09,
+ 'root_mean_square': 5.8910080737196374e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 8.906231297115389e-10}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.191 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_300_349-v1000.nc
+
+_____ Start of colocation iteration with file number 7 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_100_149-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1375 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.6693 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [30.707611083984375, ..., 11.695836067199707] degree_north
+                : longitude(ncdim%npres(6000)) = [-148.41339111328125, ..., -173.19769287109375] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 20:25:18, ..., 2017-07-03 20:31:56]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.5626 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.5627 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.3866 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.1263 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0014 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.2529 _____
+
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.6759 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.1056 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [30.707611083984375, ..., 11.695836067199707] degree_north
+                : longitude(ncdim%npres(6000)) = [-148.41339111328125, ..., -173.19769287109375] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [30.707611083984375, ..., 11.695836067199707] degree_north
+                : longitude(ncdim%npres(6000)) = [-148.41339111328125, ..., -173.19769287109375] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[6.253910289881578e-08, ..., 5.273239134772398e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [30.707611083984375, ..., 11.695836067199707] degree_north
+                : longitude(ncdim%npres(6000)) = [-148.41339111328125, ..., -173.19769287109375] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 7.644548148679343e-08,
+ 'mean': 5.73374219741582e-08,
+ 'median': 5.651037063719364e-08,
+ 'mid_range': 6.446205739570766e-08,
+ 'minimum': 5.2478633304621895e-08,
+ 'range': 2.396684818217153e-08,
+ 'root_mean_square': 5.748005769045158e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 4.0468597029009014e-09}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.2425 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_100_149-v1000.nc
+
+_____ Start of colocation iteration with file number 8 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_550_599-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1391 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.56 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-2.5868430137634277, ..., 24.517383575439453] degree_north
+                : longitude(ncdim%npres(6000)) = [-7.780371189117432, ..., 5.0582661628723145] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 21:25:18, ..., 2017-07-03 21:31:56]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.4692 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.4692 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.3693 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.1075 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0009 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.2444 _____
+
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.7013 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.108 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-2.5868430137634277, ..., 24.517383575439453] degree_north
+                : longitude(ncdim%npres(6000)) = [-7.780371189117432, ..., 5.0582661628723145] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-2.5868430137634277, ..., 24.517383575439453] degree_north
+                : longitude(ncdim%npres(6000)) = [-7.780371189117432, ..., 5.0582661628723145] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[9.4601248017648e-08, ..., 4.6633532096935194e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-2.5868430137634277, ..., 24.517383575439453] degree_north
+                : longitude(ncdim%npres(6000)) = [-7.780371189117432, ..., 5.0582661628723145] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 1.8014948205814999e-07,
+ 'mean': 8.918714028389354e-08,
+ 'median': 8.835453781578332e-08,
+ 'mid_range': 1.1748748940494396e-07,
+ 'minimum': 5.4825496751737944e-08,
+ 'range': 1.2532398530641204e-07,
+ 'root_mean_square': 9.308127973621674e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 2.6641671218467666e-08}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.2849 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_550_599-v1000.nc
+
+_____ Start of colocation iteration with file number 9 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_450_499-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1321 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.6948 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-49.07011413574219, ..., -21.90143585205078] degree_north
+                : longitude(ncdim%npres(6000)) = [0.23472200334072113, ..., 15.874102592468262] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 21:11:58, ..., 2017-07-03 21:18:36]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.4728 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.4729 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.3993 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.1092 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0016 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.24 _____
+
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.7172 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.119 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-49.07011413574219, ..., -21.90143585205078] degree_north
+                : longitude(ncdim%npres(6000)) = [0.23472200334072113, ..., 15.874102592468262] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-49.07011413574219, ..., -21.90143585205078] degree_north
+                : longitude(ncdim%npres(6000)) = [0.23472200334072113, ..., 15.874102592468262] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[5.879045446130872e-08, ..., 3.857172127483246e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-49.07011413574219, ..., -21.90143585205078] degree_north
+                : longitude(ncdim%npres(6000)) = [0.23472200334072113, ..., 15.874102592468262] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 9.211853537113156e-08,
+ 'mean': 6.621399509125193e-08,
+ 'median': 6.656758344436705e-08,
+ 'mid_range': 7.36917001600458e-08,
+ 'minimum': 5.526486494896003e-08,
+ 'range': 3.685367042217153e-08,
+ 'root_mean_square': 6.68828462208023e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 9.435145608370591e-09}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.3416 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_450_499-v1000.nc
+
+_____ Start of colocation iteration with file number 10 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_400_449-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1438 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.6268 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-72.1034927368164, ..., -44.370853424072266] degree_north
+                : longitude(ncdim%npres(6000)) = [2.72760009765625, ..., 26.026796340942383] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 21:05:18, ..., 2017-07-03 21:11:56]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.5549 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.555 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.3631 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.1191 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0011 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.2297 _____
+
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.6917 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.1061 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-72.1034927368164, ..., -44.370853424072266] degree_north
+                : longitude(ncdim%npres(6000)) = [2.72760009765625, ..., 26.026796340942383] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-72.1034927368164, ..., -44.370853424072266] degree_north
+                : longitude(ncdim%npres(6000)) = [2.72760009765625, ..., 26.026796340942383] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[0.0, ..., 2.033541788730244e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [-72.1034927368164, ..., -44.370853424072266] degree_north
+                : longitude(ncdim%npres(6000)) = [2.72760009765625, ..., 26.026796340942383] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 6.368420288073195e-08,
+ 'mean': 5.9351963036286156e-08,
+ 'median': 5.9304784985305204e-08,
+ 'mid_range': 5.990797260288344e-08,
+ 'minimum': 5.613174232503494e-08,
+ 'range': 7.552460555697012e-09,
+ 'root_mean_square': 5.93644153690726e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 1.2158519034427117e-09}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.399 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_400_449-v1000.nc
+
+_____ Start of colocation iteration with file number 11 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_600_649-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1422 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.5777 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [20.60399627685547, ..., 47.770606994628906] degree_north
+                : longitude(ncdim%npres(6000)) = [-13.781310081481934, ..., 1.3079309463500977] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 21:31:58, ..., 2017-07-03 21:38:36]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.5596 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.5597 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.3866 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.1058 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0011 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.2421 _____
+
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.7946 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.1211 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [20.60399627685547, ..., 47.770606994628906] degree_north
+                : longitude(ncdim%npres(6000)) = [-13.781310081481934, ..., 1.3079309463500977] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [20.60399627685547, ..., 47.770606994628906] degree_north
+                : longitude(ncdim%npres(6000)) = [-13.781310081481934, ..., 1.3079309463500977] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[0.0, ..., 1.4506366005247262e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [20.60399627685547, ..., 47.770606994628906] degree_north
+                : longitude(ncdim%npres(6000)) = [-13.781310081481934, ..., 1.3079309463500977] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 8.978165342396613e-08,
+ 'mean': 6.466863192227881e-08,
+ 'median': 6.160954375651955e-08,
+ 'mid_range': 7.195224473105669e-08,
+ 'minimum': 5.412283603814724e-08,
+ 'range': 3.565881738581889e-08,
+ 'root_mean_square': 6.510967630338167e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 7.565579530476227e-09}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.2849 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_600_649-v1000.nc
+
+_____ Start of colocation iteration with file number 12 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_650_699-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1334 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.5833 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [43.23649597167969, ..., 70.91064453125] degree_north
+                : longitude(ncdim%npres(6000)) = [-23.489736557006836, ..., -1.6323620080947876] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 21:38:38, ..., 2017-07-03 21:45:16]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.5388 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.5388 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.3731 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.121 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0011 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.2443 _____
+
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.7429 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.1135 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [43.23649597167969, ..., 70.91064453125] degree_north
+                : longitude(ncdim%npres(6000)) = [-23.489736557006836, ..., -1.6323620080947876] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [43.23649597167969, ..., 70.91064453125] degree_north
+                : longitude(ncdim%npres(6000)) = [-23.489736557006836, ..., -1.6323620080947876] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[9.384959253587547e-08, ..., 1.4744838363128162e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [43.23649597167969, ..., 70.91064453125] degree_north
+                : longitude(ncdim%npres(6000)) = [-23.489736557006836, ..., -1.6323620080947876] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 9.116660104683303e-08,
+ 'mean': 7.378125643553588e-08,
+ 'median': 7.361039191165976e-08,
+ 'mid_range': 7.467777282518251e-08,
+ 'minimum': 5.8188944603532006e-08,
+ 'range': 3.297765644330102e-08,
+ 'root_mean_square': 7.402504604231565e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 6.002802708789028e-09}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.2807 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_650_699-v1000.nc
+
+_____ Start of colocation iteration with file number 13 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_700_749-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1223 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.6243 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(5040)) K
+Auxiliary coords: latitude(ncdim%npres(5040)) = [63.69267272949219, ..., 89.53279876708984] degree_north
+                : longitude(ncdim%npres(5040)) = [-45.68848419189453, ..., 122.72491455078125] degree_east
+                : time(ncdim%npres(5040)) = [2017-07-03 21:45:18, ..., 2017-07-03 21:50:52]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.497 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.497 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.3586 _____
+
+Applied override to observational times, now have: time(5040) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:05:34]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.1325 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0017 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.2522 _____
+
+Halo reduced to keep subspace within axis limits
+Halo reduced to keep subspace within axis limits
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.9602 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.1244 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 5040
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(5040)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(5040)) = [63.69267272949219, ..., 89.53279876708984] degree_north
+                : longitude(ncdim%npres(5040)) = [-45.68848419189453, ..., 122.72491455078125] degree_east
+                : time(ncdim%npres(5040)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:05:34]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(5040)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(5040)) = [63.69267272949219, ..., 89.53279876708984] degree_north
+                : longitude(ncdim%npres(5040)) = [-45.68848419189453, ..., 122.72491455078125] degree_east
+                : time(ncdim%npres(5040)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:05:34]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 5040): [[0.0, ..., --]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(5040)) 1
+Auxiliary coords: latitude(ncdim%npres(5040)) = [63.69267272949219, ..., 89.53279876708984] degree_north
+                : longitude(ncdim%npres(5040)) = [-45.68848419189453, ..., 122.72491455078125] degree_east
+                : time(ncdim%npres(5040)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:05:34]
+
+The final result field has data statistics of:
+
+{'maximum': 1.196347565830073e-07,
+ 'mean': 7.704603662601549e-08,
+ 'median': 7.251148044493921e-08,
+ 'mid_range': 8.64147670496119e-08,
+ 'minimum': 5.3194777516216473e-08,
+ 'range': 6.643997906679083e-08,
+ 'root_mean_square': 7.825958386724114e-08,
+ 'sample_size': 5032,
+ 'standard_deviation': 1.372846339895445e-08}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.4203 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_700_749-v1000.nc
+
+_____ Start of colocation iteration with file number 14 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_050_099-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1481 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.7736 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [52.759822845458984, ..., 35.00285339355469] degree_north
+                : longitude(ncdim%npres(6000)) = [-135.17489624023438, ..., -169.03524780273438] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 20:18:38, ..., 2017-07-03 20:25:16]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.5138 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.5139 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.418 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.1123 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0012 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.2588 _____
+
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.7063 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.1458 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [52.759822845458984, ..., 35.00285339355469] degree_north
+                : longitude(ncdim%npres(6000)) = [-135.17489624023438, ..., -169.03524780273438] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [52.759822845458984, ..., 35.00285339355469] degree_north
+                : longitude(ncdim%npres(6000)) = [-135.17489624023438, ..., -169.03524780273438] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[5.858132802300655e-08, ..., 1.6150585848956235e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [52.759822845458984, ..., 35.00285339355469] degree_north
+                : longitude(ncdim%npres(6000)) = [-135.17489624023438, ..., -169.03524780273438] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 9.622931058982183e-08,
+ 'mean': 6.716525303193244e-08,
+ 'median': 6.799972570143363e-08,
+ 'mid_range': 7.297311507860598e-08,
+ 'minimum': 4.9716919567390133e-08,
+ 'range': 4.65123910224317e-08,
+ 'root_mean_square': 6.770708625583094e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 8.548585521068472e-09}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.249 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_050_099-v1000.nc
+
+_____ Start of colocation iteration with file number 15 of total 15: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_150_199-v1000.nc _____
+
+
+_____ Time taken (in s) for 'read_obs_input_data' to run: 0.1472 _____
+
+
+_____ Time taken (in s) for 'read_model_input_data' to run: 1.6876 _____
+
+
+_____ Time taken (in s) for 'get_input_fields_of_interest' to run: 0.0 _____
+
+Final pre-processed field from satellite plugin is Field: air_temperature (ncvar%t)
+--------------------------------
+Data            : air_temperature(ncdim%npres(6000)) K
+Auxiliary coords: latitude(ncdim%npres(6000)) = [7.672985076904297, ..., -11.548052787780762] degree_north
+                : longitude(ncdim%npres(6000)) = [-155.6153564453125, ..., -178.5377655029297] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-03 20:31:58, ..., 2017-07-03 20:38:36]
+
+_____ Time taken (in s) for 'satellite_plugin' to run: 0.5607 _____
+
+
+_____ Time taken (in s) for 'ensure_cf_compliance' to run: 0.5607 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+con - adding cylindrical axes
+
+_____ Time taken (in s) for 'make_preview_plots' to run: 0.382 _____
+
+Applied override to observational times, now have: time(6000) day since 2000-01-01 , with data of: [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'set_start_datetime' to run: 0.1282 _____
+
+
+_____ Time taken (in s) for 'ensure_unit_calendar_consistency' to run: 0.0009 _____
+
+
+_____ Time taken (in s) for 'check_time_coverage' to run: 0.2244 _____
+
+
+_____ Time taken (in s) for 'subspace_to_spatiotemporal_bounding_box' to run: 0.6754 _____
+
+Doing spatial regridding without using vertical levels.
+
+_____ Time taken (in s) for 'spatial_interpolation' to run: 0.118 _____
+
+Starting time interpolation step.
+Using split segments.
+
+Number of model time data points: 3
+Number of observational time sample data points: 6000
+
+Observational (aux) coord. time key is: auxiliarycoordinate2
+Model (dim) time key is: dimensioncoordinate0
+
+*** Begin iteration over pairwise 'segments'. ***
+Segments to loop over are, pairwise: [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)
+ cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)]
+
+*** Segment 0 ***
+
+Datetime endpoints for this segment are: 2017-07-20 23:00:00, 2017-07-21 00:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [7.672985076904297, ..., -11.548052787780762] degree_north
+                : longitude(ncdim%npres(6000)) = [-155.6153564453125, ..., -178.5377655029297] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 20, 23, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [0]}
+
+
+*** Segment 1 ***
+
+Datetime endpoints for this segment are: 2017-07-21 00:00:00, 2017-07-31 01:00:00.
+
+Querying with query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False))) on field:
+Field: id%UM_m01s51i010_vn1105 (ncvar%UM_m01s51i010_vn1105)
+-----------------------------------------------------------
+Data            : id%UM_m01s51i010_vn1105(time(3), air_pressure(19), ncdim%npres(6000)) 1
+Cell methods    : time(3): point
+Dimension coords: time(3) = [2017-07-20 23:00:00, 2017-07-21 00:00:00, 2017-07-31 01:00:00]
+                : air_pressure(19) = [1000.0, ..., 100.0] hPa
+Auxiliary coords: latitude(ncdim%npres(6000)) = [7.672985076904297, ..., -11.548052787780762] degree_north
+                : longitude(ncdim%npres(6000)) = [-155.6153564453125, ..., -178.5377655029297] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+
+Using subspace arguments for i=0 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [1]}
+
+Using subspace arguments for i=1 of: {'auxiliarycoordinate2': <CF Query: (wi [cftime.DatetimeGregorian(2017, 7, 21, 0, 0, 0, 0, has_year_zero=False), cftime.DatetimeGregorian(2017, 7, 31, 1, 0, 0, 0, has_year_zero=False)))>, 'dimensioncoordinate0': [2]}
+
+Final per-segment weighted value arrays are:
+[<CF Data(19, 6000): [[5.8245453093477225e-08, ..., 5.080873678026486e-08]] 1>]
+
+New history message reads: Converted from UM/PP by cf-python v3.17.0 ~ Processed using the NCAS VISION Toolkit to colocate from model data to the observational data spatio-temporal location.
+
+
+Final result field is:
+
+Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(ncdim%npres(6000)) 1
+Auxiliary coords: latitude(ncdim%npres(6000)) = [7.672985076904297, ..., -11.548052787780762] degree_north
+                : longitude(ncdim%npres(6000)) = [-155.6153564453125, ..., -178.5377655029297] degree_east
+                : time(ncdim%npres(6000)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+The final result field has data statistics of:
+
+{'maximum': 8.034833880932188e-08,
+ 'mean': 5.517965506021436e-08,
+ 'median': 5.3571959015214004e-08,
+ 'mid_range': 6.478297552508518e-08,
+ 'minimum': 4.921761224084848e-08,
+ 'range': 3.1130726568473405e-08,
+ 'root_mean_square': 5.532036247569286e-08,
+ 'sample_size': 6000,
+ 'standard_deviation': 3.943117025629124e-09}
+
+Time interpolation complete.
+
+_____ Time taken (in s) for 'time_interpolation' to run: 1.2538 _____
+
+End of colocation iteration with file: ../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_150_199-v1000.nc
+Have compound output, a FieldList of length 15
+Final Field(List) from colocation of all inputs from specified observational data path is: Field: long_name=CO MASS MIX RATIO ON PRESS LEVS (ncvar%t)
+----------------------------------------------------------
+Data            : long_name=CO MASS MIX RATIO ON PRESS LEVS(key%domainaxis0(89040)) 1
+Auxiliary coords: latitude(key%domainaxis0(89040)) = [-38.8714485168457, ..., -11.548052787780762] degree_north
+                : longitude(key%domainaxis0(89040)) = [-164.52804565429688, ..., -178.5377655029297] degree_east
+                : time(key%domainaxis0(89040)) = [2017-07-21 00:00:00, ..., 2017-07-21 00:06:38]
+
+_____ Time taken (in s) for 'create_cra_outputs' to run: 0.0 _____
+
+
+_____ Time taken (in s) for 'write_output_data' to run: 3.9622 _____
+
+traj - making a trajectory plot
+traj - plotting different colour markers based on a user set of levels
+plotting lines
+plotting markers
+con - adding cylindrical axes
+con - adding a colour bar
+
+_____ Time taken (in s) for 'make_outputs_plot' to run: 4.4011 _____
+
+
+_____ Time taken (in s) for 'main' to run: 92.1082 _____
+
