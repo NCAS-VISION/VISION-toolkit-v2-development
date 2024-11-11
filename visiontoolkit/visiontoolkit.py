@@ -203,15 +203,23 @@ def make_preview_plots(
     cfp_input_track_only_config,
     cfp_input_general_config,
     verbose,
+    index=False,
 ):
     """Generate plots of the flight track for a pre-colocation preview.
 
+    If index is provided, it is assumed there will be multiple preview plots
+    and therefore each should be labelled with the index in the name.
+
     TODO: DETAILED DOCS
     """
-    # First configure general settings for plot:
+    # First configure general settings for plot
     # Change the viewpoint to be over the UK only, with high-res map outline
     cfp.mapset(**cfp_mapset_config)
     cfp.cscale(cfp_cscale)
+    if index is False:  # distinguish it from 0, a possible index
+        index = ""  # so the name does not change
+    else:
+        index = f"_{index}"
 
     if show_plot_of_input_obs:
         # Plot *input* observational data for a preview, before doing anything
@@ -228,9 +236,15 @@ def make_preview_plots(
             equal_data_obs_field.set_data(new_data, inplace=True)
 
             # Not configurable, always use since it gives red for zero values
+            # therefore whole track will be red to make it clear it is a block
+            # colour without meaning attached
             cfp.cscale("scale28")
             cfp.gopen(
-                file=f"{outputs_dir}/{plotname_start}_obs_track_only.png")
+                file=(
+                    f"{outputs_dir}/"
+                    f"{plotname_start}_obs_track_only{index}.png"
+                )
+            )
             cfp_input_track_only_config.update(verbose=verbose)
             cfp.traj(equal_data_obs_field, **cfp_input_track_only_config)
             cfp.gclose()
@@ -239,7 +253,10 @@ def make_preview_plots(
             )  # reset for normal (default-style) plots after
         if plot_of_input_obs_track_only in (0, 2):
             cfp.gopen(
-                file=f"{outputs_dir}/{plotname_start}_obs_track_with_data.png"
+                file=(
+                    f"{outputs_dir}/"
+                    f"{plotname_start}_obs_track_with_data_{index}.png"
+                )
             )
             cfp_input_general_config.update(verbose=verbose)
             cfp.traj(obs_field, **cfp_input_general_config)
@@ -1465,6 +1482,7 @@ def main():
                 args.cfp_input_track_only_config,
                 args.cfp_input_general_config,
                 verbose,
+                index,
             )
 
 
