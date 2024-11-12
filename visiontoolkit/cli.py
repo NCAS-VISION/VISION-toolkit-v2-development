@@ -17,9 +17,21 @@ def setup_logging(verbosity):
     # to ensure the log level nevers goes below DEBUG value (10), with a
     # minimum of ERROR (40)
     numeric_log_level = 40 - (min(verbosity, 3) * 10)
-    logging.basicConfig()
-    logging.getLogger().setLevel(numeric_log_level)  # root logger e.g. for cf
-    logging.getLogger(__name__).setLevel(numeric_log_level)  # VISION logger
+
+    # logging.basicConfig()  #level=numeric_log_level)
+    # logging.getLogger(__name__).setLevel(numeric_log_level)  # VISION logger
+    # logging.getLogger().setLevel(numeric_log_level)  # root logger e.g. for cf
+
+    # Want to set all VISION toolkit and cf* library log levels, without
+    # affecting other Python module ones, so this logic is necessary since the
+    # more elegant way above doesn't seem to work whatever variation I try...
+    loggers = [
+        logging.getLogger(name) for name in logging.root.manager.loggerDict
+        if name.startswith("visiontoolkit") or name.startswith("cf")
+        or name.startswith("cfdm")  # note cf-plot does not yet have logging
+    ]
+    for logger in loggers:
+        logger.setLevel(numeric_log_level)
 
 
 def process_cli_arguments(parser):

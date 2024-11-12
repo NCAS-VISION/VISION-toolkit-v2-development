@@ -14,7 +14,7 @@ import cf
 
 import numpy as np
 
-from .cli import process_config, validate_config
+from .cli import process_config, validate_config, setup_logging
 from .constants import toolkit_banner
 from .plugins import satellite_compliance_plugin
 
@@ -35,7 +35,9 @@ def timeit(func):
         output = func(*args, **kwargs)
         endtime = time()
         totaltime = endtime - starttime
-        # TODO use logging instead of a direct print
+
+        # Note: using a print not log call here, so they always emerge. At
+        # release time we can subsume this into the logging system.
         print(
             f"\n_____ Time taken (in s) for {func.__name__!r} to run: "
             f"{round(totaltime, 4)} _____\n"
@@ -87,7 +89,7 @@ def get_files_to_individually_colocate(path):
         if os.path.isdir(filesystem_item):
             # Keep as ptint until address TODO
             # TODO deal with sub-directories under read glob
-            print(
+            logger.info(
                 "Warning, read directory includes a sub-directory. "
                 "Ignoring sub-directory cases for now."
             )
@@ -113,7 +115,7 @@ def get_files_to_individually_colocate(path):
             readable_files.append(filename)
 
 
-    logging.info(
+    logger.info(
         f"Globbed list of files to read with cf is: {pformat(readable_files)}")
 
     return readable_files
@@ -294,7 +296,7 @@ def ensure_cf_compliance(field, plugin, satellite_plugin_config=None):
     #
     # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT
     if plugin == "satellite":
-        logging.info("Starting satellite pre-processing plugin.")
+        logger.info("Starting satellite pre-processing plugin.")
 
         # If no config is provided (None), the plugin will apply defaults
         return satellite_plugin(field, config=satellite_plugin_config)
@@ -342,7 +344,7 @@ def set_start_datetime(obs_times, obs_t_identifier, new_obs_starttime):
 
     # TODO should we update the metadata to reflect the previous operation?
 
-    logger.critical(
+    logger.warning(
         f"Applied override to observational times, now have: {obs_times}, "
         f"with data of: {obs_times.data}"
     )
@@ -496,7 +498,7 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 def bounding_box_query(
         model_field, model_id, coord_tight_bounds, model_coord):
     """TODO."""
-    logging.info(
+    logger.info(
         f"Starting a bounding box query for {coord_tight_bounds} on "
         f"{model_coord} of {model_field} "
     )
@@ -868,7 +870,7 @@ def spatial_interpolation(
     )
 
     if no_vertical:
-        logging.critical(
+        logger.warning(
             f"Doing spatial regridding without using vertical levels.")
         spatially_colocated_field = model_field_bb.regrids(
             obs_field,
@@ -1019,14 +1021,14 @@ def time_subspace_per_segment(
 ):
     """TODO."""
     # Define the pairwise segment datetime endpoints
-    logger.critical(f"Datetime endpoints for this segment are: {t1}, {t2}.\n")
+    logger.info(f"Datetime endpoints for this segment are: {t1}, {t2}.\n")
 
     # Define a query which will find any datetimes within these times
     # to map all observational times to the appropriate segment, later.
     q = cf.wi(
         cf.dt(t1), cf.dt(t2), open_upper=True
     )  # TODO is cf.dt wrapping necessary?
-    logger.critical(f"Querying with query: {q} on field:\n{m}\n")
+    logger.info(f"Querying with query: {q} on field:\n{m}\n")
 
     # Subspace the observational times to match the segments above,
     # namely using the query created above.
@@ -1038,7 +1040,7 @@ def time_subspace_per_segment(
         obs_time_key: q,
         model_time_key: [index],
     }
-    logger.critical(
+    logger.info(
         f"\nUsing subspace arguments for i=0 of: {s0_subspace_args}\n"
     )
     s0 = m.subspace(**s0_subspace_args)
@@ -1047,7 +1049,7 @@ def time_subspace_per_segment(
         obs_time_key: q,
         model_time_key: [index + 1],
     }
-    logger.critical(
+    logger.info(
         f"Using subspace arguments for i=1 of: {s1_subspace_args}\n"
     )
     s1 = m.subspace(**s1_subspace_args)
@@ -1119,9 +1121,9 @@ def time_interpolation(
 
     TODO: DETAILED DOCS
     """
-    logger.critical("Starting time interpolation step.")
+    logger.info("Starting time interpolation step.")
     if split_segments:
-        logger.critical("Using split segments.\n")
+        logger.info("Using split segments.\n")
 
     # Setup ready for iteration...
     m = spatially_colocated_field.copy()
@@ -1140,12 +1142,12 @@ def time_interpolation(
     model_times_len = len(model_times.data)
     obs_times_len = len(obs_times.data)
 
-    logger.critical(
+    logger.info(
         f"Number of model time data points: {model_times_len}\n"
         f"Number of observational time sample data points: {obs_times_len}\n"
     )
-    logger.critical(f"Observational (aux) coord. time key is: {obs_time_key}")
-    logger.critical(f"Model (dim) time key is: {model_time_key}\n")
+    logger.info(f"Observational (aux) coord. time key is: {obs_time_key}")
+    logger.info(f"Model (dim) time key is: {model_time_key}\n")
 
     # Empty objects ready to populate - TODO make these FieldLists if approp.?
     v_w = []
@@ -1154,14 +1156,14 @@ def time_interpolation(
     # Chop the flight path up into these *segments* and do a weighted merge
     # of data from segments adjacent in the model times to form the final
     # time-interpolated value.
-    logger.critical(
+    logger.info(
         "*** Begin iteration over pairwise 'segments'. ***\n"
         f"Segments to loop over are, pairwise: {model_times.datetime_array}"
     )
     # Note the length of (pairwise(model_times.datetime_array) is equal to
     # model_times_len - 1 by its nature, e.g. A, B, C -> (A, B), (B, C)).
     for index, (t1, t2) in enumerate(pairwise(model_times.datetime_array)):
-        logger.critical(f"\n*** Segment {index} ***\n")
+        logger.info(f"\n*** Segment {index} ***\n")
         # Rarely, when we apply a halo and the start or end time is on the
         # boundary where there is a model time point, there will be no
         # points captured by the outermost subspaces. Therefore, for the
@@ -1222,8 +1224,8 @@ def time_interpolation(
     #       Eventually we will add an extrapolation option whereby user can
     #       choose to extrapolate as well as interpolate, and therefore assign
     #       values to the masked ones.
-    logger.critical("Final per-segment weighted value arrays are:")
-    logger.critical(pformat(v_w))
+    logger.info("Final per-segment weighted value arrays are:")
+    logger.info(pformat(v_w))
 
     if not v_w:
         raise ValueError("Empty weights array, something went wrong!")
@@ -1231,7 +1233,7 @@ def time_interpolation(
     # get the full set of model-to-obs co-located data.
     if len(v_w) > 1:  # TODO is this just a hack?
         concatenated_weighted_values = cf.Data.concatenate(v_w)
-        logger.critical(
+        logger.info(
             "\nFinal concatenated weighted value array is: "
             f"{concatenated_weighted_values.array}, with length: "
             f"{len(concatenated_weighted_values)}\n"
@@ -1261,7 +1263,7 @@ def time_interpolation(
     # correct.
     final_result_field = obs_field.copy()
 
-    logging.info(
+    logger.info(
         f"Concatenated weighted values are: {concatenated_weighted_values}"
     )
 
@@ -1286,19 +1288,19 @@ def time_interpolation(
         " ~ " + history_message
     )  # include divider to previous critical
     final_result_field.set_property("history", history_details)
-    logger.critical(
+    logger.info(
         "\nNew history message reads: "
         f"{final_result_field.get_property('history')}\n"
     )
 
-    logger.critical("\nFinal result field is:\n" f"\n{final_result_field}\n")
-    logger.critical("The final result field has data statistics of:\n")
-    logger.critical(pformat(final_result_field.data.stats()))
+    logger.info("\nFinal result field is:\n" f"\n{final_result_field}\n")
+    logger.info("The final result field has data statistics of:\n")
+    logger.info(pformat(final_result_field.data.stats()))
 
     # TODO: consider whether or not to persist the regridded / time interp.
     # before the next stage, or to do in a fully lazy way.
 
-    logger.critical("\nTime interpolation complete.")
+    logger.info("\nTime interpolation complete.")
 
     return final_result_field
 
@@ -1351,6 +1353,7 @@ def make_outputs_plot(
 
     TODO: DETAILED DOCS
     """
+    cfp_output_general_config.update(verbose=verbose)
 
     # Upgrade the aux coor to a dim coor, so we can plot the trajectory.
     # TODO: avoid doing this, as is not 'proper', when there is a way to
@@ -1385,9 +1388,6 @@ def make_outputs_plot(
     if cfp_output_levs_config:
         cfp.levs(**cfp_output_levs_config)
 
-    # TODO issue with 'cfp_output_general_config', causes blank plot output
-    # when set - fix!
-    cfp_output_general_config.update(verbose=verbose)
     # Note the set start time of the obs on the plot title as key info.
     if new_obs_starttime:
         update_title = f"assuming starting time of {new_obs_starttime}"
@@ -1433,20 +1433,21 @@ def main():
     interpolation_method = (
         args.spatial_colocation_method or args.regrid_method)
 
+    # Need to do this again here to pick up on this module's logger
+    ###setup_logging(verbose)
+
     # 2. Start colocating the indivdual files to read (which may just be one
     # file in many cases)
     read_file_list = get_files_to_individually_colocate(args.obs_data_path)
     length_read_file_list = len(read_file_list)
-    #logging.info(
-    print(f"Read file list has length: {length_read_file_list}")
+    logger.info(f"Read file list has length: {length_read_file_list}")
     if not read_file_list:
         raise ValueError(
             f"Bad path, nothing readable by cf: {args.obs_data_path}")
 
     output_fields = cf.FieldList()
     for index, file_to_colocate in enumerate(read_file_list):
-        #logging.info
-        print(
+        logger.info(
             "\n_____ Start of colocation iteration with file number "
             f"{index + 1} of total {length_read_file_list}: "
             f"{file_to_colocate} _____\n")
@@ -1550,8 +1551,7 @@ def main():
             split_segments=split_segments,
         )
 
-        #logging.info
-        print(f"End of colocation iteration with file: {file_to_colocate}")
+        logger.info(f"End of colocation iteration with file: {file_to_colocate}")
         output_fields.append(final_result_field)
 
     # 3. Post-processing of co-located results and prepare outputs
@@ -1563,20 +1563,20 @@ def main():
         # Concatenate the fields now since they should all constitute one
         # DSG feature.
         output = output_fields.concatenate()
-        print(
+        logger.info(
             f"Have compound output, a FieldList of length {len(output_fields)}"
         )
     else:
         output = output_fields[0]  # unpack to field in this case
-        print(
+        logger.info(
             "Have singular output i.e. just one result field."
         )
-        print(
+        logger.info(
         "Final pre-concatenated fieldlist from colocation of all inputs "
         f"from specified observational data path is: {output_fields}"
     )
 
-    print(
+    logger.info(
         "Final Field(List) from colocation of all inputs from specified "
         f"observational data path is: {output}"
     )

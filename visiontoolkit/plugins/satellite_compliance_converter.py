@@ -30,10 +30,9 @@ def satellite_compliance_plugin(fieldlist, config=None):
 
     Configuration may be provided to override the defaults.
     """
-    # print(
-    #     #logging.info(
-    #     f"Before pre-processing, fieldlist to satellite plugin is {fieldlist}"
-    # )
+    logger.info(
+        f"Before pre-processing, fieldlist to satellite plugin is {fieldlist}"
+    )
 
     plugin_config = PLUGIN_CONFIG_DEFAULTS
     if config:
@@ -49,11 +48,11 @@ def satellite_compliance_plugin(fieldlist, config=None):
             if config_key in plugin_config:
                 plugin_config[config_key] = config_value
             else:
-                logging.warning(
+                logger.warning(
                     f"Unrecognised satellite plugin config. item: {config_key}"
                 )
 
-    logging.info(
+    logger.info(
         f"Final configuration for satellite plugin is {pformat(plugin_config)}"
     )
 
@@ -117,7 +116,7 @@ def satellite_compliance_plugin(fieldlist, config=None):
     s.set_construct(cf.AuxiliaryCoordinate(source=time))
     s.set_property("featureType", "trajectory")
 
-    logging.critical(
+    logger.info(
         f"Final pre-processed field from satellite plugin is {s}")
 
     return s
