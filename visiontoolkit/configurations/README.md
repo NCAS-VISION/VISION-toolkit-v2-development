@@ -58,7 +58,9 @@ TODO the same case as above but testing/exploring more config. options
 * um-satellite-7.json: adds trivial satellite-plugin-config value. TODO apply actual not trivial
    satellite plugin setting i.e. to change a variable name to process from the default.
 * um-satellite-8.json: whole orbit worth of swaths (multiple satellite datasets i.e.
-   read form of `20170703201158z_20170703215054z_*.nc`
+   read form of (ending) `20170703201158z_20170703215054z_*.nc`
+* um-satellite-8.json: multiple whole orbits worth of swaths (multiple satellite datasets i.e.
+   read form of (ending) `201707032*.nc` corresponding to three full orbits.
 
 TODO the same case as above but testing/exploring more config. options
 
