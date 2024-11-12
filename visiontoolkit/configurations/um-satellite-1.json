@@ -1,0 +1,29 @@
+{
+    "start-time-override": "2017-07-17 03:14:15",
+    "show-plot-of-input-obs": false,
+    "obs-data-path":"../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc",
+    "model-data-path":"../data/main-workwith-test-ISO-simulator/Model_Input",
+    "preprocess-mode-obs":"satellite",
+    "chosen-obs-fields":false,
+    "chosen-model-fields":-2,
+    "outputs-dir":"cf-script-outputs/um-satellite-1",
+    "output-file-name":"um_satellite_1_vision_result.nc",
+    "skip-all-plotting":false,
+    "cfp-mapset-config":{
+        "resolution":"10m",
+        "proj":"spstere",
+        "boundinglat":-60,
+        "lon_0":0
+    },
+    "cfp-input-levs-config":{
+        "min":-5,
+        "max":55,
+        "step":5
+    },
+    "cfp-output-levs-config":{
+        "min":5.5e-08,
+        "max":6.5e-08,
+        "step":0.05e-08
+    },
+    "cfp-cscale":"inferno"
+}

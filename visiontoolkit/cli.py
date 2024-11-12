@@ -7,7 +7,31 @@ from pprint import pformat
 
 from .constants import CONFIG_DEFAULTS
 
+
 logger = logging.getLogger(__name__)
+
+
+def setup_logging(verbosity):
+    """Configure the package log level assuming CLI counted '-v' flag input."""
+    # Maximum of 3 (-vvv i.e. -v -v -v) calls to have an effect, use min()
+    # to ensure the log level nevers goes below DEBUG value (10), with a
+    # minimum of ERROR (40)
+    numeric_log_level = 40 - (min(verbosity, 3) * 10)
+
+    # logging.basicConfig()  #level=numeric_log_level)
+    # logging.getLogger(__name__).setLevel(numeric_log_level)  # VISION logger
+    # logging.getLogger().setLevel(numeric_log_level)  # root logger e.g. for cf
+
+    # Want to set all VISION toolkit and cf* library log levels, without
+    # affecting other Python module ones, so this logic is necessary since the
+    # more elegant way above doesn't seem to work whatever variation I try...
+    loggers = [
+        logging.getLogger(name) for name in logging.root.manager.loggerDict
+        if name.startswith("visiontoolkit") or name.startswith("cf")
+        or name.startswith("cfdm")  # note cf-plot does not yet have logging
+    ]
+    for logger in loggers:
+        logger.setLevel(numeric_log_level)
 
 
 def process_cli_arguments(parser):
@@ -22,6 +46,7 @@ def process_cli_arguments(parser):
     parser.add_argument(
         "-v",
         "--verbose",
+        default=0,  # in this case can't set default later else NoneType issues
         action="count",
         help=(
             "provide more detailed output, where multiple calls will "
@@ -38,6 +63,27 @@ def process_cli_arguments(parser):
             "configuration file in JSON format to supply configuration, "
             "which overrides any configuration provided by other "
             "command-line options, if duplication of input occurs"
+        ),
+    )
+    parser.add_argument(
+        "-p",
+        "--preprocess-mode-obs",
+        action="store",
+        help=(
+            "specify a pre-processing mode so a set plugin is applied "
+            "to pre-process the observational data in an apprpriate way, "
+            "current options being 'flight' and 'satellite' where by default "
+            "we apply no pre-processing"
+        ),
+    )
+    parser.add_argument(
+        "--preprocess-mode-model",
+        action="store",
+        help=(
+            "specify a pre-processing mode so a set plugin is applied "
+            "to pre-process the model data in an apprpriate way, current "
+            "options being 'UM' and 'WRF' where by default we apply no "
+            "pre-processing"
         ),
     )
     parser.add_argument(
@@ -121,22 +167,26 @@ def process_cli_arguments(parser):
         ),
     )
     parser.add_argument(
-        "-r",
-        "--regrid-method",
+        "-i",
+        "--spatial-colocation-method",
         action="store",
+        # Note: the temporal colocation is always linear, even if the spatial
+        # colocation isn't, so there is no equivalent option for temporal case
         help=(
-            "regridding interpolation method to apply, see 'method' "
-            "parameter to 'cf.regrids' method for options: "
+            "interpolation method to apply for the spatial colocation, see "
+            "'method' parameter to "
+            "'cf.regrids' method used under-the-hood to do this for options: "
             "https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html"
         ),
     )
     parser.add_argument(
         "-z",
-        "--regrid-z-coord",
+        "--vertical-colocation-coord",
         action="store",
         help=(
             "vertical (z) coordinate to use as the vertical component in "
-            "the spatial interpolation step"
+            "the spatial interpolation step of colocation, where either "
+            "a pressure or an altitude CF standard name is expected"
         ),
     )
     parser.add_argument(
@@ -154,7 +204,6 @@ def process_cli_arguments(parser):
         help="initial text to use in the names of all plots generated",
     )
     parser.add_argument(
-        "-p",
         "--show-plot-of-input-obs",
         action="store_true",
         help=(
@@ -243,6 +292,46 @@ def process_cli_arguments(parser):
             "https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars"
             "[TODO CLARIFY/SEPARATE SETVARS AND PLOT CALL CONFIG.]"
         ),
+    ),
+    # Plugin specific config. items - each has no effect if not applying
+    # the relevant plugin through setting the relevant string value for
+    # the preprocess-mode-obs and/or
+    # preprocess-mode-model plugin specifying configuration items.
+    parser.add_argument(
+        "--satellite-plugin-config",
+        action="store",
+        help=(
+            "dictionary to set the configuration values for the satellite "
+            "plugin, where valid keys to set are 'latitude', 'longitude', "
+            "'sensingtime', 'do_retrieval', 'sensingtime_msec', "
+            "'sensingtime_day', 'npres' and 'npi'."
+        ),
+    )
+
+    # Effectively deprecated CLI input names - these have been replaced by
+    # better names for the same item, but to allow folk to continue to use
+    # the under-development toolkit at a 'frozen API' stage, keep them as
+    # working alternatives (the logic accepts either at present). Before the
+    # first proper release these will be removed as possibilities.
+    parser.add_argument(
+        "--regrid-z-coord",
+        action="store",
+        help=(
+            "NOW DEPRECATED: use '--vertical-colocation-coord' instead. "
+            "[vertical (z) coordinate to use as the vertical component in "
+            "the spatial interpolation step]"
+        ),
+    )
+    parser.add_argument(
+        "-r",
+        "--regrid-method",
+        action="store",
+        help=(
+            "NOW DEPRECATED: use '--spatial-colocation-method' instead. "
+            "regridding interpolation method to apply, see 'method' "
+            "parameter to 'cf.regrids' method for options: "
+            "https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html"
+        ),
     )
 
 
@@ -278,6 +367,11 @@ def process_config():
     # otherwise constant default values as defaults to the CLI arguments
     # to fill in whatever is not provided from the command.
     parsed_args = parser.parse_args()
+
+    # Configure logging - do this now since otherwise folowing log messages
+    # get missed!
+    setup_logging(parsed_args.verbose)
+
     logger.info(
         f"Parsed CLI configuration arguments are:\n{pformat(parsed_args)}\n"
     )
@@ -289,6 +383,8 @@ def process_config():
     logger.debug(
         f"Default configuration is:\n{pformat(CONFIG_DEFAULTS)}\n"
     )
+
+
 
     # 2.  Get configuration from file
     config_file = parsed_args.config_file

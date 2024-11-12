@@ -26,8 +26,12 @@ CONFIG_DEFAULTS = {
     # If these are set to False, then the whole FieldList will be taken.
     # Otherwise should be set to a valid index or slice, to be taken on the
     # FieldList.
+    # TODO allow this to be a filter keyword, too! If is a string assume this?
     "chosen-obs-fields": False,
     "chosen-model-fields": False,
+    # Pre-processing modes
+    "preprocess-mode-obs": None,
+    "preprocess-mode-model": None,
     # *** Output choices ***
     # A given directory must exist already, if specified.
     "outputs-dir": ".",
@@ -39,14 +43,16 @@ CONFIG_DEFAULTS = {
     ),
     # *** Subspacing options ***
     "halo-size": 1,
-    # *** Regridding options, to configure the 4D interpolation ***
-    "regrid-method": "linear",
+    # *** Interpolation options, to configure the 4D interpolation ***
+    "spatial-colocation-method": "linear",
     # Note this option except in rare cases won't be required, as should almost
     # always be able to determine what z-coordinate want given it must be
     # present in both the model and the observational data, so match those.
     # Only if both data have more than one of identical z-coord do we need
     # to ask for this info.
-    "regrid-z-coord": None,  # default to None given above note
+    # Pressure will always be the ideal case, so that is our default and if
+    # it can't be found, we look for other ways forward for the vertical.
+    "vertical-colocation-coord": "air_pressure",
     "source-axes": False,
     # *** Plotting: what to plot and how to minimally configure it ***
     "plotname-start": "vision_toolkit",
@@ -90,3 +96,39 @@ CONFIG_DEFAULTS = {
         "title": "Result: model co-located onto observational path",
     },
 }
+
+
+def toolkit_banner():
+    """Provide an optional report of environment and diagnostics.
+
+    TODO: DETAILED DOCS
+    """
+    # Use short variable names here to not clog up ASCII art preview below
+    bhc = "\033[31m"  # bhc == banner_highlight_colour
+    bfc = "\33[34m"  # bfc == banner_foreground_colour
+    # Leave this at end so that the toolkit STDOUT gets this colour to
+    # distinguish from other terminal text.
+    rsc = "\33[32m"
+
+    # ASCII text art was created using: http://www.patorjk.com/software/taag
+    # Note '\' characters need to be escaped twice to avoid a warning of:
+    # 'SyntaxWarning: invalid escape sequence', which makes the preview
+    # less clear as to the overall ASCII art output, but is necessary.
+    banner_text = f"""{bfc}
+.______________________________________________.
+|{bhc}   _     _  _   ______  _  _______  _______   {bfc}|
+|{bhc}  (_)   (_)| | / _____)| |(_______)(_______)  {bfc}|
+|{bhc}   _     _ | |( (____  | | _     _  _     _   {bfc}|
+|{bhc}  | |   | || | \\____ \\ | || |   | || |   | |  {bfc}|
+|{bhc}   \\ \\ / / | | _____) )| || |___| || |   | |  {bfc}|
+|{bhc}    \\___/  |_|(______/ |_| \\_____/ |_|   |_|  {bfc}|
+|   _______             _   _      _           {bfc}|
+|  (_______)           | | | |    (_)   _      {bfc}|
+|      _   ___    ___  | | | |  _  _  _| |_    {bfc}|
+|     | | / _ \\  / _ \\ | | | |_/ )| |(_   _)   {bfc}|
+|     | || |_| || |_| || | |  _ ( | |  | |_    {bfc}|
+|     |_| \\___/  \\___/  \\_)|_| \\_)|_|   \\__)   {bfc}|
+.______________________________________________.{rsc}
+    """
+
+    return banner_text

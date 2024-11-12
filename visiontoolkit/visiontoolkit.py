@@ -1,15 +1,22 @@
 import functools
 import logging
+import os
 import sys
+
+from glob import glob
 from itertools import pairwise  # requires Python 3.10+
 from pprint import pformat
 from time import time
 
-import cf
+# NOTE: keep this order (cfp then cf imported) to avoid Seg Fault issues
 import cfplot as cfp
+import cf
+
 import numpy as np
 
-from .cli import process_config, validate_config
+from .cli import process_config, validate_config, setup_logging
+from .constants import toolkit_banner
+from .plugins import satellite_compliance_plugin
 
 
 # ----------------------------------------------------------------------------
@@ -17,17 +24,6 @@ from .cli import process_config, validate_config
 # ----------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
-
-
-def setup_logging(verbosity):
-    """Configure the package log level assuming CLI counted '-v' flag input."""
-    # Maximum of 3 (-vvv i.e. -v -v -v) calls to have an effect, use min()
-    # to ensure the log level nevers goes below DEBUG value (10), with a
-    # minimum of ERROR (40)
-    numeric_log_level = 40 - (min(verbosity, 3) * 10)
-    logging.basicConfig()
-    logging.getLogger().setLevel(numeric_log_level)  # root logger e.g. for cf
-    logging.getLogger(__name__).setLevel(numeric_log_level)  # VISION logger
 
 
 def timeit(func):
@@ -39,7 +35,9 @@ def timeit(func):
         output = func(*args, **kwargs)
         endtime = time()
         totaltime = endtime - starttime
-        # TODO use logging instead of a direct print
+
+        # Note: using a print not log call here, so they always emerge. At
+        # release time we can subsume this into the logging system.
         print(
             f"\n_____ Time taken (in s) for {func.__name__!r} to run: "
             f"{round(totaltime, 4)} _____\n"
@@ -63,41 +61,6 @@ class CFComplianceIssue(Exception):
 # ----------------------------------------------------------------------------
 # Main functions
 # ----------------------------------------------------------------------------
-def print_toolkit_banner():
-    """Provide an optional report of environment and diagnostics.
-
-    TODO: DETAILED DOCS
-    """
-    # Use short variable names here to not clog up ASCII art preview below
-    bhc = "\033[31m"  # bhc == banner_highlight_colour
-    bfc = "\33[34m"  # bfc == banner_foreground_colour
-    # Leave this at end so that the toolkit STDOUT gets this colour to
-    # distinguish from other terminal text.
-    rsc = "\33[32m"
-
-    # ASCII text art was created using: http://www.patorjk.com/software/taag
-    # Note '\' characters need to be escaped twice to avoid a warning of:
-    # 'SyntaxWarning: invalid escape sequence', which makes the preview
-    # less clear as to the overall ASCII art output, but is necessary.
-    banner_text = f"""{bfc}
-.______________________________________________.
-|{bhc}   _     _  _   ______  _  _______  _______   {bfc}|
-|{bhc}  (_)   (_)| | / _____)| |(_______)(_______)  {bfc}|
-|{bhc}   _     _ | |( (____  | | _     _  _     _   {bfc}|
-|{bhc}  | |   | || | \\____ \\ | || |   | || |   | |  {bfc}|
-|{bhc}   \\ \\ / / | | _____) )| || |___| || |   | |  {bfc}|
-|{bhc}    \\___/  |_|(______/ |_| \\_____/ |_|   |_|  {bfc}|
-|   _______             _   _      _           {bfc}|
-|  (_______)           | | | |    (_)   _      {bfc}|
-|      _   ___    ___  | | | |  _  _  _| |_    {bfc}|
-|     | | / _ \\  / _ \\ | | | |_/ )| |(_   _)   {bfc}|
-|     | || |_| || |_| || | |  _ ( | |  | |_    {bfc}|
-|     |_| \\___/  \\___/  \\_)|_| \\_)|_|   \\__)   {bfc}|
-.______________________________________________.{rsc}
-    """
-
-    print(banner_text)
-
 
 def get_env_and_diagnostics_report():
     """Provide an optional report of environment and diagnostics.
@@ -108,6 +71,54 @@ def get_env_and_diagnostics_report():
         "Using Python and CF environment of:\n"
         f"{cf.environment(display=False)}\n"
     )
+
+
+@timeit
+def get_files_to_individually_colocate(path):
+    """TODO."""
+
+    # Basically copying logic here from cf-python read globbing,
+    # because we need to get a list of files to separately loop through
+    # to do colocation on, but once a globbed read is done the fields are
+    # all put into one fieldlist so we can't do a globbed read and go from
+    # there. But we do need to check the list of files to read are valid
+    # up-front, so use the same logic as cf-python (I have taken the liberty
+    # of improving the variable names and adding some commenting.)
+    files = glob(path)
+    for filesystem_item in files:
+        if os.path.isdir(filesystem_item):
+            # Keep as ptint until address TODO
+            # TODO deal with sub-directories under read glob
+            logger.info(
+                "Warning, read directory includes a sub-directory. "
+                "Ignoring sub-directory cases for now."
+            )
+
+    readable_files = []
+    # TODO for now we assume that all of the files under the given
+    # path are valid files to read, e.g. netCDF or PP. If they can't be read,
+    # assume they are not relevant. We can update this to a better way later.
+    for filename in files:
+        logger.info(f"Found file name from glob: {filename}")
+        readable = True
+
+        # TODO this method to read to check will be slow, find a better way
+        try:
+            # Turn off verbosity since this is just a preliminary/test read
+            with cf.log_level(0):
+                cf.read(filename)
+        except:
+            readable = False
+            logger.warning(
+                f"Glob includes file {filename} which cannot be read by cf.")
+        if readable:
+            readable_files.append(filename)
+
+
+    logger.info(
+        f"Globbed list of files to read with cf is: {pformat(readable_files)}")
+
+    return readable_files
 
 
 @timeit
@@ -171,11 +182,14 @@ def get_input_fields_of_interest(
 
     TODO: DETAILED DOCS
     """
-    # Take only relevant fields from the list of fields read in
-    obs_field = obs_data[chosen_obs_fields]
-    model_field = model_data[chosen_model_fields]
+    if chosen_obs_fields is not False:  # distinguish from 0 etc.
+        # Take only relevant fields from the list of fields read in
+        obs_data = obs_data[chosen_obs_fields]
 
-    return obs_field, model_field
+    if chosen_model_fields is not False:
+        model_data = model_data[chosen_model_fields]
+
+    return obs_data, model_data
 
 
 @timeit
@@ -191,15 +205,23 @@ def make_preview_plots(
     cfp_input_track_only_config,
     cfp_input_general_config,
     verbose,
+    index=False,
 ):
     """Generate plots of the flight track for a pre-colocation preview.
 
+    If index is provided, it is assumed there will be multiple preview plots
+    and therefore each should be labelled with the index in the name.
+
     TODO: DETAILED DOCS
     """
-    # First configure general settings for plot:
+    # First configure general settings for plot
     # Change the viewpoint to be over the UK only, with high-res map outline
     cfp.mapset(**cfp_mapset_config)
     cfp.cscale(cfp_cscale)
+    if index is False:  # distinguish it from 0, a possible index
+        index = ""  # so the name does not change
+    else:
+        index = f"_{index}"
 
     if show_plot_of_input_obs:
         # Plot *input* observational data for a preview, before doing anything
@@ -216,9 +238,14 @@ def make_preview_plots(
             equal_data_obs_field.set_data(new_data, inplace=True)
 
             # Not configurable, always use since it gives red for zero values
+            # therefore whole track will be red to make it clear it is a block
+            # colour without meaning attached
             cfp.cscale("scale28")
             cfp.gopen(
-                file=f"{outputs_dir}/{plotname_start}_obs_track_only.png"
+                file=(
+                    f"{outputs_dir}/"
+                    f"{plotname_start}_obs_track_only{index}.png"
+                )
             )
             cfp_input_track_only_config.update(verbose=verbose)
             cfp.traj(equal_data_obs_field, **cfp_input_track_only_config)
@@ -228,7 +255,10 @@ def make_preview_plots(
             )  # reset for normal (default-style) plots after
         if plot_of_input_obs_track_only in (0, 2):
             cfp.gopen(
-                file=f"{outputs_dir}/{plotname_start}_obs_track_with_data.png"
+                file=(
+                    f"{outputs_dir}/"
+                    f"{plotname_start}_obs_track_with_data_{index}.png"
+                )
             )
             cfp_input_general_config.update(verbose=verbose)
             cfp.traj(obs_field, **cfp_input_general_config)
@@ -236,7 +266,16 @@ def make_preview_plots(
 
 
 @timeit
-def ensure_cf_compliance(obs_field, model_field):
+def satellite_plugin(fieldlist, config=None):
+    """Pre-processing of a field from a satellite swath.
+
+    Define this is own function so we can apply the timing decorator.
+    """
+    return satellite_compliance_plugin(fieldlist, config=config)
+
+
+@timeit
+def ensure_cf_compliance(field, plugin, satellite_plugin_config=None):
     """Ensure the chosen fields are CF compliant with the correct format.
 
     TODO: DETAILED DOCS
@@ -256,7 +295,26 @@ def ensure_cf_compliance(obs_field, model_field):
     # * Get orography data, separate input, as per Maria's dir.
     #
     # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT
-    pass
+    if plugin == "satellite":
+        logger.info("Starting satellite pre-processing plugin.")
+
+        # If no config is provided (None), the plugin will apply defaults
+        return satellite_plugin(field, config=satellite_plugin_config)
+
+    elif plugin == "flight":
+        raise NotImplementedError(
+            "Flight pre-processing plugin yet to be finalised.")
+
+    elif plugin == "UM":
+        raise NotImplementedError(
+            "UM pre-processing plugin yet to be finalised.")
+
+    elif plugin == "WRF":
+        raise NotImplementedError(
+            "WRF pre-processing plugin yet to be finalised.")
+
+    else:
+        return field
 
 
 @timeit
@@ -286,7 +344,7 @@ def set_start_datetime(obs_times, obs_t_identifier, new_obs_starttime):
 
     # TODO should we update the metadata to reflect the previous operation?
 
-    logger.info(
+    logger.warning(
         f"Applied override to observational times, now have: {obs_times}, "
         f"with data of: {obs_times.data}"
     )
@@ -371,24 +429,26 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
         obs_field, model_field, return_identifiers=False
     )
 
-    # Ensure the units of the obs and model datetimes are consistent - conform
-    # them if they differ (if they don't, Units setting operation is harmless).
-    obs_times_units = obs_times.Units
+    obs_times_units = obs_times.get_property("units", None)
     logger.info(f"Units on obs. time coordinate are: {obs_times_units}")
-
-    model_times_units = model_times.Units
+    model_times_units = model_times.get_property("units", None)
     logger.info(f"Units on model time coordinate are: {model_times_units}")
 
-    # Change the units on the model (not obs) times since there are fewer
-    # data points on those, meaning less converting work.
-    # ##model_times.Units = obs_times_units
+    # Ensure the units of the obs and model datetimes are consistent - conform
+    # them if they differ.
+    if obs_times_units and model_times_units:
+        same = obs_times.Units.equals(model_times.Units)
+        if not same:
+            # Change the units on the model (not obs) times since there are
+            # fewer data points on those, meaning less converting work.
+            # Will raise its own error here if units are not equivalent.
+            model_times.Units = obs_times.Units
+            logger.info(f"Unit-conformed model time coord. is: {model_times}")
 
-    logger.info(f"Unit-conformed model time coord. is: {model_times}")
-    same_units = obs_times.data.Units == model_times.data.Units
-    logger.info(
-        f"Units on observational and model time coords. are the same?: "
-        f"{same_units}\n"
-    )
+        logger.debug(
+            f"Units on observational and model time coords. are the same: "
+            f"{same}\n"
+        )
 
     # Ensure calendars are consistent, if not convert to equivalent.
     #
@@ -399,41 +459,102 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     # same).
     # TODO IGNORE FOR NOW (consistent in this case, but will need to generalise
     # for when they are not).
-    obs_calendar = obs_times.calendar
+
+    obs_calendar = obs_times.get_property("calendar", None)
     logger.info(f"Calendar on obs. time coordinate is: {obs_calendar}")
 
-    model_calendar = model_times.calendar
+    model_calendar = model_times.get_property("calendar", None)
     logger.info(f"Calendar on model time coordinate is: {model_calendar}")
 
-    # Some custom calendar consistency logic, necessary for e.g. WRF data
-    before_pg_cutoff = cf.gt(cf.dt(1582, 10, 15))
-    if (
-        obs_calendar == "standard"
-        and model_calendar == "proleptic_gregorian"
-        and before_pg_cutoff.evaluate(model_times.minimum())
-    ):
-        # 'A calendar with the Gregorian rules for leap-years extended to
-        #  dates before 1582-10-15', see:
-        # https://cfconventions.org/Data/cf-conventions/
-        # cf-conventions-1.11/cf-conventions.html#calendar
-        # so it unless the data is before 1582, e.g. very historical runs,
-        # it i equivalent to have 'standard' set (and can match up).
-        logger.info(
-            f"Changing {model_times} calendar from '{model_calendar}' to "
-            "'standard' (equivalent given all times are after 1582-10-15) "
-            "to enable the time co-location to work."
-        )
-        model_times.override_calendar("standard", inplace=True)
+    # If both have calendars defined, we need to check for consistency
+    # between these, else the datetimes aren't comparable
+    if obs_calendar and model_calendar:
+        # Some custom calendar consistency logic, necessary for e.g. WRF data
+        before_pg_cutoff = cf.gt(cf.dt(1582, 10, 15))
+        if (
+            obs_calendar == "standard"
+            and model_calendar == "proleptic_gregorian"
+            and before_pg_cutoff.evaluate(model_times.minimum())
+        ):
+            # 'A calendar with the Gregorian rules for leap-years extended to
+            #  dates before 1582-10-15', see:
+            # https://cfconventions.org/Data/cf-conventions/
+            # cf-conventions-1.11/cf-conventions.html#calendar
+            # so it unless the data is before 1582, e.g. very historical runs,
+            # it i equivalent to have 'standard' set (and can match up).
+            logger.info(
+                f"Changing {model_times} calendar from '{model_calendar}' to "
+                "'standard' (equivalent given all times are after 1582-10-15) "
+                "to enable the time co-location to work."
+            )
+            model_times.override_calendar("standard", inplace=True)
 
-    logger.debug(
-        f"Calendars on observational and model time coords. are the same?: "
-        f"{obs_times.calendar == model_times.calendar}\n"
+        logger.debug(
+            f"Calendars on observational and model time coords. are the same?: "
+            f"{obs_times.calendar == model_times.calendar}\n"
+        )
+
+
+def bounding_box_query(
+        model_field, model_id, coord_tight_bounds, model_coord):
+    """TODO."""
+    logger.info(
+        f"Starting a bounding box query for {coord_tight_bounds} on "
+        f"{model_coord} of {model_field} "
     )
+
+    obs_time_min, obs_time_max = coord_tight_bounds
+
+    # Get an array with truth values representing whether the obs values
+    # are inside or outside the region of relevance for the model field
+    # TODO use greater/less than or equal to (e.g. 'gt' or 'ge')?
+    # TODO could combine into one 'wo' to simplify, probably?
+    # Note we can't do 'wo' since for these cases there wouldn't be
+    # want zeros.
+    min_query_result = cf.lt(obs_time_min) == model_coord
+    max_query_result = cf.gt(obs_time_max) == model_coord
+
+    # Get indices of last case of index being outside of the range of the
+    # obs times fr below, and the first of it being outside from above in terms
+    # of position. +/1 will ensure we take the values immediately around.
+    # Method based on the below logic, want 2 and 4 as resulting indices:
+    #    >>> a = [1, 1, 1, 0, 0, 0, 0, 0]
+    #    >>> b = [0, 0, 0, 0, 1, 1, 1, 1]
+    #    >>> np.argmin(a)
+    #    3
+    #    >>> np.argmax(b)
+    #    4
+    # Note: originally tried np.where(a)[0][-1] and np.where(b)[0][0][5]
+    # instead of argmin/max but that will be less efficient(?)
+
+    lower_index = np.argmin(min_query_result)
+    upper_index = np.argmax(max_query_result)
+
+    # Remove 1 *only* if the index is not the first one already, else we
+    # get an index of 0-1=-1 which is the last value and will mess things up!
+    # And the same for the final index.
+    # TODO check for cyclicity considerations.
+    if lower_index != 0:
+        lower_index -= 1
+    if upper_index != model_coord.size:
+        upper_index += 1
+
+    slice_on = [lower_index, upper_index]
+
+    logger.info(
+        f"Bounding box indices are min {lower_index} and max {upper_index}")
+    # Now can do a subspace using these indices
+    model_field_after_bb = model_field.subspace(
+        "envelope", **{model_id: slice(*tuple(slice_on))})
+
+    logger.info(f"Results from bounding box query is: {model_field_after_bb}")
+
+    return model_field_after_bb
 
 
 @timeit
 def subspace_to_spatiotemporal_bounding_box(
-    obs_field, model_field, halo_size, verbose
+        obs_field, model_field, halo_size, verbose, no_vertical=False,
 ):
     """Extract only relevant data in the model field via a 4D subspace.
 
@@ -462,7 +583,8 @@ def subspace_to_spatiotemporal_bounding_box(
     # For a DSG, the spatial coordinates will always be auxiliary:
     obs_X = obs_field.auxiliary_coordinate("X")
     obs_Y = obs_field.auxiliary_coordinate("Y")
-    obs_Z = obs_field.auxiliary_coordinate("Z")
+    if not no_vertical:
+        obs_Z = obs_field.auxiliary_coordinate("Z")
 
     # Prep. towards the temporal BB component.
     # TODO: are we assuming the model and obs data are strictly increasing, as
@@ -480,7 +602,7 @@ def subspace_to_spatiotemporal_bounding_box(
     #     * a time 1D T subspace to bound it in time i.e. cover only
     #       relevant times
 
-    # Note: this requires a 'halo' config. feature introduced in
+    # Note: this requires a 'halo' plugin_config. feature introduced in
     #       cf-python 3.16.2.
     # TODO SLB: need to think about possible compications of cyclicity, etc.,
     #           and account for those.
@@ -489,16 +611,18 @@ def subspace_to_spatiotemporal_bounding_box(
 
     x_coord_tight_bounds = obs_X.data.minimum(), obs_X.data.maximum()
     y_coord_tight_bounds = obs_Y.data.minimum(), obs_Y.data.maximum()
-    z_coord_tight_bounds = obs_Z.data.minimum(), obs_Z.data.maximum()
+    if not no_vertical:
+        z_coord_tight_bounds = obs_Z.data.minimum(), obs_Z.data.maximum()
     t_coord_tight_bounds = obs_times.data.minimum(), obs_times.data.maximum()
 
     bb_kwargs = {
         "X": cf.wi(*x_coord_tight_bounds),
         "Y": cf.wi(*y_coord_tight_bounds),
-        "Z": cf.wi(*z_coord_tight_bounds),
         # Can't just use 'T' here since we might have a different name
         model_t_id: cf.wi(*t_coord_tight_bounds),
     }
+    if not no_vertical:
+        bb_kwargs["Z"] = cf.wi(*z_coord_tight_bounds)
 
     # Attempt to do a full bounding box subspace immediately (if indices call
     # works, the subspace call will work) - if it works, great! But probably it
@@ -549,15 +673,26 @@ def subspace_to_spatiotemporal_bounding_box(
             "envelope", halo_size, **bb_kwargs
         )
     else:  # more likely case, so be more careful and treat axes separately
+        # Time
         logger.info("1. Time subspace step")
         time_kwargs = {model_t_id: cf.wi(*t_coord_tight_bounds)}
-        # Now we set model_field -> model_field_bb, as this is our
-        # last separate subspace.
+
         # TODO partial also not working here - clues, clues.
-        # ##model_field_bb = model_field_bb_subspace(**time_kwargs)
-        model_field = model_field.subspace(
-            "envelope", halo_size, **time_kwargs
-        )
+        try:
+            # For the time subspace (only), we don't need a halo
+            model_field = model_field.subspace(
+                "envelope", **time_kwargs
+            )
+        except ValueError:
+            # Both times may sit inside between one model time and another
+            # and the time subspace may fail then, and we can't solve this
+            # with a halo because the subspace doesn't know what point to
+            # 'halo' around. So we need to be more clever.
+            # TODO we decided to write this into this module then move it out
+            # as a new query to cf eventually.
+            model_field = bounding_box_query(
+                model_field, model_t_id, t_coord_tight_bounds, model_times)
+
         logger.info(
             f"Time ('{model_t_id}') bounding box calculated. It is: "
             f"{model_field}"
@@ -566,89 +701,140 @@ def subspace_to_spatiotemporal_bounding_box(
         # Horizontal
         logger.info("2. Horizontal subspace step")
         # For this case where we do 3 separate subspaces, we reassign to
-        # the same field and only at the end create 'model_field_bb' variable
+        # the same field and only at the end create 'model_field_bb' variable.
         # We should be safe to do the horizontal subspacing as one
-        model_field = model_field.subspace(
-            "envelope",
-            halo_size,
-            X=cf.wi(*x_coord_tight_bounds),
-            Y=cf.wi(*y_coord_tight_bounds),
-        )
-        logger.info(
-            "Horizontal ('X' and 'Y') bounding box calculated. It is: "
-            f"{model_field}"
-        )
 
-        # Vertical
-        logger.info("3. Vertical subspace step")
-        # First, need to calculate the vertical coordinates if there are
-        # parametric vertical dimension coordinates to handle.
-        # TODO cater for case where are > 1 coord refs (ValueError for now)
-        coord_ref = model_field.coordinate_reference(default=None)
-        if not coord_ref:  # no parametric coords, simple case
-            model_field_bb = model_field.subspace(
+        # TODO do we need to ensure cyclicity set correctly, or should that
+        # be guaranteed by pre-proc or compliance reqs?
+
+        try:
+            model_field = model_field.subspace(
                 "envelope",
                 halo_size,
-                Z=cf.wi(*z_coord_tight_bounds),
+                X=cf.wi(*x_coord_tight_bounds),
+                Y=cf.wi(*y_coord_tight_bounds),
             )
+            logger.info(
+                "Horizontal ('X' and 'Y') bounding box calculated. It is: "
+                f"{model_field}"
+            )
+        except ValueError:
+            # Two possible issues here: it could be that all of the X and/or
+            # all of the Y points sit within two model X or Y points, such
+            # that we need to do a bounding box query one either or both of
+            # these OR it could be that, usually for data defined at either
+            # of the poles, the subspace is hitting a bug in cf-python whereby
+            # slices which act on cyclic axes which have near-full coverage
+            # of the possible axes values, such as cf.wi(-179, 179) for the
+            # longitude will fail. In the latter case, nothing (much) would be
+            # subspaced out anyway, so it is safe and alomost equivalent to
+            # not perform the subpace along that axes anyway.
+            #
+            # To distinguish these two cases, for now until the latter/bug is
+            # fixed, check the extent of outside of the query.
+
+            # X axis case separately
+            X = model_field.coordinate("X")
+            wo_query_x = cf.wo(*x_coord_tight_bounds) == X
+            wo_count_x = np.sum(wo_query_x.array)
+            # TODO choose right < value here, should probably be 1 but check
+            # how halo effects might influence
+            if wo_count_x < 3:  # extend by 1 each side to acount for halo effect
+                model_field = bounding_box_query(
+                    model_field, "X", x_coord_tight_bounds, X
+                )
+            # Else it is the latter/bug case so we are good to continue without
+            # the x axis subspace.
+
+            # Y axis case separately
+            Y = model_field.coordinate("Y")
+            wo_query_y = cf.wo(*y_coord_tight_bounds) == Y
+            wo_count_y = np.sum(wo_query_y.array)
+            # TODO choose right < value here, should probably be 1 but check
+            # how halo effects might influence
+            if wo_count_y < 3:  # extend by 1 each side to acount for halo effect
+                model_field = bounding_box_query(
+                    model_field, "Y", y_coord_tight_bounds, X
+                )
+            # Else it is the latter/bug case so we are good to continue without
+            # the x axis subspace.
+
+        # Vertical, if appropriate
+        # Now we set model_field -> model_field_bb, as this is our
+        # last separate subspace.
+        if no_vertical:
+            model_field_bb = model_field
             vertical_sn = False
         else:
+            logger.info("3. Vertical subspace step")
+            # First, need to calculate the vertical coordinates if there are
+            # parametric vertical dimension coordinates to handle.
+            # TODO cater for case where are > 1 coord refs (ValueError for now)
+            coord_ref = model_field.coordinate_reference(default=None)
+            if not coord_ref:  # no parametric coords, simple case
+                model_field_bb = model_field.subspace(
+                    "envelope",
+                    halo_size,
+                    Z=cf.wi(*z_coord_tight_bounds),
+                )
+                vertical_sn = False
+            else:
+                logger.info(
+                    "Need to calculate parametric vertical coordinates. "
+                    "Attempting..."
+                )
+                model_field_w_vertical = model_field.compute_vertical_coordinates()
+
+                # TODO: see Issue 802, after closure will have better way to know
+                # the vertical coordinate added by the calc, if it added it at all:
+                # https://github.com/NCAS-CMS/cf-python/issues/802
+                added_vertical = not model_field_w_vertical.equals(model_field)
+                if not added_vertical:
+                    raise ValueError("Couldn't calculate vertical coordinates.")
+
+                # If a vertical dim coord was added, we need to use that for our
+                # z coordinate from now onwards
+                # TODO move vertical calc. out of this method more generally for
+                # better processing going forward
+                # TODO handle lack of, will currently give ValueError
+                vertical_sn = model_field_w_vertical.coordinate_reference().coordinate_conversion.get_parameter(
+                    "computed_standard_name"
+                )
+                new_z_coord = model_field_w_vertical.coordinate(vertical_sn)
+                logger.info(
+                    "Added vertical coordinates from parameters: "
+                    f"{new_z_coord.dump(display=False)}."
+                )
+
+                # Reset model_field to one with vertical coord now
+                # TODO use in-place before so no need to create new one?
+                model_field = model_field_w_vertical
+                logger.info(
+                    "Model field with vertical coords is: "
+                    f"{model_field.dump(display=False)}"
+                )
+
+                # Unit conforming: convert units on new cal'd Z to obs Z units
+                # TODO can deal with further unit conformance using query units
+                # for the queries we subspace on!
+                new_z_coord.Units = obs_Z.Units
+                logger.info(
+                    "Units conformed for computed vertical coordinates:"
+                    f"{new_z_coord} with same units as {obs_Z}"
+                )
+
+                vert_kwargs = {vertical_sn: cf.wi(*z_coord_tight_bounds)}
+                # TODO: partial case commented below is breaking things here! WHY!?
+                # ## model_field = model_field_bb_subspace(**vert_kwargs)
+                model_field_bb = model_field.subspace(
+                    "envelope",
+                    halo_size,
+                    **vert_kwargs,
+                )
+
             logger.info(
-                "Need to calculate parametric vertical coordinates. "
-                "Attempting..."
+                f"Vertical ('Z') bounding box calculated. It is: {model_field_bb}"
             )
-            model_field_w_vertical = model_field.compute_vertical_coordinates()
-
-            # TODO: see Issue 802, after closure will have better way to know
-            # the vertical coordinate added by the calc, if it added it at all:
-            # https://github.com/NCAS-CMS/cf-python/issues/802
-            added_vertical = not model_field_w_vertical.equals(model_field)
-            if not added_vertical:
-                raise ValueError("Couldn't calculate vertical coordinates.")
-
-            # If a vertical dim coord was added, we need to use that for our
-            # z coordinate from now onwards
-            # TODO move vertical calc. out of this method more generally for
-            # better processing going forward
-            # TODO handle lack of, will currently give ValueError
-            vertical_sn = model_field_w_vertical.coordinate_reference().coordinate_conversion.get_parameter(
-                "computed_standard_name"
-            )
-            new_z_coord = model_field_w_vertical.coordinate(vertical_sn)
-            logger.info(
-                "Added vertical coordinates from parameters: "
-                f"{new_z_coord.dump(display=False)}."
-            )
-
-            # Reset model_field to one with vertical coord now
-            # TODO use in-place before so no need to create new one?
-            model_field = model_field_w_vertical
-            logger.info(
-                "Model field with vertical coords is: "
-                f"{model_field.dump(display=False)}"
-            )
-
-            # Unit conforming: convert units on new cal'd Z to obs Z units
-            # TODO can deal with further unit conformance using query units
-            # for the queries we subspace on!
-            new_z_coord.Units = obs_Z.Units
-            logger.info(
-                "Units conformed for computed vertical coordinates:"
-                f"{new_z_coord} with same units as {obs_Z}"
-            )
-
-            vert_kwargs = {vertical_sn: cf.wi(*z_coord_tight_bounds)}
-            # TODO: partial case commented below is breaking things here! WHY!?
-            # ## model_field = model_field_bb_subspace(**vert_kwargs)
-            model_field_bb = model_field.subspace(
-                "envelope",
-                halo_size,
-                **vert_kwargs,
-            )
-
-        logger.info(
-            f"Vertical ('Z') bounding box calculated. It is: {model_field_bb}"
-        )
 
     logger.info(
         "4D bounding box calculated. Model data with bounding box applied is: "
@@ -662,11 +848,12 @@ def subspace_to_spatiotemporal_bounding_box(
 def spatial_interpolation(
     obs_field,
     model_field_bb,
-    regrid_method,
-    regrid_z_coord,
+    interpolation_method,
+    interpolation_z_coord,
     source_axes,
     model_t_identifier,
     vertical_sn,
+    no_vertical,
 ):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
 
@@ -680,8 +867,20 @@ def spatial_interpolation(
 
     logger.info(
         "Starting spatial interpolation (regridding) step..."
-        f"WITH {model_field_bb}"
     )
+
+    if no_vertical:
+        logger.warning(
+            f"Doing spatial regridding without using vertical levels.")
+        spatially_colocated_field = model_field_bb.regrids(
+            obs_field,
+            method=interpolation_method,
+            src_axes=source_axes,
+        )
+        logger.info("\nSpatial interpolation (regridding) complete.\n")
+        logger.info(f"XY-colocated data is:\n {spatially_colocated_field}")
+
+        return spatially_colocated_field
 
     # Creating the spatial bounding box may have made some of the spatial
     # dimensions singular, which would lead to an error or:
@@ -702,8 +901,9 @@ def spatial_interpolation(
     try:
         spatially_colocated_field = model_field_bb.regrids(
             obs_field,
-            method=regrid_method,
-            z=regrid_z_coord,
+            method=interpolation_method,
+            z=interpolation_z_coord,
+            # TODO, guess we set ln_z if z is altitude not pressure?
             ln_z=True,
             src_axes=source_axes,
         )
@@ -780,7 +980,7 @@ def spatial_interpolation(
             # Do the regrids weighting operation for the 3D Z in each case
             spatially_colocated_field_comp = model_field_z_per_time.regrids(
                 obs_field,
-                method=regrid_method,
+                method=interpolation_method,
                 z=vertical_sn,
                 ln_z=True,  # TODO should we use a log here in this case?
                 src_axes=source_axes,
@@ -909,6 +1109,7 @@ def time_interpolation(
     halo_size,
     spatially_colocated_field,
     history_message,
+    split_segments=False,
 ):
     """Interpolate the flight path temporally (in time T).
 
@@ -920,7 +1121,9 @@ def time_interpolation(
 
     TODO: DETAILED DOCS
     """
-    logger.info("Starting time interpolation step.\n")
+    logger.info("Starting time interpolation step.")
+    if split_segments:
+        logger.info("Using split segments.\n")
 
     # Setup ready for iteration...
     m = spatially_colocated_field.copy()
@@ -973,7 +1176,8 @@ def time_interpolation(
         # second item in the tuple uses length of pairwise iterator being
         # equal to model_times_len - 1, so is:
         # (model_times_len - 1) - 1 - (halo_size - 1), and -1+1-1 = -1 overall.
-        if index in (halo_size - 1, model_times_len - 1 - halo_size):
+        # HACK
+        if True:  ####index in (halo_size - 1, model_times_len - 1 - halo_size):
             permit_null_subspace = True
             logger.debug(
                 "Allowing potential null-return subspace for segment emerging "
@@ -1023,21 +1227,32 @@ def time_interpolation(
     logger.info("Final per-segment weighted value arrays are:")
     logger.info(pformat(v_w))
 
+    if not v_w:
+        raise ValueError("Empty weights array, something went wrong!")
     # Concatenate the data values found above from each segment, to finally
     # get the full set of model-to-obs co-located data.
-    concatenated_weighted_values = cf.Data.concatenate(v_w)
-    logger.info(
-        "\nFinal concatenated weighted value array is: "
-        f"{concatenated_weighted_values.array}, with length: "
-        f"{len(concatenated_weighted_values)}\n"
-    )
+    if len(v_w) > 1:  # TODO is this just a hack?
+        concatenated_weighted_values = cf.Data.concatenate(v_w)
+        logger.info(
+            "\nFinal concatenated weighted value array is: "
+            f"{concatenated_weighted_values.array}, with length: "
+            f"{len(concatenated_weighted_values)}\n"
+        )
+    else:
+        # HACK, getting all 19 air pressure values for now, take first one as
+        # case whilst get working generally
+        concatenated_weighted_values = v_w[0]
+        # Note that 0th index here gives all 0 values - maybe they are all masked
+        # for that and some other indices?
+        concatenated_weighted_values = concatenated_weighted_values[
+            10, :].squeeze()
 
-    # For info, report on number of masked and unmasked data points
+    # Report on number of masked and unmasked data points for info/debugging
     masked_value_count = (
         len(concatenated_weighted_values)
         - concatenated_weighted_values.count()
     ).array[0]
-    logger.info(
+    logger.debug(
         f"Masking: {concatenated_weighted_values.count().array[0]} "
         f"non-masked values vs. {masked_value_count} masked."
     )
@@ -1047,7 +1262,19 @@ def time_interpolation(
     # reflect the new context so that the field with data set is contextually
     # correct.
     final_result_field = obs_field.copy()
-    final_result_field.set_data(concatenated_weighted_values)
+
+    logger.info(
+        f"Concatenated weighted values are: {concatenated_weighted_values}"
+    )
+
+    try:
+        final_result_field.set_data(
+            concatenated_weighted_values, inplace=True)
+    except:
+        final_result_field.set_data(
+            concatenated_weighted_values,
+            inplace=True, set_axes=False
+        )
 
     # Finally, re-set the properties on the final result field so it has model
     # data properties not obs preoprties.
@@ -1059,7 +1286,7 @@ def time_interpolation(
     history_details = final_result_field.get_property("history", default="")
     history_details += (
         " ~ " + history_message
-    )  # include divider to previous info
+    )  # include divider to previous critical
     final_result_field.set_property("history", history_details)
     logger.info(
         "\nNew history message reads: "
@@ -1108,8 +1335,8 @@ def write_output_data(final_result_field, output_path_name):
 
 
 @timeit
-def make_outputs_plots(
-    final_result_field,
+def make_outputs_plot(
+    output,
     obs_t_identifier,
     cfp_output_levs_config,
     outputs_dir,
@@ -1117,14 +1344,16 @@ def make_outputs_plots(
     new_obs_starttime,
     cfp_output_general_config,
     verbose,
+    preprocess_model=False,
 ):
-    """Generate plots of the flight track for a pre-colocation preview.
+    """Generate a post-colocation result plot of the track(s) or swath(s).
 
-    The plots may optionally be displayed duering script execution, else
+    The plot may optionally be displayed during script execution, else
     saved to disk.
 
     TODO: DETAILED DOCS
     """
+    cfp_output_general_config.update(verbose=verbose)
 
     # Upgrade the aux coor to a dim coor, so we can plot the trajectory.
     # TODO: avoid doing this, as is not 'proper', when there is a way to
@@ -1139,21 +1368,26 @@ def make_outputs_plots(
     #       massive red herring. In which case, generalise it so that the input
     #       can be a field with a 2D *or* a 1D array to plot. If 1D, it means
     #       it has a trajectory dimension leading, which can be dropped.
-    aux_coor_t = final_result_field.auxiliary_coordinate(obs_t_identifier)
-    dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
-    final_result_field.set_construct(dim_coor_t, axes="ncdim%obs")
 
-    # Set levels for plotting of data in a colourmap
-    # Min, max as determined using final_result_field.min(), .max():
-    if cfp_output_levs_config:
-        cfp.levs(**cfp_output_levs_config)
+    # WRF ONLY, TODO move underlying logic to pre-processing so as not to
+    # clog up main module
+    if preprocess_model == "WRF":
+        aux_coor_t = output.auxiliary_coordinate(obs_t_identifier)
+        dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
+        output.set_construct(dim_coor_t, axes="ncdim%obs")
 
     # Make and open the final plot
     # NOTE: can try 'legend_lines=True' for the lines plotted with average
     #       between the two scatter marker points, if preferable?
-    cfp.gopen(file=f"{outputs_dir}/{plotname_start}_final_colocated_field.png")
+    cfp.gopen(
+        file=f"{outputs_dir}/{plotname_start}_final_colocated_field.png",
+    )
 
-    cfp_output_general_config.update(verbose=verbose)
+    # Set levels for plotting of data in a colourmap
+    # Min, max as determined using output.min(), .max():
+    if cfp_output_levs_config:
+        cfp.levs(**cfp_output_levs_config)
+
     # Note the set start time of the obs on the plot title as key info.
     if new_obs_starttime:
         update_title = f"assuming starting time of {new_obs_starttime}"
@@ -1164,16 +1398,19 @@ def make_outputs_plots(
             )
         else:
             cfp_output_general_config["title"] = update_title.title()
-    cfp.traj(final_result_field, **cfp_output_general_config)
-    cfp.gclose()
 
+    cfp.traj(output, **cfp_output_general_config)
+
+    cfp.gclose()
     logger.info("Plot created.")
 
 
 @timeit
 def main():
     """Perform end-to-end model-to-observational co-location."""
-    print_toolkit_banner()
+
+    # 1. Prepare inputs and config. ready for possibly-iterative co-location
+    print(toolkit_banner())
 
     # Manage inputs from CLI and from configuration file, if present.
     args = process_config()
@@ -1186,90 +1423,175 @@ def main():
     verbose = args.verbose
     halo_size = args.halo_size
     skip_all_plotting = args.skip_all_plotting
+    preprocess_obs = args.preprocess_mode_obs
+    preprocess_model = args.preprocess_mode_model
+    # TODO: eventually remove the deprecated alternatives, but for now
+    # accept both (see cli.py end of process_cli_arguments for the listing
+    # of any deprecated options)
+    # Note that e.g. "A" or "B" evaluates to "A"
+    colocation_z_coord = args.vertical_colocation_coord or args.regrid_z_coord
+    interpolation_method = (
+        args.spatial_colocation_method or args.regrid_method)
 
-    # Configure logging
-    setup_logging(verbose)
+    # Need to do this again here to pick up on this module's logger
+    ###setup_logging(verbose)
 
-    # Process and validate inputs, including optional flight track preview plot
-    obs_data, model_data = read_input_data(
-        args.obs_data_path, args.model_data_path
-    )
-    obs_field, model_field = get_input_fields_of_interest(
-        obs_data, model_data, args.chosen_obs_fields, args.chosen_model_fields
-    )
+    # 2. Start colocating the indivdual files to read (which may just be one
+    # file in many cases)
+    read_file_list = get_files_to_individually_colocate(args.obs_data_path)
+    length_read_file_list = len(read_file_list)
+    logger.info(f"Read file list has length: {length_read_file_list}")
+    if not read_file_list:
+        raise ValueError(
+            f"Bad path, nothing readable by cf: {args.obs_data_path}")
 
-    # TODO: this has too many parameters for one function, separate out
-    if not skip_all_plotting:
-        make_preview_plots(
+    output_fields = cf.FieldList()
+    for index, file_to_colocate in enumerate(read_file_list):
+        logger.info(
+            "\n_____ Start of colocation iteration with file number "
+            f"{index + 1} of total {length_read_file_list}: "
+            f"{file_to_colocate} _____\n")
+
+        # Process and validate inputs, including optional preview plot
+        obs_data, model_data = read_input_data(
+            file_to_colocate, args.model_data_path
+        )
+        obs_field, model_field = get_input_fields_of_interest(
+            obs_data, model_data, args.chosen_obs_fields,
+            args.chosen_model_fields
+        )
+
+        # Apply any specified pre-processing: use returned fields since the
+        # input may be a FieldList which gets reduced to less fields or to one
+        if preprocess_obs:
+            obs_field = ensure_cf_compliance(
+                obs_field, preprocess_obs, args.satellite_plugin_config)
+        if preprocess_model:
+            model_field = ensure_cf_compliance(model_field, preprocess_model)
+
+        # TODO: this has too many parameters for one function, separate out
+        if not skip_all_plotting:
+            make_preview_plots(
+                obs_field,
+                args.show_plot_of_input_obs,
+                args.plot_of_input_obs_track_only,
+                outputs_dir,
+                plotname_start,
+                args.cfp_mapset_config,
+                args.cfp_cscale,
+                args.cfp_input_levs_config,
+                args.cfp_input_track_only_config,
+                args.cfp_input_general_config,
+                verbose,
+                index,
+            )
+
+
+        # Time coordinate considerations, pre-colocation
+        times, time_identifiers = get_time_coords(obs_field, model_field)
+        obs_times, model_times = times
+        obs_t_identifier, model_t_identifier = time_identifiers
+
+        new_obs_starttime = args.start_time_override
+        if new_obs_starttime:
+            # TODO can just do in-place rather than re-assign, might be best?
+            obs_times = set_start_datetime(
+                obs_times, obs_t_identifier, new_obs_starttime
+            )
+
+        # TODO apply obs_t_identifier, model_t_identifier in further logic
+        ensure_unit_calendar_consistency(obs_field, model_field)
+
+        # Ensure the model time axes covers the entire time axes span of the
+        # obs track, else we can't go forward - if so inform about this clearly
+        check_time_coverage(obs_times, model_times)
+
+        # For the satellite swath cases, ignore vertical height since it is
+        # dealt with by the averaging kernel.
+        # TODO how do we account for the averging kernel work in this case?
+        no_vertical = False
+        if preprocess_obs == "satellite":
+            no_vertical = True
+
+        # Subspacing to remove irrelavant information, pre-colocation
+        # TODO tidy passing through of computed vertical coord identifier
+        model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
+            obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
+        )
+
+        # Perform spatial and then temporal interpolation to colocate
+        spatially_colocated_field = spatial_interpolation(
             obs_field,
-            args.show_plot_of_input_obs,
-            args.plot_of_input_obs_track_only,
-            outputs_dir,
-            plotname_start,
-            args.cfp_mapset_config,
-            args.cfp_cscale,
-            args.cfp_input_levs_config,
-            args.cfp_input_track_only_config,
-            args.cfp_input_general_config,
-            verbose,
-        )
-    ensure_cf_compliance(obs_field, model_field)  # TODO currently does nothing
-
-    # Time coordinate considerations, pre-colocation
-    times, time_identifiers = get_time_coords(obs_field, model_field)
-    obs_times, model_times = times
-    obs_t_identifier, model_t_identifier = time_identifiers
-
-    new_obs_starttime = args.start_time_override
-    if new_obs_starttime:
-        # TODO can just do in-place rather than re-assign, might be best?
-        obs_times = set_start_datetime(
-            obs_times, obs_t_identifier, new_obs_starttime
+            model_field_bb,
+            interpolation_method,
+            colocation_z_coord,
+            args.source_axes,
+            model_t_identifier,
+            vertical_sn,
+            no_vertical,
         )
 
-    # TODO apply obs_t_identifier, model_t_identifier in further logic
-    ensure_unit_calendar_consistency(obs_field, model_field)
+        # For such cases as satellite swaths, the times can straddle model points
+        # so we need to chop these up into ones on each side of a model time
+        # segmentm as per our approach below.
+        split_segments = False
+        if preprocess_obs == "satellite":
+            split_segments = True
 
-    # Ensure the model time axes covers the entire time axes span of the
-    # obs track - else we can't go forward - if so inform about this clearly
-    check_time_coverage(obs_times, model_times)
+        final_result_field = time_interpolation(
+            obs_times,
+            model_times,
+            obs_t_identifier,
+            model_t_identifier,
+            obs_field,
+            model_field,
+            halo_size,
+            spatially_colocated_field,
+            args.history_message,
+            split_segments=split_segments,
+        )
 
-    # Subspacing to remove irrelavant information, pre-colocation
-    # TODO tidy passing through of computer vertical coord identifier
-    model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field, halo_size, verbose
+        logger.info(f"End of colocation iteration with file: {file_to_colocate}")
+        output_fields.append(final_result_field)
+
+    # 3. Post-processing of co-located results and prepare outputs
+    if not output_fields:
+        raise ValueError("Empty resulting FieldList: something went wrong!")
+
+    compound_output = len(output_fields) > 1
+    if compound_output:
+        # Concatenate the fields now since they should all constitute one
+        # DSG feature.
+        output = output_fields.concatenate()
+        logger.info(
+            f"Have compound output, a FieldList of length {len(output_fields)}"
+        )
+    else:
+        output = output_fields[0]  # unpack to field in this case
+        logger.info(
+            "Have singular output i.e. just one result field."
+        )
+        logger.info(
+        "Final pre-concatenated fieldlist from colocation of all inputs "
+        f"from specified observational data path is: {output_fields}"
     )
 
-    # Perform spatial and then temporal interpolation to colocate
-    spatially_colocated_field = spatial_interpolation(
-        obs_field,
-        model_field_bb,
-        args.regrid_method,
-        args.regrid_z_coord,
-        args.source_axes,
-        model_t_identifier,
-        vertical_sn,
-    )
-    final_result_field = time_interpolation(
-        obs_times,
-        model_times,
-        obs_t_identifier,
-        model_t_identifier,
-        obs_field,
-        model_field,
-        halo_size,
-        spatially_colocated_field,
-        args.history_message,
+    logger.info(
+        "Final Field(List) from colocation of all inputs from specified "
+        f"observational data path is: {output}"
     )
 
     # Create and process outputs
     create_cra_outputs()  # TODO currently does nothing
+
     # TODO improve path handling with PathLib library
     output_path_name = f"{outputs_dir}/{args.output_file_name}"
-    write_output_data(final_result_field, output_path_name)
+    write_output_data(output, output_path_name)
+
     if not skip_all_plotting:
-        make_outputs_plots(
-            final_result_field,
+        # Plot the output
+        make_outputs_plot(
+            output,
             obs_t_identifier,
             args.cfp_output_levs_config,
             outputs_dir,
@@ -1277,6 +1599,7 @@ def main():
             new_obs_starttime,
             args.cfp_output_general_config,
             verbose,
+            preprocess_model,
         )
 
 

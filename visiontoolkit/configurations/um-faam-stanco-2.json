@@ -6,7 +6,6 @@
     "chosen-model-fields":-2,
     "outputs-dir":"cf-script-outputs/um-faam-stanco-2",
     "output-file-name":"um_faam_stanco_2_vision_result.nc",
-    "regrid-z-coord":"air_pressure",
     "show-plot-of-input-obs": false,
     "plot-of-input-obs-track-only": 0,
     "cfp-mapset-config":{
