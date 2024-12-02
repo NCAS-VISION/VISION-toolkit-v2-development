@@ -495,6 +495,23 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
         )
 
 
+@timeit
+def persist_all_metadata(field):
+    """Persist all of the metadata for a field.
+    """
+    logger.warning(
+        f"Persisting data for all metadata constructs of field."
+    )
+    for construct_name, construct_obj in field.constructs().items():
+        logger.debug("Construct is", construct_name)
+        # TODO might be a better way to skip the dataless constructs below?
+        ###if hasattr(construct_obj, "persist"):
+        try:
+            construct_obj.persist(inplace=True)
+        except:
+            pass  # most efficient way to skip dataless constructs!
+
+
 def bounding_box_query(
         model_field, model_id, coord_tight_bounds, model_coord):
     """TODO."""
@@ -608,7 +625,6 @@ def subspace_to_spatiotemporal_bounding_box(
     #           and account for those.
     # Note: getting some dask arrays out instead of slices, due to Dask
     # laziness. DH to look into.
-
     x_coord_tight_bounds = obs_X.data.minimum(), obs_X.data.maximum()
     y_coord_tight_bounds = obs_Y.data.minimum(), obs_Y.data.maximum()
     if not no_vertical:
@@ -1513,11 +1529,19 @@ def main():
         if preprocess_obs == "satellite":
             no_vertical = True
 
+        # Persist stage 1
+        persist_all_metadata(obs_field)
+        persist_all_metadata(model_field)
+
         # Subspacing to remove irrelavant information, pre-colocation
         # TODO tidy passing through of computed vertical coord identifier
         model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
             obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
         )
+
+        # Persist stage 2
+        persist_all_metadata(obs_field)
+        persist_all_metadata(model_field)
 
         # Perform spatial and then temporal interpolation to colocate
         spatially_colocated_field = spatial_interpolation(
@@ -1530,6 +1554,10 @@ def main():
             vertical_sn,
             no_vertical,
         )
+
+        # Persist stage 3
+        persist_all_metadata(obs_field)
+        persist_all_metadata(model_field)
 
         # For such cases as satellite swaths, the times can straddle model points
         # so we need to chop these up into ones on each side of a model time
