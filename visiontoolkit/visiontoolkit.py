@@ -127,7 +127,16 @@ def read_obs_input_data(obs_data_path):
 
     TODO: DETAILED DOCS
     """
-    return cf.read(obs_data_path)
+    logger.info(
+        f"Observational data input location is: '{obs_data_path}'\n"
+    )
+    fl = cf.read(obs_data_path)
+
+    logger.info(
+        "Read in observational data. For example, its first field is:\n")
+    logger.info(fl[0].dump(display=False))
+
+    return fl
 
 
 @timeit
@@ -136,60 +145,28 @@ def read_model_input_data(model_data_path):
 
     TODO: DETAILED DOCS
     """
-    return cf.read(model_data_path)
-
-
-def read_input_data(obs_data_path, model_data_path):
-    """Read in all input data.
-
-    TODO: DETAILED DOCS
-    """
-    get_env_and_diagnostics_report()
-    obs_data = read_obs_input_data(obs_data_path)
-    model_data = read_model_input_data(model_data_path)
-
-    # Reporting
-    logger.info("All input data successfully read in.")
     logger.info(
-        f"\nInput data locations are:\n"
-        f"Observational data: '{obs_data_path}'\n"
-        f"Model data: '{model_data_path}'\n"
+        f"Model data input location is: '{model_data_path}'\n"
     )
-    report_about_input_data(obs_data, model_data)
+    fl = cf.read(model_data_path)
 
-    return obs_data, model_data
+    logger.info("Read in model data. For example, its first field is:\n")
+    logger.info(fl[0].dump(display=False))
 
-
-def report_about_input_data(obs_data, model_data):
-    """Read in all input data.
-
-    TODO: DETAILED DOCS
-    """
-    logger.info(f"Observational FieldList is:\n {obs_data}")
-    logger.info("For example, first observational field is:\n")
-    logger.info(obs_data[0].dump(display=False))
-
-    logger.info(f"Model FieldList is:\n {model_data}")
-    logger.info("For example, first model field is:\n")
-    logger.info(model_data[0].dump(display=False))
+    return fl
 
 
 @timeit
-def get_input_fields_of_interest(
-    obs_data, model_data, chosen_obs_fields, chosen_model_fields
-):
-    """Return fields of interest from input datasets.
+def get_input_fields_of_interest(fl, chosen_fields):
+    """Return the field(s) of interest from the input dataset.
 
     TODO: DETAILED DOCS
     """
-    if chosen_obs_fields is not False:  # distinguish from 0 etc.
+    if chosen_fields is not False:  # distinguish from 0 etc.
         # Take only relevant fields from the list of fields read in
-        obs_data = obs_data[chosen_obs_fields]
+        fl = fl[chosen_fields]
 
-    if chosen_model_fields is not False:
-        model_data = model_data[chosen_model_fields]
-
-    return obs_data, model_data
+    return fl
 
 
 @timeit
@@ -1436,9 +1413,13 @@ def make_outputs_plot(
 def main():
     """Perform end-to-end model-to-observational co-location."""
 
-    # 1. Prepare inputs and config. ready for possibly-iterative co-location
+    # Print the ASCII VISION banner - this must come before any logging!
     print(toolkit_banner())
 
+    # Env print
+    get_env_and_diagnostics_report()
+
+    # Prepare inputs and config. ready for possibly-iterative co-location
     # Manage inputs from CLI and from configuration file, if present.
     args = process_config()
     # Check all inputs are valid else error before starting toolkit logic
@@ -1472,6 +1453,13 @@ def main():
         raise ValueError(
             f"Bad path, nothing readable by cf: {args.obs_data_path}")
 
+    # Read in model outside of a loop
+    model_data = read_model_input_data(args.model_data_path)
+    model_field = get_input_fields_of_interest(
+        model_data, args.chosen_model_fields)
+    if preprocess_model:
+            model_field = ensure_cf_compliance(model_field, preprocess_model)
+
     output_fields = cf.FieldList()
     for index, file_to_colocate in enumerate(read_file_list):
         logger.info(
@@ -1480,21 +1468,14 @@ def main():
             f"{file_to_colocate} _____\n")
 
         # Process and validate inputs, including optional preview plot
-        obs_data, model_data = read_input_data(
-            file_to_colocate, args.model_data_path
-        )
-        obs_field, model_field = get_input_fields_of_interest(
-            obs_data, model_data, args.chosen_obs_fields,
-            args.chosen_model_fields
-        )
-
+        obs_data = read_obs_input_data(file_to_colocate)
+        obs_field = get_input_fields_of_interest(
+            obs_data, args.chosen_obs_fields)
         # Apply any specified pre-processing: use returned fields since the
         # input may be a FieldList which gets reduced to less fields or to one
         if preprocess_obs:
             obs_field = ensure_cf_compliance(
                 obs_field, preprocess_obs, args.satellite_plugin_config)
-        if preprocess_model:
-            model_field = ensure_cf_compliance(model_field, preprocess_model)
 
         # TODO: this has too many parameters for one function, separate out
         if not skip_all_plotting:
