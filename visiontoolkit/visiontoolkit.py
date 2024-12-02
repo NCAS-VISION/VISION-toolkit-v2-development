@@ -714,6 +714,10 @@ def subspace_to_spatiotemporal_bounding_box(
             f"{model_field}"
         )
 
+        # Persist all after first (1. Time) stage
+        persist_all_metadata(obs_field)
+        persist_all_metadata(model_field)
+
         # Horizontal
         logger.info("2. Horizontal subspace step")
         # For this case where we do 3 separate subspaces, we reassign to
@@ -782,6 +786,10 @@ def subspace_to_spatiotemporal_bounding_box(
             model_field_bb = model_field
             vertical_sn = False
         else:
+            # Persist all after second (2. Horizontal) stage
+            persist_all_metadata(obs_field)
+            persist_all_metadata(model_field)
+
             logger.info("3. Vertical subspace step")
             # First, need to calculate the vertical coordinates if there are
             # parametric vertical dimension coordinates to handle.
@@ -851,6 +859,9 @@ def subspace_to_spatiotemporal_bounding_box(
             logger.info(
                 f"Vertical ('Z') bounding box calculated. It is: {model_field_bb}"
             )
+            # Note: no need to persist at end like with stages 1-2 of BB for
+            # time and horizontal since there is a persist after this method
+            # is called.
 
     logger.info(
         "4D bounding box calculated. Model data with bounding box applied is: "
@@ -1450,7 +1461,7 @@ def main():
         args.spatial_colocation_method or args.regrid_method)
 
     # Need to do this again here to pick up on this module's logger
-    ###setup_logging(verbose)
+    setup_logging(verbose)
 
     # 2. Start colocating the indivdual files to read (which may just be one
     # file in many cases)
