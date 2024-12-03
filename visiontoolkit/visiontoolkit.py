@@ -77,6 +77,10 @@ def get_env_and_diagnostics_report():
 def get_files_to_individually_colocate(path):
     """TODO."""
 
+    logger.info(
+        "Reading in all files. Note if there are a lot of file to read "
+        "this may take a little time."
+    )
     # Basically copying logic here from cf-python read globbing,
     # because we need to get a list of files to separately loop through
     # to do colocation on, but once a globbed read is done the fields are
@@ -1410,6 +1414,134 @@ def make_outputs_plot(
 
 
 @timeit
+def colocate_single_file(
+    file_to_colocate,
+    index,
+    args,
+    preprocess_obs,
+    skip_all_plotting,
+    outputs_dir,
+    plotname_start,
+    verbose,
+    model_field,  # TODO pull this out of loop
+    halo_size,  # TODO use args instead of names since pass args in
+    interpolation_method,
+    colocation_z_coord,
+):
+    """Perform model-to-observational colocation using a single file source."""
+    logger.info(
+        f"\n_____ Start of colocation iteration with file number {index + 1}: "
+        f"{file_to_colocate} _____\n"
+    )
+
+    # Process and validate inputs, including optional preview plot
+    obs_data = read_obs_input_data(file_to_colocate)
+    obs_field = get_input_fields_of_interest(
+        obs_data, args.chosen_obs_fields)
+    # Apply any specified pre-processing: use returned fields since the
+    # input may be a FieldList which gets reduced to less fields or to one
+    if preprocess_obs:
+        obs_field = ensure_cf_compliance(
+            obs_field, preprocess_obs, args.satellite_plugin_config)
+
+    # TODO: this has too many parameters for one function, separate out
+    if not skip_all_plotting:
+        make_preview_plots(
+            obs_field,
+            args.show_plot_of_input_obs,
+            args.plot_of_input_obs_track_only,
+            outputs_dir,
+            plotname_start,
+            args.cfp_mapset_config,
+            args.cfp_cscale,
+            args.cfp_input_levs_config,
+            args.cfp_input_track_only_config,
+            args.cfp_input_general_config,
+            verbose,
+            index,
+        )
+
+    # Time coordinate considerations, pre-colocation
+    times, time_identifiers = get_time_coords(obs_field, model_field)
+    obs_times, model_times = times
+    obs_t_identifier, model_t_identifier = time_identifiers
+
+    new_obs_starttime = args.start_time_override
+    if new_obs_starttime:
+        # TODO can just do in-place rather than re-assign, might be best?
+        obs_times = set_start_datetime(
+            obs_times, obs_t_identifier, new_obs_starttime
+        )
+
+    # TODO apply obs_t_identifier, model_t_identifier in further logic
+    ensure_unit_calendar_consistency(obs_field, model_field)
+
+    # Ensure the model time axes covers the entire time axes span of the
+    # obs track, else we can't go forward - if so inform about this clearly
+    check_time_coverage(obs_times, model_times)
+
+    # For the satellite swath cases, ignore vertical height since it is
+    # dealt with by the averaging kernel.
+    # TODO how do we account for the averging kernel work in this case?
+    no_vertical = False
+    if preprocess_obs == "satellite":
+        no_vertical = True
+
+    # Persist stage 1
+    persist_all_metadata(obs_field)
+    persist_all_metadata(model_field)
+
+    # Subspacing to remove irrelavant information, pre-colocation
+    # TODO tidy passing through of computed vertical coord identifier
+    model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
+        obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
+    )
+
+    # Persist stage 2
+    persist_all_metadata(obs_field)
+    persist_all_metadata(model_field_bb)
+
+    # Perform spatial and then temporal interpolation to colocate
+    spatially_colocated_field = spatial_interpolation(
+        obs_field,
+        model_field_bb,
+        interpolation_method,
+        colocation_z_coord,
+        args.source_axes,
+        model_t_identifier,
+        vertical_sn,
+        no_vertical,
+    )
+
+    # Persist stage 3
+    persist_all_metadata(obs_field)
+    persist_all_metadata(spatially_colocated_field)
+
+    # For such cases as satellite swaths, the times can straddle model points
+    # so we need to chop these up into ones on each side of a model time
+    # segmentm as per our approach below.
+    split_segments = False
+    if preprocess_obs == "satellite":
+        split_segments = True
+
+    final_result_field = time_interpolation(
+        obs_times,
+        model_times,
+        obs_t_identifier,
+        model_t_identifier,
+        obs_field,
+        model_field,
+        halo_size,
+        spatially_colocated_field,
+        args.history_message,
+        split_segments=split_segments,
+    )
+
+    logger.info(f"End of colocation iteration with file: {file_to_colocate}")
+    return final_result_field
+
+
+@timeit
 def main():
     """Perform end-to-end model-to-observational co-location."""
 
@@ -1461,118 +1593,26 @@ def main():
             model_field = ensure_cf_compliance(model_field, preprocess_model)
 
     output_fields = cf.FieldList()
+    logger.info(
+        "\n_____ Starting colocation iteration to cover a total of "
+        f"{length_read_file_list} files."
+    )
     for index, file_to_colocate in enumerate(read_file_list):
-        logger.info(
-            "\n_____ Start of colocation iteration with file number "
-            f"{index + 1} of total {length_read_file_list}: "
-            f"{file_to_colocate} _____\n")
-
-        # Process and validate inputs, including optional preview plot
-        obs_data = read_obs_input_data(file_to_colocate)
-        obs_field = get_input_fields_of_interest(
-            obs_data, args.chosen_obs_fields)
-        # Apply any specified pre-processing: use returned fields since the
-        # input may be a FieldList which gets reduced to less fields or to one
-        if preprocess_obs:
-            obs_field = ensure_cf_compliance(
-                obs_field, preprocess_obs, args.satellite_plugin_config)
-
-        # TODO: this has too many parameters for one function, separate out
-        if not skip_all_plotting:
-            make_preview_plots(
-                obs_field,
-                args.show_plot_of_input_obs,
-                args.plot_of_input_obs_track_only,
-                outputs_dir,
-                plotname_start,
-                args.cfp_mapset_config,
-                args.cfp_cscale,
-                args.cfp_input_levs_config,
-                args.cfp_input_track_only_config,
-                args.cfp_input_general_config,
-                verbose,
-                index,
-            )
-
-
-        # Time coordinate considerations, pre-colocation
-        times, time_identifiers = get_time_coords(obs_field, model_field)
-        obs_times, model_times = times
-        obs_t_identifier, model_t_identifier = time_identifiers
-
-        new_obs_starttime = args.start_time_override
-        if new_obs_starttime:
-            # TODO can just do in-place rather than re-assign, might be best?
-            obs_times = set_start_datetime(
-                obs_times, obs_t_identifier, new_obs_starttime
-            )
-
-        # TODO apply obs_t_identifier, model_t_identifier in further logic
-        ensure_unit_calendar_consistency(obs_field, model_field)
-
-        # Ensure the model time axes covers the entire time axes span of the
-        # obs track, else we can't go forward - if so inform about this clearly
-        check_time_coverage(obs_times, model_times)
-
-        # For the satellite swath cases, ignore vertical height since it is
-        # dealt with by the averaging kernel.
-        # TODO how do we account for the averging kernel work in this case?
-        no_vertical = False
-        if preprocess_obs == "satellite":
-            no_vertical = True
-
-        # Persist stage 1
-        persist_all_metadata(obs_field)
-        persist_all_metadata(model_field)
-
-        # Subspacing to remove irrelavant information, pre-colocation
-        # TODO tidy passing through of computed vertical coord identifier
-        model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
-            obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
-        )
-
-        # Persist stage 2
-        persist_all_metadata(obs_field)
-        persist_all_metadata(model_field)
-
-        # Perform spatial and then temporal interpolation to colocate
-        spatially_colocated_field = spatial_interpolation(
-            obs_field,
-            model_field_bb,
+        file_fl_result = colocate_single_file(
+            file_to_colocate,
+            index,
+            args,
+            preprocess_obs,
+            skip_all_plotting,
+            outputs_dir,
+            plotname_start,
+            verbose,
+            model_field,  # TODO pull this out of loop
+            halo_size,  # TODO use args instead of names since pass args in
             interpolation_method,
             colocation_z_coord,
-            args.source_axes,
-            model_t_identifier,
-            vertical_sn,
-            no_vertical,
         )
-
-        # Persist stage 3
-        persist_all_metadata(obs_field)
-        persist_all_metadata(model_field)
-
-        # For such cases as satellite swaths, the times can straddle model points
-        # so we need to chop these up into ones on each side of a model time
-        # segmentm as per our approach below.
-        split_segments = False
-        if preprocess_obs == "satellite":
-            split_segments = True
-
-        final_result_field = time_interpolation(
-            obs_times,
-            model_times,
-            obs_t_identifier,
-            model_t_identifier,
-            obs_field,
-            model_field,
-            halo_size,
-            spatially_colocated_field,
-            args.history_message,
-            split_segments=split_segments,
-        )
-
-        logger.info(f"End of colocation iteration with file: {file_to_colocate}")
-        output_fields.append(final_result_field)
+        output_fields.append(file_fl_result)
 
     # 3. Post-processing of co-located results and prepare outputs
     if not output_fields:
