@@ -323,31 +323,31 @@ def check_time_coverage(obs_times, model_times):
         "spanned by the observational data, but got"
     )
 
-    # TODO can we replace with first and last value since we are
-    # assuming (to document) times are never decreasing in order
-    #model_min = model_times[0]
-    #obs_min = obs_times[0]
-    #model_max = model_times[-1]
-    #obs_max = obs_times[-1]
-    model_min = model_times.minimum()
-    obs_min = obs_times.minimum()
-    model_max = model_times.maximum()
-    obs_max = obs_times.maximum()
+    # TODO we are assuming the times are monotonically increasing, i.e. never
+    # decreasing, in (increasing) order. Hence the minima will be the first
+    # values and the maxima will be the last.
+    # TODO document this as part of data input assumptions
+    model_min = model_times[0]
+    obs_min = obs_times[0]
+    model_max = model_times[-1]
+    obs_max = obs_times[-1]
 
     logger.debug(
         f"Model data has maxima {model_max!r} and minima {model_min!r}"
     )
     logger.debug(f"Obs data has maxima {obs_max!r} and minima {obs_min!r}")
 
-    if model_min > obs_min:
+    # Note need to do a '.data' comparison, else will get a
+    # '<CF Data(1): [False]>' like object which won't evaluate as want
+    if model_min.data > obs_min.data:
         raise ValueError(
-            f"{msg_start} minima of {model_min!r} for the model > {obs_min!r} "
-            "for the observations."
+            f"{msg_start} minima of {model_min.data} for the model > "
+            f"{obs_min.data} for the observations."
         )
-    if model_max < obs_max:
+    if model_max.data < obs_max.data:
         raise ValueError(
-            f"{msg_start} maxima of {model_max!r} for the model < {obs_max!r} "
-            "for the observations."
+            f"{msg_start} maxima of {model_max.data} for the model < "
+            f"{obs_max.data} for the observations."
         )
 
 
@@ -1280,8 +1280,12 @@ def time_interpolation(
     )
 
     logger.info("\nFinal result field is:\n" f"\n{final_result_field}\n")
-    logger.info("The final result field has data statistics of:\n")
-    logger.info(pformat(final_result_field.data.stats()))
+
+    # TODO reinstate this later, some bug intermittently emerges fro 'stats'
+    # apparently due to using 'persist' earlier (at least showing up after
+    # that code was added)
+    ##logger.info("The final result field has data statistics of:\n")
+    ###logger.info(pformat(final_result_field.data.stats()))
 
     # TODO: consider whether or not to persist the regridded / time interp.
     # before the next stage, or to do in a fully lazy way.
