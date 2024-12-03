@@ -98,31 +98,11 @@ def get_files_to_individually_colocate(path):
                 "Ignoring sub-directory cases for now."
             )
 
-    readable_files = []
-    # TODO for now we assume that all of the files under the given
-    # path are valid files to read, e.g. netCDF or PP. If they can't be read,
-    # assume they are not relevant. We can update this to a better way later.
-    for filename in files:
-        logger.info(f"Found file name from glob: {filename}")
-        readable = True
-
-        # TODO this method to read to check will be slow, find a better way
-        try:
-            # Turn off verbosity since this is just a preliminary/test read
-            with cf.log_level(0):
-                cf.read(filename)
-        except:
-            readable = False
-            logger.warning(
-                f"Glob includes file {filename} which cannot be read by cf.")
-        if readable:
-            readable_files.append(filename)
-
-
     logger.info(
-        f"Globbed list of files to read with cf is: {pformat(readable_files)}")
+        "Globbed list of files to attempt to read with cf is: "
+        f"{pformat(files)}")
 
-    return readable_files
+    return files
 
 
 @timeit
@@ -134,7 +114,9 @@ def read_obs_input_data(obs_data_path):
     logger.info(
         f"Observational data input location is: '{obs_data_path}'\n"
     )
-    fl = cf.read(obs_data_path)
+    fl = cf.read(obs_data_path, ignore_read_error=True)
+    if not fl:
+        return
 
     logger.info(
         "Read in observational data. For example, its first field is:\n")
@@ -340,23 +322,31 @@ def check_time_coverage(obs_times, model_times):
         "Model data datetimes must cover the whole of the datetime range "
         "spanned by the observational data, but got"
     )
+
+    # TODO can we replace with first and last value since we are
+    # assuming (to document) times are never decreasing in order
+    #model_min = model_times[0]
+    #obs_min = obs_times[0]
+    #model_max = model_times[-1]
+    #obs_max = obs_times[-1]
     model_min = model_times.minimum()
     obs_min = obs_times.minimum()
     model_max = model_times.maximum()
     obs_max = obs_times.maximum()
+
     logger.debug(
-        f"Model data has maxima {model_max} and minima {model_min}"
+        f"Model data has maxima {model_max!r} and minima {model_min!r}"
     )
-    logger.debug(f"Obs data has maxima {obs_max} and minima {obs_min}")
+    logger.debug(f"Obs data has maxima {obs_max!r} and minima {obs_min!r}")
 
     if model_min > obs_min:
         raise ValueError(
-            f"{msg_start} minima of {model_min} for the model > {obs_min} "
+            f"{msg_start} minima of {model_min!r} for the model > {obs_min!r} "
             "for the observations."
         )
     if model_max < obs_max:
         raise ValueError(
-            f"{msg_start} maxima of {model_max} for the model < {obs_max} "
+            f"{msg_start} maxima of {model_max!r} for the model < {obs_max!r} "
             "for the observations."
         )
 
@@ -483,14 +473,10 @@ def persist_all_metadata(field):
     logger.warning(
         f"Persisting data for all metadata constructs of field."
     )
-    for construct_name, construct_obj in field.constructs().items():
+    for construct_name, construct_obj in field.constructs.filter_by_data(
+            todict=True).items():
         logger.debug("Construct is", construct_name)
-        # TODO might be a better way to skip the dataless constructs below?
-        ###if hasattr(construct_obj, "persist"):
-        try:
-            construct_obj.persist(inplace=True)
-        except:
-            pass  # most efficient way to skip dataless constructs!
+        construct_obj.persist(inplace=True)
 
 
 def bounding_box_query(
@@ -695,10 +681,6 @@ def subspace_to_spatiotemporal_bounding_box(
             f"{model_field}"
         )
 
-        # Persist all after first (1. Time) stage
-        persist_all_metadata(obs_field)
-        persist_all_metadata(model_field)
-
         # Horizontal
         logger.info("2. Horizontal subspace step")
         # For this case where we do 3 separate subspaces, we reassign to
@@ -767,10 +749,6 @@ def subspace_to_spatiotemporal_bounding_box(
             model_field_bb = model_field
             vertical_sn = False
         else:
-            # Persist all after second (2. Horizontal) stage
-            persist_all_metadata(obs_field)
-            persist_all_metadata(model_field)
-
             logger.info("3. Vertical subspace step")
             # First, need to calculate the vertical coordinates if there are
             # parametric vertical dimension coordinates to handle.
@@ -1436,6 +1414,9 @@ def colocate_single_file(
 
     # Process and validate inputs, including optional preview plot
     obs_data = read_obs_input_data(file_to_colocate)
+    if obs_data is None:
+        return
+
     obs_field = get_input_fields_of_interest(
         obs_data, args.chosen_obs_fields)
     # Apply any specified pre-processing: use returned fields since the
@@ -1443,6 +1424,10 @@ def colocate_single_file(
     if preprocess_obs:
         obs_field = ensure_cf_compliance(
             obs_field, preprocess_obs, args.satellite_plugin_config)
+
+    # Persist obs field - do this as early as possible, but after
+    # the pre-processing
+    persist_all_metadata(obs_field)
 
     # TODO: this has too many parameters for one function, separate out
     if not skip_all_plotting:
@@ -1487,19 +1472,11 @@ def colocate_single_file(
     if preprocess_obs == "satellite":
         no_vertical = True
 
-    # Persist stage 1
-    persist_all_metadata(obs_field)
-    persist_all_metadata(model_field)
-
     # Subspacing to remove irrelavant information, pre-colocation
     # TODO tidy passing through of computed vertical coord identifier
     model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
         obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
     )
-
-    # Persist stage 2
-    persist_all_metadata(obs_field)
-    persist_all_metadata(model_field_bb)
 
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
@@ -1512,10 +1489,6 @@ def colocate_single_file(
         vertical_sn,
         no_vertical,
     )
-
-    # Persist stage 3
-    persist_all_metadata(obs_field)
-    persist_all_metadata(spatially_colocated_field)
 
     # For such cases as satellite swaths, the times can straddle model points
     # so we need to chop these up into ones on each side of a model time
@@ -1538,7 +1511,7 @@ def colocate_single_file(
     )
 
     logger.info(f"End of colocation iteration with file: {file_to_colocate}")
-    return final_result_field
+    return final_result_field, obs_t_identifier  # TODO remove obs_t from ret
 
 
 @timeit
@@ -1576,7 +1549,20 @@ def main():
     # Need to do this again here to pick up on this module's logger
     setup_logging(verbose)
 
-    # 2. Start colocating the indivdual files to read (which may just be one
+    # Read in model outside of a loop
+    model_data = read_model_input_data(args.model_data_path)
+    model_field = get_input_fields_of_interest(
+        model_data, args.chosen_model_fields)
+    if preprocess_model:
+            model_field = ensure_cf_compliance(model_field, preprocess_model)
+
+    # Persist model field outside of loop
+    persist_all_metadata(model_field)
+
+    # Initiate to store colocated fields
+    output_fields = cf.FieldList()
+
+    # Start colocating the indivdual files to read (which may just be one
     # file in many cases)
     read_file_list = get_files_to_individually_colocate(args.obs_data_path)
     length_read_file_list = len(read_file_list)
@@ -1585,20 +1571,12 @@ def main():
         raise ValueError(
             f"Bad path, nothing readable by cf: {args.obs_data_path}")
 
-    # Read in model outside of a loop
-    model_data = read_model_input_data(args.model_data_path)
-    model_field = get_input_fields_of_interest(
-        model_data, args.chosen_model_fields)
-    if preprocess_model:
-            model_field = ensure_cf_compliance(model_field, preprocess_model)
-
-    output_fields = cf.FieldList()
     logger.info(
         "\n_____ Starting colocation iteration to cover a total of "
         f"{length_read_file_list} files."
     )
     for index, file_to_colocate in enumerate(read_file_list):
-        file_fl_result = colocate_single_file(
+        file_fl_result, obs_t_identifier = colocate_single_file(
             file_to_colocate,
             index,
             args,
@@ -1612,6 +1590,8 @@ def main():
             interpolation_method,
             colocation_z_coord,
         )
+        if file_fl_result is None:
+            continue
         output_fields.append(file_fl_result)
 
     # 3. Post-processing of co-located results and prepare outputs
@@ -1656,7 +1636,7 @@ def main():
             args.cfp_output_levs_config,
             outputs_dir,
             plotname_start,
-            new_obs_starttime,
+            args.start_time_override,
             args.cfp_output_general_config,
             verbose,
             preprocess_model,
