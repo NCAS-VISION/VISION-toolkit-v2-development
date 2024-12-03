@@ -1281,7 +1281,7 @@ def time_interpolation(
 
     logger.info("\nFinal result field is:\n" f"\n{final_result_field}\n")
 
-    # TODO reinstate this later, some bug intermittently emerges fro 'stats'
+    # TODO reinstate this later, some bug intermittently emerges from 'stats'
     # apparently due to using 'persist' earlier (at least showing up after
     # that code was added)
     ##logger.info("The final result field has data statistics of:\n")

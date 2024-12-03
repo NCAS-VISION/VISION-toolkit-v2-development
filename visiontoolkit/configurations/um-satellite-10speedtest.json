@@ -1,0 +1,11 @@
+{
+    "start-time-override": "2017-07-21 00:00:00",
+    "obs-data-path":"../data/marias-satellite-example-data/satellite-data/*",
+    "model-data-path":"../data/main-workwith-test-ISO-simulator/Model_Input",
+    "preprocess-mode-obs":"satellite",
+    "chosen-obs-fields":false,
+    "chosen-model-fields":-2,
+    "outputs-dir":"cf-script-outputs/um-satellite-10",
+    "output-file-name":"um_satellite_10_vision_result.nc",
+    "skip-all-plotting":true
+}

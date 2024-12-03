@@ -59,8 +59,13 @@ TODO the same case as above but testing/exploring more config. options
    satellite plugin setting i.e. to change a variable name to process from the default.
 * um-satellite-8.json: whole orbit worth of swaths (multiple satellite datasets i.e.
    read form of (ending) `20170703201158z_20170703215054z_*.nc`
-* um-satellite-8.json: multiple whole orbits worth of swaths (multiple satellite datasets i.e.
+* um-satellite-9.json: multiple whole orbits worth of swaths (multiple satellite datasets i.e.
    read form of (ending) `201707032*.nc` corresponding to three full orbits.
+* um-satellite-10.json: entire available dataset store from full directory (`*` including as
+  a test to check ignoring of non-readable files in a directory) covering (in form as tested)
+   220 swath files corresponding to numerous orbits, with all plotting disabled to act as
+   the benchmark performance test for now. Best tested speed is ~330 seconds (on SLB's local
+   machine).
 
 TODO the same case as above but testing/exploring more config. options
 
