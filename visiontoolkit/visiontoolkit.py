@@ -16,7 +16,7 @@ import numpy as np
 
 from .cli import process_config, validate_config, setup_logging
 from .constants import toolkit_banner
-from .plugins import satellite_compliance_plugin
+from .plugins.satellite_compliance_converter import satellite_compliance_plugin
 
 
 # ----------------------------------------------------------------------------
