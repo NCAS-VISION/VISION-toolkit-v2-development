@@ -173,7 +173,7 @@ DEFAULT_FILEPATH = (
     "satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_"
     "20170703215054z_000_049-v1000.nc"
     # From orig IDL, used: "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-"
-    #"20110718141155z_20110718155058z_000_049-v1000.nc"
+    # "20110718141155z_20110718155058z_000_049-v1000.nc"
 )
 
 
@@ -920,8 +920,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     ak_lnvmr = ncdf_get(fi, "ak_c", lun=lun, noclo=True, undo=True, ova=True)
     dsx_ev = ncdf_get(fi, "dsx_c", lun=lun, noclo=True, undo=True, ova=True)
     csx_ev = ncdf_get(fi, "csx_c", lun=lun, noclo=True, undo=True, ova=True)
-    print("pf:", pf)
-    print("csx_ev:", csx_ev)
+    print("Example netcdf variable got, pf:", pf)
 
     # Special case from above: takes value
     do_ret = (
@@ -935,7 +934,12 @@ def main(fi=None, lun=None, nret=None, approx=False):
     # Get indices of retrieved scenes
     # - code assumes all retrieved scenes have AK and covariance
     # - this is true for all current ims files for co and o3 and minor gases (but not h2o or T)
-    (iret,) = np.where(do_ret, nret)
+    print("nret:", nret)
+    # PY np space: (iret,) = np.where(do_ret, nret)
+    # PY ALT cf space: Field.where()
+    (iret,) = do_ret.where(nret)
+    print("iret:", iret)
+
     if nret == 0:
         raise ValueError("No retrievals in file!")
 
@@ -959,7 +963,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     nsc = len(scs[:, 0])  # number of subcolumns
 
     # SLB: flake8 says this variable is not used, so comment out
-    # nev = len(evecs[:, 0])  # number of Eigenvectors used to represent profile
+    nev = len(evecs[:, 0])  # number of Eigenvectors used to represent profile
 
     # Interpolate the set of prior profiles in latitude
     c_ap_lnvmr = irc_interp_ap(c_ap_lnvmr, lat)
@@ -1014,14 +1018,19 @@ def main(fi=None, lun=None, nret=None, approx=False):
 
         # Make the square (nz,nz) AK array
         # IDL for first arg: ak_lnvmr(*,*,iret)
-
-        # SLB: flake8 says this variable is not used, so comment out
-        # ak_lnvmr_sq = irc_ak_exp(
-        #     ak_lnvmr[iret, :, :], evecs, pf, sp[iret], nz, nev
-        # )
+        # IMPORTANT! fix relative to original code provided by RS, updated:
+        # In doing this I found an error in ims_rd_co4ak - the modified
+        # version is in also in that directory.
+        # Wrong line was…
+        # ak_vmr_sq=ak_lnvmr*matrix_multiply(c_vmr,1d0/c_vmr)
+        # now corrected to
+        # ak_vmr_sq=ak_lnvmr_sq*matrix_multiply(c_vmr,1d0/c_vmr)
+        ak_lnvmr_sq = irc_ak_exp(
+            ak_lnvmr[iret, :, :], evecs, pf, sp[iret], nz, nev
+        )
 
         # Convert from ln(vmr)/ln(vmr) to vmr/vmr
-        ak_vmr_sq = ak_lnvmr * matrix_multiply(c_vmr, 1.0 / c_vmr)
+        ak_vmr_sq = ak_lnvmr_sq * matrix_multiply(c_vmr, 1.0 / c_vmr)
 
         # Convert AK to d_sub-columns/d_vmr
         ak_sc[iret, 0, 0] = matrix_multiply(msc, ak_vmr_sq, atr=True)
@@ -1091,7 +1100,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     return s
 
 
-def cf_field_result(fi, s):
+def cf_field_result(fi, s, c_vmr_model):
     """Output a new CF-compliant field with the averaging kernel applied.
 
     Includes setting up appropriate bounds from 'scs' etc.
