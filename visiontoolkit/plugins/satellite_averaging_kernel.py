@@ -1,34 +1,34 @@
 #!/usr/bin/env python
 
 """
-IMS_RD_CO4AK 
+IMS_RD_CO4AK
 
-Read IMS L2 file to construct CO sub-columns and averaging kernels only 
-(cut down from ims_rd_basic to serve as simple e.g. code for Vision project) 
+Read IMS L2 file to construct CO sub-columns and averaging kernels only
+(cut down from ims_rd_basic to serve as simple e.g. code for Vision project)
 
-From the resulting structure "s" averaging kernels can be applied to model 
-c_vmr_model (ppmv on 101 fine grid levels) to obtain sub-columns accounting 
-for the retrieval averaging kernel, c_sc_model (in ppmv) via 
+From the resulting structure "s" averaging kernels can be applied to model
+c_vmr_model (ppmv on 101 fine grid levels) to obtain sub-columns accounting
+for the retrieval averaging kernel, c_sc_model (in ppmv) via
 
-c_sc_model = s.c_apc + matrix_cultiply(s.ak,c_vmr_model) 
+c_sc_model = s.c_apc + matrix_cultiply(s.ak,c_vmr_model)
 
-If required to apply to model profiles on a different grid then the AKs will 
-need to be (a) normalised by dividing (in the fine vertical grid dimension) 
-by the pressure differences between the fine grid (dpf) 
-(b) interpolated in that dimension to the new model pressure grid. 
-(c) multiplied by the layer pressure differences of the model grid. 
-Pressure differences,dp can be obtained by 
-	dp1=pf(1:nz-1)-pf(0:nz-2) 
-	dpf=([0,dp1]+[dp1,0])/2 
+If required to apply to model profiles on a different grid then the AKs will
+need to be (a) normalised by dividing (in the fine vertical grid dimension)
+by the pressure differences between the fine grid (dpf)
+(b) interpolated in that dimension to the new model pressure grid.
+(c) multiplied by the layer pressure differences of the model grid.
+Pressure differences,dp can be obtained by
+	dp1=pf(1:nz-1)-pf(0:nz-2)
+	dpf=([0,dp1]+[dp1,0])/2
 
-PARAMETERS 
-	 FILE	Name of IMS L2 file to read 
+PARAMETERS
+	 FILE	Name of IMS L2 file to read
 
-KEYWORDS 
-	APPROX	Compute sub-columns approximately 
-		(mainly to illustrate basic approach, but 
-		treats the bounds of the defined pressure layers 
-		in an approximate way) 
+KEYWORDS
+	APPROX	Compute sub-columns approximately
+		(mainly to illustrate basic approach, but
+		treats the bounds of the defined pressure layers
+		in an approximate way)
 
 
 R.S. 30/10/2024 (original IDL module)
@@ -82,14 +82,35 @@ a[:, :, 0]
 
 BUT I think it is instead a[0, :, :] somehow - due to reversal w.r.t Python order
 specified.
-9.
+
+9. 'flake8' is returning a lot of 'F821 undefined name' failures which are
+   caused by variables not being defined in function (and nothing globally) so
+   there is scope to consider (quoting from ChatGPT):
+   ```
+   1. Inheritance of Scope from the Caller
+
+   If a procedure is called without defining all its variables internally or passing them as arguments, it can access variables from the calling scope. This behavior is unique to IDL and can lead
+   to implicit dependencies.
+   Example:
+
+   PRO my_procedure
+     PRINT, a  ; Accesses 'a' from the caller's scope if it exists
+   END
+
+   a = 42
+   my_procedure  ; Outputs: 42
+
+   So to get around this, add these as function arguments and go edit code
+   appropriately.
+   2. Common Blocks
+
+   IDL allows variables to be shared among multiple procedures or functions using common blocks. A common block acts like a shared memory space that multiple procedures can use to access and modify the same variables.
+   ```
 10.
 
 """
 
 
-import os
-import time
 import numpy as np
 
 
@@ -144,13 +165,19 @@ def iasimhs_sx_exp():
     pass
 
 
+def f_diagonal():
+    """Implement IDL code 'f_diagonal' function in Python."""
+    pass
+
+
 # END OF IDL CONVERSION
 # START OF ORIGINAL IDL CODE CONVERTED, INCLUDING USE OF ABOVE NEW FUNCS
 
 DEFAULT_FILENAME = "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20110718141155z_20110718155058z_000_049-v1000.nc"
 
 
-def irc_interp_ap(xap, latitude):
+# added internal undefined vars to arguments: i0, i1, w0, w1
+def irc_interp_ap(xap, latitude, i0, i1, w0, w1):
     """CONV DONE
     Interpolate prior in 18 latitude bands to latitude of measurement
 
@@ -164,7 +191,7 @@ def irc_interp_ap(xap, latitude):
     setup_linear(lats_ap, latitude, i0, i1, w0, w1, vl=True)
     np = len(latitude)
     nz = len(xap[0,])  # IDL: xap(*,0)
-    xapi = np.zeros((nz, np), Float)  # IDL: dblarr(nz, np)
+    xapi = np.zeros((nz, np))  # IDL: dblarr(nz, np)
 
     for ip in np.arange(0, np):
         # IDL: xapi(0, ip) = xap(*,i0(ip)) * w0(ip) + xap(*,i1(ip)) * w1(ip)
@@ -173,7 +200,8 @@ def irc_interp_ap(xap, latitude):
     return xapi
 
 
-def irc_ak_exp(ak, evecs, pf, sp, nz, nev):
+# added internal undefined vars to arguments: ns, w0, i0, i1, w1
+def irc_ak_exp(ak, evecs, pf, sp, nz, nev, ns, w0, i0, i1, w1):
     """CONV DONE
     Recreate full averaging kernel from IASI-MHS state vector representation
 
@@ -186,11 +214,11 @@ def irc_ak_exp(ak, evecs, pf, sp, nz, nev):
         NEV	Number of eigenvectors
     """
     # Index of PF used to store true grid perturbations in file
-    idx = lindgen(nz / 2 + 1) * 2
+    idx = np.arange(nz / 2 + 1) * 2  # IDL: lindgen(nz / 2 + 1) * 2
     pfs = pf[idx]
     setup_linear(pfs, pf, i0, i1, w0, w1, vl=True)
     akt = ak.T
-    ak_101 = np.zeros((nz, nev), Float)  # IDL: dblarr(nz, nev)
+    ak_101 = np.zeros((nz, nev))  # IDL: dblarr(nz, nev)
 
     for iev in range(nev):  # Interpolate to full grid
         # IDL: ak_101(0, iev) = akt(i0, iev) * w0 + akt(i1, iev) * w1
@@ -206,11 +234,12 @@ def irc_ak_exp(ak, evecs, pf, sp, nz, nev):
     return ak_101
 
 
-def irc_integration_matrix(scs, pf, sp, nz, nsc, approx=approx):
+# added internal undefined vars to arguments: n0, w0
+def irc_integration_matrix(scs, pf, sp, nz, nsc, n0, w0, approx=False):
     """CONV DONE
     (No docstring in corresponding IDL procedure).
     """
-    msc = np.zeros((nz, nsc), Float)  # IDL: dblarr(nz, nsc)
+    msc = np.zeros((nz, nsc))  # IDL: dblarr(nz, nsc)
 
     if approx:
         # Approximate method uses the just the fine layer pressure differences between
@@ -245,14 +274,15 @@ def irc_integration_matrix(scs, pf, sp, nz, nsc, approx=approx):
     return msc
 
 
-def ims_rd_co4ak(fi, approx=approx):
+# added internal undefined vars to arguments: lun, nret
+def ims_rd_co4ak(fi, lun, nret, approx=False):
     """
     Main function.
     """
     # Default filename if one not defined
     # (this one co-located with FAAM over Candian fire)
     if len(fi) == 0:
-        fi = DEAFULT_FILENAME
+        fi = DEFAULT_FILENAME
 
     # Define subcolumns as pressure bounds in hpa of 3 layers
     # (total, 0-6km, 6-12km column amounts)
@@ -326,25 +356,25 @@ def ims_rd_co4ak(fi, approx=approx):
 
     # Make arrays to hold the results which are neeeded for model comparisons
     c_sc = np.zeros(
-        (nsc, nret), Float
+        (nsc, nret),
     )  # IDL: dblarr(nsc, nret)  # CO sub-column average mixing ratios / ppmv
     ak_sc = np.zeros(
-        (nsc, nz, nret), Float
+        (nsc, nz, nret),
     )  # IDL: dblarr(nsc, nz, nret)  # Averaging kernels for retrieved sub-column wrt true profile vmr / ppmv/ppmv
     sx_sc = np.zeros(
-        (nsc, nsc, nret), Float
+        (nsc, nsc, nret),
     )  # IDL: dblarr(nsc, nsc, nret)  # Total (Noise + smoothing) covariance for sub-col.avg.vmrs / ppmv^2
     sn_sc = np.zeros(
-        (nsc, nsc, nret), Float
+        (nsc, nsc, nret),
     )  # IDL: dblarr(nsc, nsc, nret)  # Noise covariance  / ppmv^2
     c_apc_sc = np.zeros(
-        (nsc, nret), Float
+        (nsc, nret),
     )  # IDL: dblarr(nsc, nret)  # A priori contribution to each sub-column / ppmv
     c_err_sc = np.zeros(
-        (nsc, nret), Float
+        (nsc, nret),
     )  # IDL: dblarr(nsc, nret)  # Estimated total standard deviation of retrieved sub-cols / ppmv
     c_noise_sc = np.zeros(
-        (nsc, nret), Float
+        (nsc, nret),
     )  # IDL: dblarr(nsc, nret)  # Estimated noise standard deviation / ppmv
 
     # Loop individual retrievals
@@ -403,19 +433,19 @@ def ims_rd_co4ak(fi, approx=approx):
     # Make result structure
     # Everything given for sub columns so drop the _sc in the tag names
     s = {
-        pf: pf,  # Fine grid pressures / hPa (nz = number of fine grid levels)
-        scs: scs,  # Definition of the sub-column bounds / hPa (2,nsc = number of sub-columns)
-        lat: lat,  # Latitude (np = number of retrievals in the file)
-        lon: lon,  # Longitude (np)
-        jday: jday,  # Julian day  (np)
-        sp: sp,  # Surface pressure / hPa (np)
-        c: c_sc,  # CO sub-column average mixing ratios (nsc,np) / ppmv
-        ak: ak_sc,  # Averaging kernels for retrieved sub-column wrt true profile vmr (nsc,nz,np) / ppmv/ppmv
-        sx: sx_sc,  # Total (Noise + smoothing) covariance for sub-col.avg.vmrs (nsc,nsc) / ppmv^2
-        sn: sn_sc,  # Noise covariance (nsc,nsc) / ppmv^2
-        c_apc: c_apc_sc,  # A priori contribution to each sub-column (nsc,np) / ppmv
-        c_err: c_err_sc,  # Estimated total standard deviation of retrieved sub-cols (nsc,np) / ppmv
-        c_noise: c_noise_sc,  # Estimated noise standard deviation (nsc,np) / ppmv
+        "pf": pf,  # Fine grid pressures / hPa (nz = number of fine grid levels)
+        "scs": scs,  # Definition of the sub-column bounds / hPa (2,nsc = number of sub-columns)
+        "lat": lat,  # Latitude (np = number of retrievals in the file)
+        "lon": lon,  # Longitude (np)
+        "jday": jday,  # Julian day  (np)
+        "sp": sp,  # Surface pressure / hPa (np)
+        "c": c_sc,  # CO sub-column average mixing ratios (nsc,np) / ppmv
+        "ak": ak_sc,  # Averaging kernels for retrieved sub-column wrt true profile vmr (nsc,nz,np) / ppmv/ppmv
+        "sx": sx_sc,  # Total (Noise + smoothing) covariance for sub-col.avg.vmrs (nsc,nsc) / ppmv^2
+        "sn": sn_sc,  # Noise covariance (nsc,nsc) / ppmv^2
+        "c_apc": c_apc_sc,  # A priori contribution to each sub-column (nsc,np) / ppmv
+        "c_err": c_err_sc,  # Estimated total standard deviation of retrieved sub-cols (nsc,np) / ppmv
+        "c_noise": c_noise_sc,  # Estimated noise standard deviation (nsc,np) / ppmv
     }
 
     return s
