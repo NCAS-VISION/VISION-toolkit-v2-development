@@ -122,8 +122,13 @@ So renamed these orig_np
 
 11. IDL case statement, see:
 https://www.nv5geospatialsoftware.com/docs/CASE_Versus_SWITCH.html
-12.
-13.
+12. Mystery function!
+TODO SLB 'fz_roots' is not standard IDL but it doesn't seem to have been
+    # defined in the 'ims_rd_co4ak' directory at all either - what is it?
+
+13. Note converted keyword arguments to arguments where the argument is
+    undefined gloally e.g. tol=tol, box=box. Can be input as args anyway
+    so should be harmless but necessary to work in Python script.
 
 """
 
@@ -209,7 +214,7 @@ def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
     return v
 
 
-def setup_linear(x0, x1, i0, i1, w0, w1, vl=False):
+def setup_linear(x0, x1, i0, i1, w0, w1, vl=False, extra=False):
     """Implement IDL code 'setup_linear' function in Python.
 
         This procedure was stored in its own module, with the functional code
@@ -304,9 +309,9 @@ def sqrt_nz(a):
     return sqa
 
 
+# added internal undefined vars to arguments: nw, i0, i1, w0, w1
 def setup_integration_matrix(
-    x1, orig_xrange=orig_xrange, _EXTRA=extra, tol=tol, box=box
-):
+        x1, orig_xrange, extra, tol, box, nw, i0, i1, w0, w1):
     """Implement IDL code 'setup_integration_matrix' function in Python.
 
         This procedure was stored in its own module, with the functional code
@@ -413,7 +418,7 @@ def setup_integration_matrix(
 
         # x is in ascending order so can use value locate to do this
         # as fast as possible
-        setup_linear(x, xi, i0, i1, w0, w1, vl=True, _EXTRA=extra)
+        setup_linear(x, xi, i0, i1, w0, w1, vl=True, extra=extra)
         nx = len(x)
         nxi = len(xi)
         mi = np.zeros((nxi, nx))
@@ -425,7 +430,13 @@ def setup_integration_matrix(
         mii = setup_integration_matrix(xi, box=box)
 
         # Now combine the two operations into one vector
-        m = reform(matrix_multiply(mii, mi))
+        # "The REFORM function changes the dimensions of an array without
+        # changing the total number of elements."
+        # "Return Value
+        # If no dimensions are specified, REFORM returns a copy of
+        # Array with all dimensions
+        # of size 1 removed." therefore is a squeeze operation here
+        m = np.squeeze(matrix_multiply(mii, mi))
     else:
         dx = [x[:, 1:] - x]  # IDL: [x(1: *) - x]
         if box:
@@ -436,7 +447,7 @@ def setup_integration_matrix(
                 nz = len(x)
                 m = np.zeros((nz - 1, nz - 1))
                 for iz in np.arange(1, nz):
-                    m[iz - 1, 0] = dx[0 : iz - 1]
+                    m[iz - 1, 0] = dx[0: iz - 1]
             else:
                 m = dx
         else:
@@ -445,7 +456,7 @@ def setup_integration_matrix(
                 m = np.zeros((nz, nz - 1))
                 for iz in np.arange(1, nz):
                     m[iz - 1, 0] = 0.5 * (
-                        [0.0, dx[0 : iz - 1]] + [dx[0 : iz - 1], 0.0]
+                        [0.0, dx[0: iz - 1]] + [dx[0: iz - 1], 0.0]
                     )
             else:
                 m = 0.5 * ([0.0, dx] + [dx, 0.0])
@@ -457,7 +468,7 @@ def setup_integration_matrix(
     return m
 
 
-def iasimhs_vsx2cov(vsx, diag=diag):
+def iasimhs_vsx2cov(vsx, diag):
     """Implement IDL code 'iasimhs_vsx2cov' function in Python.
 
         This procedure was stored in its own module, with the functional code
@@ -541,6 +552,8 @@ def iasimhs_vsx2cov(vsx, diag=diag):
 
     # Find expected dimensions of covariance based on unwrapped
     # vector of half of the off-diagonals and the diagonals
+    # TODO SLB 'fz_roots' is not standard IDL but it doesn't seem to have been
+    # defined in the 'ims_rd_co4ak' directory at all either - what is it?
     n = fz_roots([2 * nv, -1, -1])
     n = int(n[1] + 0.1)
     sx = np.zeros((n, n, npi), dtype=np.float32)
@@ -553,13 +566,13 @@ def iasimhs_vsx2cov(vsx, diag=diag):
             diag2 = matrix_multiply(diag1, diag1)
 
         for i in range(n):
-            if i == 0:  #  diagonals
-                sx1 = np.diag(vsx1[j : j + n - i - 1])
+            if i == 0:  # diagonals
+                sx1 = np.diag(vsx1[j: j + n - i - 1])
             else:
                 sx1 = (
                     sx1
-                    + np.diag(vsx1[j : j + n - i - 1], i)
-                    + np.diag(vsx1[j : j + n - i - 1], -i)
+                    + np.diag(vsx1[j: j + n - i - 1], i)
+                    + np.diag(vsx1[j: j + n - i - 1], -i)
                 )  # off-diagonals
             j = j + n - i
         if correl:
@@ -570,7 +583,7 @@ def iasimhs_vsx2cov(vsx, diag=diag):
     return sx
 
 
-def iasimhs_sx_exp(s1, evecs, log=log, x=x):
+def iasimhs_sx_exp(s1, evecs, log, x):
     """Implement IDL code 'iasimhs_sx_exp' function in Python.
 
         This procedure was stored in its own module, with the functional code
@@ -607,9 +620,9 @@ def iasimhs_sx_exp(s1, evecs, log=log, x=x):
     if sz[1] != sz[2]:
         raise ValueError("Expected first 2 dims to be same size!")
 
-    sz = size[evecs]
+    sz = evecs.shape
     nz = sz[1]
-    np.zeros((nz, nz, np), dtype=np.float32)
+    s = np.zeros((nz, nz, np), dtype=np.float32)
     for ip in range(np):
         sipi = s1[ip, :, :]
         sipi = matrix_multiply(
@@ -624,13 +637,13 @@ def iasimhs_sx_exp(s1, evecs, log=log, x=x):
     return s
 
 
-def f_diagonal(matrix, orig_input=orig_in):
+def f_diagonal(matrix, orig_input):
     """Implement IDL code 'f_diagonal' function in Python.
 
         This procedure was stored in its own module, with the functional code
         and important docs as follows:
 
-    (SLB note renamed 'input' arg and 'in' value to avoid clash with Python
+    (SLB note renamed 'input' arg to avoid clash with Python
     built-in keyword names which would cause issue)
 
      ; Reads/writes diagonal of a matrix
@@ -638,7 +651,7 @@ def f_diagonal(matrix, orig_input=orig_in):
     ; Arguments
     ;
     ;  I  matrix   matrix whose diagonal is to be read/written
-    ;  I  \input   input vector or single item  if diagonal to be written
+    ;  I  \\input   input vector or single item  if diagonal to be written
     ;
     ;  Either one or both arguments may be passed.
     ;  If only an input vector is passed a matrix is created.
@@ -680,9 +693,13 @@ def f_diagonal(matrix, orig_input=orig_in):
     nel = len(matrix)
     if nel == 1:
         matrix_save = matrix
-        matrix = replicate(matrix(0), 2, 2)
+        # https://lweb.cfa.harvard.edu/~atripath/idlrefguide.pdf
+        # "The REPLICATE function returns an array with the given dimensions, filled with the
+        # scalar value specified as the first parameter"
+        matrix = np.full((2, 2), matrix[0])  # IDL: replicate(matrix(0), 2, 2)
 
-    dim_in = orig_input.shape
+    # SLB: flake8 says this variable is not used, so comment out
+    # dim_in = orig_input.shape
     nin = len(orig_input)
     dim_mat = matrix.shape
     nmat = len(matrix)
@@ -797,7 +814,7 @@ def irc_integration_matrix(scs, pf, sp, nz, nsc, n0, w0, approx=False):
         # the defined bounds as weights.
         # Full method treats the layer bounds more exactly, by also including interpolation
         # from the fine grid to the defined pressure bounds (and surface pressure).
-        dp1 = pf[1 : nz - 1] - pf[0 : nz - 2]  # IDL: =pf(1:nz-1)-pf(0:nz-2)
+        dp1 = pf[1: nz - 1] - pf[0: nz - 2]  # IDL: =pf(1:nz-1)-pf(0:nz-2)
         dpf = ([0.0, dp1] + [dp1, 0]) / 2
 
     for isc in range(nsc):
