@@ -90,8 +90,8 @@ This is equivalent to indexing a 3D NumPy array in Python as:
 
 a[:, :, 0]
 
-BUT I think it is instead a[0, :, :] somehow - due to reversal w.r.t Python order
-specified.
+BUT I think it is instead a[0, :, :] somehow - due to reversal w.r.t
+Python order specified.
 
 9. 'flake8' is returning a lot of 'F821 undefined name' failures which are
    caused by variables not being defined in function (and nothing globally) so
@@ -120,7 +120,8 @@ specified.
     # avoid nameclash with numpy alias!
 So renamed these orig_np
 
-11.
+11. IDL case statement, see:
+https://www.nv5geospatialsoftware.com/docs/CASE_Versus_SWITCH.html
 12.
 13.
 
@@ -265,7 +266,6 @@ def setup_linear(x0, x1, i0, i1, w0, w1, vl=False):
     # SLB TODO: how to deal with specified existing weights? Gues via
     # RegridOperator(weights, ...) somehow, but not yet sure.
     # SLB TODO what are these 'indexes to y' and how to deal with?
-    # UPTO SLB
     r = x0.regrids(x1, method="linear")
     return r
 
@@ -570,7 +570,7 @@ def iasimhs_vsx2cov(vsx, diag=diag):
     return sx
 
 
-def iasimhs_sx_exp():
+def iasimhs_sx_exp(s1, evecs, log=log, x=x):
     """Implement IDL code 'iasimhs_sx_exp' function in Python.
 
         This procedure was stored in its own module, with the functional code
@@ -598,14 +598,40 @@ def iasimhs_sx_exp():
             return,s
     end
     """
-    pass
+    sz = s1.shape
+    if sz[0] == 3:
+        np = sz[3]
+    else:
+        np = 1
+
+    if sz[1] != sz[2]:
+        raise ValueError("Expected first 2 dims to be same size!")
+
+    sz = size[evecs]
+    nz = sz[1]
+    np.zeros((nz, nz, np), dtype=np.float32)
+    for ip in range(np):
+        sipi = s1[ip, :, :]
+        sipi = matrix_multiply(
+            matrix_multiply(evecs, sipi), evecs, btr=True
+        )  # map to rttov levels
+        if log:
+            xipi = x[ip,]
+            sipi = sipi * matrix_multiply(xipi, xipi)  # Multiply out log unit
+
+        s[ip, 0, 0] = sipi
+
+    return s
 
 
-def f_diagonal():
+def f_diagonal(matrix, orig_input=orig_in):
     """Implement IDL code 'f_diagonal' function in Python.
 
         This procedure was stored in its own module, with the functional code
         and important docs as follows:
+
+    (SLB note renamed 'input' arg and 'in' value to avoid clash with Python
+    built-in keyword names which would cause issue)
 
      ; Reads/writes diagonal of a matrix
     ;
@@ -650,13 +676,52 @@ def f_diagonal():
     return,f_diagonal
     end
     """
-    pass
+    # dimensions
+    nel = len(matrix)
+    if nel == 1:
+        matrix_save = matrix
+        matrix = replicate(matrix(0), 2, 2)
+
+    dim_in = orig_input.shape
+    nin = len(orig_input)
+    dim_mat = matrix.shape
+    nmat = len(matrix)
+
+    if nin == 0:
+        # SLB: think type is handled natively by Python so can drop 'type='
+        # which uses a type code mapped to a type
+        result = np.zeros(dim_mat[1])
+        for i in range(dim_mat[1]):
+            result[i] = matrix[i, i]
+    elif nin == 1:
+        result = matrix
+        for i in range(dim_mat[1]):
+            result[i, i] = orig_input
+    else:
+        if nmat != 0:
+            result = matrix
+        if nmat == 0:
+            result = np.zeros((nin, nin))
+
+        for i in range(nin):
+            result[i, i] = orig_input[i]
+
+    if nel == 1:
+        result = result[0]
+        matrix = matrix_save
+
+    f_diagonal = result
+
+    return f_diagonal
 
 
 # END OF IDL CONVERSION
 # START OF ORIGINAL IDL CODE CONVERTED, INCLUDING USE OF ABOVE NEW FUNCS
 
-DEFAULT_FILENAME = "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20110718141155z_20110718155058z_000_049-v1000.nc"
+DEFAULT_FILENAME = (
+    "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-"
+    "20110718141155z_20110718155058z_000_049-v1000.nc"
+)
 
 
 # added internal undefined vars to arguments: i0, i1, w0, w1
@@ -907,7 +972,6 @@ def ims_rd_co4ak(fi, lun, nret, approx=False):
             ak_sc[iret, :, :], c_ap_vmr
         )
 
-        # SLB UPTO
         # Now deal with errors...
         # convert matrices to vmr from ln(vmr)  (error in ln(x) is fractional error in x)
         vmr_sq = matrix_multiply(c_vmr, c_vmr)
