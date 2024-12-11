@@ -18,17 +18,17 @@ by the pressure differences between the fine grid (dpf)
 (b) interpolated in that dimension to the new model pressure grid.
 (c) multiplied by the layer pressure differences of the model grid.
 Pressure differences,dp can be obtained by
-	dp1=pf(1:nz-1)-pf(0:nz-2)
-	dpf=([0,dp1]+[dp1,0])/2
+        dp1=pf(1:nz-1)-pf(0:nz-2)
+        dpf=([0,dp1]+[dp1,0])/2
 
 PARAMETERS
-	 FILE	Name of IMS L2 file to read
+         FILE   Name of IMS L2 file to read
 
 KEYWORDS
-	APPROX	Compute sub-columns approximately
-		(mainly to illustrate basic approach, but
-		treats the bounds of the defined pressure layers
-		in an approximate way)
+        APPROX  Compute sub-columns approximately
+                (mainly to illustrate basic approach, but
+                treats the bounds of the defined pressure layers
+                in an approximate way)
 
 
 R.S. 30/10/2024 (original IDL module)
@@ -65,8 +65,8 @@ https://stackoverflow.com/questions/78656111/converting-idl-into-python-taking-v
    for tips on how to convert. Examples there:
 a(2,1) -> a[1,2]
 a(*,0) -> a[0,]
-a(0,*) ->	a[:,0]
-a(*,1:*) ->	a[1:,]
+a(0,*) ->       a[:,0]
+a(*,1:*) ->     a[1:,]
 
 Assuming ak_lnvmr(*,*,iret) therefore ->
 but need to check. ChatGPT says:
@@ -215,12 +215,12 @@ def irc_ak_exp(ak, evecs, pf, sp, nz, nev, ns, w0, i0, i1, w1):
     Recreate full averaging kernel from IASI-MHS state vector representation
 
     Inputs
-        AK	Ak for state vector representation, wrt 51 "true levels" (every other RTTOV level)
-        EVECS	Vectors to map to 101 RTTOV levels from state vector
-        PF	Fine grid pressures / hPa
-        SP	Surface pressure / hPa
-        NZ 	Number of fine vertical levels
-        NEV	Number of eigenvectors
+        AK      Ak for state vector representation, wrt 51 "true levels" (every other RTTOV level)
+        EVECS   Vectors to map to 101 RTTOV levels from state vector
+        PF      Fine grid pressures / hPa
+        SP      Surface pressure / hPa
+        NZ      Number of fine vertical levels
+        NEV     Number of eigenvectors
     """
     # Index of PF used to store true grid perturbations in file
     idx = np.arange(nz / 2 + 1) * 2  # IDL: lindgen(nz / 2 + 1) * 2
