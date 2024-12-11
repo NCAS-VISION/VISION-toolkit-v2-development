@@ -122,10 +122,8 @@ So renamed these orig_np
 
 11. IDL case statement, see:
 https://www.nv5geospatialsoftware.com/docs/CASE_Versus_SWITCH.html
-12. Mystery function!
-TODO SLB 'fz_roots' is not standard IDL but it doesn't seem to have been
-    # defined in the 'ims_rd_co4ak' directory at all either - what is it?
-
+12. SORTED fz_roots is actually built-in IDL - see here:
+https://www.nv5geospatialsoftware.com/docs/FZ_ROOTS.html
 13. Note converted keyword arguments to arguments where the argument is
     undefined gloally e.g. tol=tol, box=box. Can be input as args anyway
     so should be harmless but necessary to work in Python script.
@@ -578,9 +576,7 @@ def iasimhs_vsx2cov(vsx, diag):
 
     # Find expected dimensions of covariance based on unwrapped
     # vector of half of the off-diagonals and the diagonals
-    # TODO SLB 'fz_roots' is not standard IDL but it doesn't seem to have been
-    # defined in the 'ims_rd_co4ak' directory at all either - what is it?
-    n = fz_roots([2 * nv, -1, -1])
+    n = np.roots([2 * nv, -1, -1])
     n = int(n[1] + 0.1)
     sx = np.zeros((n, n, npi), dtype=np.float32)
     for ipi in range(npi):  # Do for more than one pixel
@@ -761,9 +757,12 @@ def f_diagonal(matrix, orig_input):
 # END OF IDL CONVERSION
 # START OF ORIGINAL IDL CODE CONVERTED, INCLUDING USE OF ABOVE NEW FUNCS
 
-DEFAULT_FILENAME = (
-    "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-"
-    "20110718141155z_20110718155058z_000_049-v1000.nc"
+DEFAULT_FILEPATH = (
+    "../../data/marias-satellite-example-data/satellite-data/"
+    "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_"
+    "20170703215054z_000_049-v1000.nc"
+    # From orig IDL, used: "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-"
+    #"20110718141155z_20110718155058z_000_049-v1000.nc"
 )
 
 
