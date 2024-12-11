@@ -106,7 +106,13 @@ specified.
 
    IDL allows variables to be shared among multiple procedures or functions using common blocks. A common block acts like a shared memory space that multiple procedures can use to access and modify the same variables.
    ```
-10.
+10. SLB: care, original IDL code has 'np' as variable, must use another to
+    # avoid nameclash with numpy alias!
+So renamed these orig_np
+
+11.
+12.
+13.
 
 """
 
@@ -189,11 +195,14 @@ def irc_interp_ap(xap, latitude, i0, i1, w0, w1):
     # Latitude grid associated with the prior values
     lats_ap = np.arange(18.0) * 10 - 85  # IDL: dindgen(18) * 10 - 85d0
     setup_linear(lats_ap, latitude, i0, i1, w0, w1, vl=True)
-    np = len(latitude)
-    nz = len(xap[0,])  # IDL: xap(*,0)
-    xapi = np.zeros((nz, np))  # IDL: dblarr(nz, np)
 
-    for ip in np.arange(0, np):
+    # SLB: care, original IDL code has 'np' as variable, must use another to
+    # avoid nameclash with numpy alias!
+    orig_np = len(latitude)
+    nz = len(xap[0,])  # IDL: xap(*,0)
+    xapi = np.zeros((nz, orig_np))  # IDL: dblarr(nz, np)
+
+    for ip in np.arange(0, orig_np):
         # IDL: xapi(0, ip) = xap(*,i0(ip)) * w0(ip) + xap(*,i1(ip)) * w1(ip)
         xapi[ip, 0] = xap[i0[ip]] * w0[ip] + xap[i1[ip]] * w1[ip]
 
@@ -246,7 +255,7 @@ def irc_integration_matrix(scs, pf, sp, nz, nsc, n0, w0, approx=False):
         # the defined bounds as weights.
         # Full method treats the layer bounds more exactly, by also including interpolation
         # from the fine grid to the defined pressure bounds (and surface pressure).
-        dp1 = pf[1 : nz - 1] - pf[0 : nz - 2]  # IDL: =pf(1:nz-1)-pf(0:nz-2)
+        dp1 = pf[1: nz - 1] - pf[0: nz - 2]  # IDL: =pf(1:nz-1)-pf(0:nz-2)
         dpf = ([0.0, dp1] + [dp1, 0]) / 2
 
     for isc in range(nsc):
@@ -315,8 +324,10 @@ def ims_rd_co4ak(fi, lun, nret, approx=False):
     ak_lnvmr = ncdf_get(fi, "ak_c", lun=lun, noclo=True, undo=True, ova=True)
     dsx_ev = ncdf_get(fi, "dsx_c", lun=lun, noclo=True, undo=True, ova=True)
     csx_ev = ncdf_get(fi, "csx_c", lun=lun, noclo=True, undo=True, ova=True)
-    dsn_ev = ncdf_get(fi, "dsxn_c", lun=lun, noclo=True, undo=True, ova=True)
-    csn_ev = ncdf_get(fi, "csxn_c", lun=lun, undo=True, ova=True)
+
+    # SLB: flake8 says this variable is not used, so comment out
+    # dsn_ev = ncdf_get(fi, "dsxn_c", lun=lun, noclo=True, undo=True, ova=True)
+    # csn_ev = ncdf_get(fi, "csxn_c", lun=lun, undo=True, ova=True)
 
     # Get indices of retrieved scenes
     # - code assumes all retrieved scenes have AK and covariance
@@ -343,7 +354,9 @@ def ims_rd_co4ak(fi, lun, nret, approx=False):
     # Get dimensions
     nz = len(pf)  # number of fine vertical levels
     nsc = len(scs[:, 0])  # number of subcolumns
-    nev = len(evecs[:, 0])  # number of Eigenvectors used to represent profile
+
+    # SLB: flake8 says this variable is not used, so comment out
+    # nev = len(evecs[:, 0])  # number of Eigenvectors used to represent profile
 
     # Interpolate the set of prior profiles in latitude
     c_ap_lnvmr = irc_interp_ap(c_ap_lnvmr, lat)
@@ -351,8 +364,12 @@ def ims_rd_co4ak(fi, lun, nret, approx=False):
     # Expand the total and noise  covariance matrices to full vertical grid (nz,nz) with units (ln(ppmv))^2
     sx_ev = iasimhs_vsx2cov(csx_ev, diag=dsx_ev)  # nev,nev matrix
     sx_lnvmr = iasimhs_sx_exp(sx_ev, evecs)  # nz,nz matrix
-    sn_ev = iasimhs_vsx2cov(csn_ev, diag=dsn_ev)  # nev,nev matrix
-    sn_lnvmr = iasimhs_sx_exp(sn_ev, evecs)  # nz,nz matrix
+
+    # SLB: flake8 says this variable is not used, so comment out
+    # sn_ev = iasimhs_vsx2cov(csn_ev, diag=dsn_ev)  # nev,nev matrix
+
+    # SLB: flake8 says this variable is not used, so comment out
+    # sn_lnvmr = iasimhs_sx_exp(sn_ev, evecs)  # nz,nz matrix
 
     # Make arrays to hold the results which are neeeded for model comparisons
     c_sc = np.zeros(
@@ -394,9 +411,11 @@ def ims_rd_co4ak(fi, lun, nret, approx=False):
 
         # Make the square (nz,nz) AK array
         # IDL for first arg: ak_lnvmr(*,*,iret)
-        ak_lnvmr_sq = irc_ak_exp(
-            ak_lnvmr[iret, :, :], evecs, pf, sp[iret], nz, nev
-        )
+
+        # SLB: flake8 says this variable is not used, so comment out
+        # ak_lnvmr_sq = irc_ak_exp(
+        #     ak_lnvmr[iret, :, :], evecs, pf, sp[iret], nz, nev
+        # )
 
         # Convert from ln(vmr)/ln(vmr) to vmr/vmr
         ak_vmr_sq = ak_lnvmr * matrix_multiply(c_vmr, 1.0 / c_vmr)
@@ -416,7 +435,8 @@ def ims_rd_co4ak(fi, lun, nret, approx=False):
         # convert matrices to vmr from ln(vmr)  (error in ln(x) is fractional error in x)
         vmr_sq = matrix_multiply(c_vmr, c_vmr)
         sx_vmr = sx_lnvmr[iret, :, :] * vmr_sq
-        sn_vmr = sn_lnvmr[iret, :, :] * vmr_sq
+        # flake8: below variable not used and is dupe to above, so ignore
+        # SLB sn_vmr = sn_lnvmr[iret, :, :] * vmr_sq
 
         # Convert these to (nsc,nsc) matrices for the sub-columns
         sx_sc[iret, 0, 0] = matrix_multiply(
