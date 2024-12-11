@@ -154,16 +154,27 @@ numpy.isfortran(a)
 """
 
 
+import sys
+from pathlib import Path
+
 import numpy as np
+import cf  # only using for now to read in to get arrays
 
 
 # START OF NEW FUNCS TO MAP IDL PROCEDURE NAMES TO EQUIVALENT PYTHON
 # FUNCTIONALITY USING E.G. CF-PYTHON
+# Start with the easiest to convert, e.g. to do the same via Python/cf-python
 
-import cf  # only using for now to read in to get arrays
 
-
-# Start with the easiest to do in Python/cf-python!
+# Adapt appropriately to own path to dataset
+DEFAULT_FILEPATH = (
+    f"{Path(__file__).absolute().parent.parent.parent}/data/"
+    "marias-satellite-example-data/"
+    "satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_"
+    "20170703215054z_000_049-v1000.nc"
+    # From orig IDL, used: "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-"
+    #"20110718141155z_20110718155058z_000_049-v1000.nc"
+)
 
 
 def matrix_multiply(a, b, atr=False, btr=False):
@@ -232,6 +243,12 @@ def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
     # Undo and ova args also probably not relevant but check this later.
     fl = cf.read(fi, aggregate=False)  # DH advice: agg=False for speed and improv.
     v = fl.select_by_ncvar(varname)
+    print("Returning fieldlist of:", len(v), v)
+
+    # Unpacking stage, if a FieldList of length 1:
+    if len(v) == 1:
+        v = v[0]
+
     return v
 
 
@@ -757,14 +774,6 @@ def f_diagonal(matrix, orig_input):
 # END OF IDL CONVERSION
 # START OF ORIGINAL IDL CODE CONVERTED, INCLUDING USE OF ABOVE NEW FUNCS
 
-DEFAULT_FILEPATH = (
-    "../../data/marias-satellite-example-data/satellite-data/"
-    "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_"
-    "20170703215054z_000_049-v1000.nc"
-    # From orig IDL, used: "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-"
-    #"20110718141155z_20110718155058z_000_049-v1000.nc"
-)
-
 
 # TODO SLB: latitude is probably not relevant so we can ignore this!
 # added internal undefined vars to arguments: i0, i1, w0, w1
@@ -869,14 +878,16 @@ def irc_integration_matrix(scs, pf, sp, nz, nsc, n0, w0, approx=False):
 
 
 # added internal undefined vars to arguments: lun, nret
-def ims_rd_co4ak(fi, lun, nret, approx=False):
+def main(fi=None, lun=None, nret=None, approx=False):
     """
     Main function.
+
+    Note this is named 'ims_rd_co4ak' in the original IDL algorithm.
     """
     # Default filename if one not defined
     # (this one co-located with FAAM over Canadian fire)
-    if len(fi) == 0:
-        fi = DEFAULT_FILENAME
+    if not fi:
+        fi = DEFAULT_FILEPATH
 
     # Define subcolumns as pressure bounds in hpa of 3 layers
     # (total, 0-6km, 6-12km column amounts)
@@ -888,12 +899,12 @@ def ims_rd_co4ak(fi, lun, nret, approx=False):
             [450.0, 170.0],
         ]
     )  # i.e. 6-12km (approx)
+    print("scs:", scs)
 
     # Read necessary info from the file
     # ncdf_get will apply scale_factor and add offset (/undo keyword)
     # /ova makes it just return the values without any attributes
     pf = ncdf_get(fi, "p", lun=lun, noclo=True, undo=True, ova=True)
-    do_ret = (ncdf_get(fi, "do_retrieval", lun=lun, noclo=True)).value
     lat = ncdf_get(fi, "latitude", lun=lun, noclo=True, undo=True, ova=True)
     lon = ncdf_get(fi, "longitude", lun=lun, noclo=True, undo=True, ova=True)
     sensingtime_msec = ncdf_get(
@@ -909,6 +920,13 @@ def ims_rd_co4ak(fi, lun, nret, approx=False):
     ak_lnvmr = ncdf_get(fi, "ak_c", lun=lun, noclo=True, undo=True, ova=True)
     dsx_ev = ncdf_get(fi, "dsx_c", lun=lun, noclo=True, undo=True, ova=True)
     csx_ev = ncdf_get(fi, "csx_c", lun=lun, noclo=True, undo=True, ova=True)
+    print("pf:", pf)
+    print("csx_ev:", csx_ev)
+
+    # Special case from above: takes value
+    do_ret = (
+        ncdf_get(fi, "do_retrieval", lun=lun, noclo=True)).data  # IDL: .value
+    print("do_ret:", do_ret)
 
     # SLB: flake8 says this variable is not used, so comment out
     # dsn_ev = ncdf_get(fi, "dsxn_c", lun=lun, noclo=True, undo=True, ova=True)
@@ -1087,3 +1105,9 @@ def cf_field_result(fi, s):
     f = None
 
     return f
+
+
+# Temp whilst get working as script, then will incorporate into the VISION
+# toolkit packaging as a plugin
+if __name__ == "__main__":
+    sys.exit(main())
