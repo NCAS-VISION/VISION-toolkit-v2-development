@@ -20,7 +20,7 @@ From the resulting structure "s" averaging kernels can be applied to model
 c_vmr_model (ppmv on 101 fine grid levels) to obtain sub-columns accounting
 for the retrieval averaging kernel, c_sc_model (in ppmv) via
 
-c_sc_model = s.c_apc + matrix_cultiply(s.ak,c_vmr_model)
+c_sc_model = s.c_apc + matrix_multiply(s.ak,c_vmr_model)
 
 If required to apply to model profiles on a different grid then the AKs will
 need to be (a) normalised by dividing (in the fine vertical grid dimension)
@@ -130,6 +130,29 @@ TODO SLB 'fz_roots' is not standard IDL but it doesn't seem to have been
     undefined gloally e.g. tol=tol, box=box. Can be input as args anyway
     so should be harmless but necessary to work in Python script.
 
+14. NOTE IDL is DL is a zero-index language - was good to check
+
+15. SLB TODO
+"IDL slice endpoints are inclusive, while Python slice endpoints are exclusive. For example, in IDL, x[1:4] extracts a subarray of length 4 (elements at indices 1, 2, 3, 4), while in Python, x[1:4] extracts a sub-array of length 3 (elements at indices 1, 2, 3)."
+so go and account for that.
+
+16. Does the IDL ncdf_get return everything in Fortran major - since
+    we are in C major, but resources like (as ref#'d for matrix_multiply);
+https://stackoverflow.com/questions/23128788/what-is-the-python-numpy-equivalent-of-the-idl-operator
+imply we deal with this via the transpose operations.
+As for more general case, check ncdf_get for row-column major bit.
+-> potetnially query in numpy to see what row-column thing we have
+and be careful with it.
+e.g. https://numpy.org/doc/2.1/reference/generated/numpy.isfortran.html
+numpy.isfortran(a)
+
+17. Also check slowest-moving indexing part - is it always first?
+
+18. Intpreting the output structure in terms of size.
+
+19. Add statement at top to include STFC OSS notes.
+
+20. Include the fix for the error RS pointed out!
 """
 
 
@@ -139,7 +162,7 @@ import numpy as np
 # START OF NEW FUNCS TO MAP IDL PROCEDURE NAMES TO EQUIVALENT PYTHON
 # FUNCTIONALITY USING E.G. CF-PYTHON
 
-import cf
+import cf  # only using for now to read in to get arrays
 
 
 # Start with the easiest to do in Python/cf-python!
@@ -209,7 +232,7 @@ def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
     """
     # Note: noclo arg to not close file irrelevant in cf-python
     # Undo and ova args also probably not relevant but check this later.
-    fl = cf.read(fi)
+    fl = cf.read(fi, aggregate=False)  # DH advice: agg=False for speed and improv.
     v = fl.select_by_ncvar(varname)
     return v
 
@@ -305,7 +328,7 @@ def sqrt_nz(a):
     end
     """
     sqa = np.sqrt(a)
-    sqa.masked_invalid()
+    sqa.masked_invalid()  # SLB update np and cf world mix
     return sqa
 
 
@@ -410,7 +433,10 @@ def setup_integration_matrix(
 
     if orig_xrange:
         # Get matrix to perform interpolation...
-        (wh,) = np.where(x > orig_xrange[0] and x < orig_xrange[1], nw)
+        # TODO SLB was originally an 'and' here but that might be
+        # problematic, DH advice to convert to ampersand which works
+        # - see cf-python codebase examples.
+        (wh,) = np.where((x > orig_xrange[0]) & (x < orig_xrange[1], nw))
         if nw > 0:
             xi = [orig_xrange[0], x[wh], orig_xrange[1]]
         else:
@@ -741,6 +767,7 @@ DEFAULT_FILENAME = (
 )
 
 
+# TODO SLB: latitude is probably not relevant so we can ignore this!
 # added internal undefined vars to arguments: i0, i1, w0, w1
 def irc_interp_ap(xap, latitude, i0, i1, w0, w1):
     """CONV DONE
@@ -848,7 +875,7 @@ def ims_rd_co4ak(fi, lun, nret, approx=False):
     Main function.
     """
     # Default filename if one not defined
-    # (this one co-located with FAAM over Candian fire)
+    # (this one co-located with FAAM over Canadian fire)
     if len(fi) == 0:
         fi = DEFAULT_FILENAME
 
@@ -900,7 +927,7 @@ def ims_rd_co4ak(fi, lun, nret, approx=False):
     # Orig. IDL: sensingtime_day+sensingtime_msec/1000d0/60d0/60d0/24d0+2451544.5d0
     jday = (
         sensingtime_day
-        + sensingtime_msec / (1000.0 * 60.0 * 60.0 * 24.0)
+        + sensingtime_msec / (1000.0 * 60.0 * 60.0 * 24.0)  # msec - millisec
         + 2451544.5
     )
 
@@ -984,13 +1011,15 @@ def ims_rd_co4ak(fi, lun, nret, approx=False):
 
         # Calculate a priori contribution so can layer apply AKs by doing simply
         # c_sc_model = c_apc + matrix_cultiply(ak_c,c_vmr_model)
-        # for sub-columns, ak_c is non square and returned in units of d_retrieved_subcolumn_average_vmr/d_true_profile_vmr
+        # for sub-columns, ak_c is non square and returned in units of
+        # d_retrieved_subcolumn_average_vmr/d_true_profile_vmr
         c_apc_sc[iret, 0] = c_ap_sc - matrix_multiply(
             ak_sc[iret, :, :], c_ap_vmr
         )
 
         # Now deal with errors...
-        # convert matrices to vmr from ln(vmr)  (error in ln(x) is fractional error in x)
+        # convert matrices to vmr from ln(vmr)  (error in ln(x) is
+        # fractional error in x)
         vmr_sq = matrix_multiply(c_vmr, c_vmr)
         sx_vmr = sx_lnvmr[iret, :, :] * vmr_sq
         # flake8: below variable not used and is dupe to above, so ignore
@@ -1004,26 +1033,58 @@ def ims_rd_co4ak(fi, lun, nret, approx=False):
             matrix_multiply(sx_vmr, msc), msc, atr=True
         )
 
-        # Just get sqrt-diagonals of the covariances (Estimated total random error std.deviation and the noise std.deviation)
+        # Just get sqrt-diagonals of the covariances (Estimated total random
+        # error std.deviation and the noise std.deviation)
         c_err_sc[iret, 0] = sqrt_nz(f_diagonal(sx_sc[iret, :, :]))
         c_noise_sc[iret, 0] = sqrt_nz(f_diagonal(sn_sc[iret, :, :]))
 
     # Make result structure
     # Everything given for sub columns so drop the _sc in the tag names
     s = {
-        "pf": pf,  # Fine grid pressures / hPa (nz = number of fine grid levels)
-        "scs": scs,  # Definition of the sub-column bounds / hPa (2,nsc = number of sub-columns)
-        "lat": lat,  # Latitude (np = number of retrievals in the file)
-        "lon": lon,  # Longitude (np)
-        "jday": jday,  # Julian day  (np)
-        "sp": sp,  # Surface pressure / hPa (np)
-        "c": c_sc,  # CO sub-column average mixing ratios (nsc,np) / ppmv
-        "ak": ak_sc,  # Averaging kernels for retrieved sub-column wrt true profile vmr (nsc,nz,np) / ppmv/ppmv
-        "sx": sx_sc,  # Total (Noise + smoothing) covariance for sub-col.avg.vmrs (nsc,nsc) / ppmv^2
-        "sn": sn_sc,  # Noise covariance (nsc,nsc) / ppmv^2
-        "c_apc": c_apc_sc,  # A priori contribution to each sub-column (nsc,np) / ppmv
-        "c_err": c_err_sc,  # Estimated total standard deviation of retrieved sub-cols (nsc,np) / ppmv
-        "c_noise": c_noise_sc,  # Estimated noise standard deviation (nsc,np) / ppmv
+        # Fine grid pressures / hPa (nz = number of fine grid levels)
+        "pf": pf,
+        # Def. of the sub-column bounds / hPa (2,nsc = number of sub-columns)
+        "scs": scs,
+        # Latitude (np = number of retrievals in the file)
+        "lat": lat,
+        # Longitude (np)
+        "lon": lon,
+        # Julian day (np)
+        "jday": jday,
+        # Surface pressure / hPa (np)
+        "sp": sp,
+        # CO sub-column average mixing ratios (nsc,np) / ppmv
+        "c": c_sc,
+        # Averaging kernels for retrieved sub-column wrt true profile
+        # vmr (nsc,nz,np) / ppmv/ppmv
+        "ak": ak_sc,
+        # Total (Noise + smoothing) covariance for sub-col.avg.vmrs
+        # (nsc,nsc) / ppmv^2
+        "sx": sx_sc,
+        # Noise covariance (nsc,nsc) / ppmv^2
+        "sn": sn_sc,
+        # A priori contribution to each sub-column (nsc,np) / ppmv
+        "c_apc": c_apc_sc,
+        # Estimated total standard deviation of retrieved sub-cols (nsc,np) / ppmv
+        "c_err": c_err_sc,
+        # Estimated noise standard deviation (nsc,np) / ppmv
+        "c_noise": c_noise_sc,
     }
 
     return s
+
+
+def cf_field_result(fi, s):
+    """Output a new CF-compliant field with the averaging kernel applied.
+
+    Includes setting up appropriate bounds from 'scs' etc.
+
+    Metadata wranlging!
+    """
+    # The code to apply the averaging kernel:
+    c_sc_model = s["c_apc"] + matrix_multiply(s["ak"], c_vmr_model)
+
+    # TODO create field with relevant data and metadata ab-inito
+    f = None
+
+    return f
