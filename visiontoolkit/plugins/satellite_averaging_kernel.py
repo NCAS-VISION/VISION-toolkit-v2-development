@@ -169,12 +169,126 @@ import cf  # only using for now to read in to get arrays
 # Adapt appropriately to own path to dataset
 DEFAULT_FILEPATH = (
     f"{Path(__file__).absolute().parent.parent.parent}/data/"
-    "marias-satellite-example-data/"
-    "satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_"
-    "20170703215054z_000_049-v1000.nc"
+    "marias-satellite-example-data/satellite-data/"
+    "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_"
+    "20170703215054z_700_749-v1000.nc"  # nret is 5040, better
+    #"ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_"
+    #"20170703215054z_000_049-v1000.nc"  # all 6000 retrievals, try another,
     # From orig IDL, used: "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-"
     # "20110718141155z_20110718155058z_000_049-v1000.nc"
 )
+
+
+# Configuration based on variable names etc. These defaults are used unless
+# the user specifies any config. to override this
+PLUGIN_CONFIG_DEFAULTS = {
+    "latitude": "latitude",
+    "longitude": "longitude",
+    "sensingtime": "sensingtime",
+    "do_retrieval": "do_retrieval",
+    "sensingtime_msec": "sensingtime_msec",
+    "sensingtime_day": "sensingtime_day",
+    "sensingtime": "sensingtime",
+    "npres": "npres",
+    "npi": "npi",
+}
+
+
+def satellite_compliance_plugin(fieldlist, config=None):
+    """The converter.
+
+    Configuration may be provided to override the defaults.
+    """
+    logger.info(
+        f"Before pre-processing, fieldlist to satellite plugin is {fieldlist}"
+    )
+
+    plugin_config = PLUGIN_CONFIG_DEFAULTS
+    if config:
+        # Basic validation of input as dict of keys
+        try:
+            dict(config)
+        except TypeError:
+            raise TypeError(
+                f"Bad configuration, require dictionary but got: {config}")
+
+        # Only update keys which will do something, else warn of irrelevance
+        for config_key, config_value in config.items():
+            if config_key in plugin_config:
+                plugin_config[config_key] = config_value
+            else:
+                logger.warning(
+                    f"Unrecognised satellite plugin config. item: {config_key}"
+                )
+
+    logger.info(
+        f"Final configuration for satellite plugin is {pformat(plugin_config)}"
+    )
+
+    s0 = fieldlist.select_by_identity("air_temperature")[0]
+
+    # Remove the vertical axis
+    index = []
+    for i, key in enumerate(s0.get_data_axes()):
+        if s0.domain_axis(key).nc_get_dimension() == plugin_config["npres"]:
+            index.append(slice(None))
+            npres_position = i
+        else:
+            index.append(0)
+
+    if len(index) != s0.ndim:
+        raise ValueError("Unexpected dimensions. TODO EXPAND")
+
+    s = s0[tuple(index)].squeeze()
+
+    # Satellite time - applying standard units
+    # TODO could use select_by_ncvar, but should check is size one fieldlist?
+    time_of_day =  fieldlist.select_field(
+        f"ncvar%{plugin_config['sensingtime_msec']}")
+    time_of_day.override_units("ms", inplace=True)
+    time_of_day.dtype = float
+
+    day = fieldlist.select_field(f"ncvar%{plugin_config['sensingtime_day']}")
+    day.override_units("day since 2000-01-01", inplace=True)
+    day.dtype = float
+
+    time = day.copy()
+    time.data += time_of_day.data
+
+    time.clear_properties()
+    time.set_property("standard_name", "time")
+
+    # Satellite latitude and longitude
+    lat = fieldlist.select_field(f"ncvar%{plugin_config['latitude']}")
+    lon = fieldlist.select_field(f"ncvar%{plugin_config['longitude']}")
+
+    # Check for spatial subsetting
+    if lat.size == s.size:
+        do_retrival = fieldlist.select_field("ncvar%do_retrieval")
+        mask = do_retrival.data.where(1, None, cf.masked).mask.persist()
+
+        for f in (time, lat, lon):
+            f.where(mask, cf.masked, inplace=True)
+            data = f.del_data()
+            data.compressed(inplace=True)
+            if data.size != s.size:
+                raise ValueError("Incompatible sizes. TODO EXPAND")
+
+            f.domain_axis().set_size(s.size)
+            f.set_data(data.compressed())
+
+        del mask
+
+    # Create satellite "trajectory"
+    s.set_construct(cf.AuxiliaryCoordinate(source=lat))
+    s.set_construct(cf.AuxiliaryCoordinate(source=lon))
+    s.set_construct(cf.AuxiliaryCoordinate(source=time))
+    s.set_property("featureType", "trajectory")
+
+    logger.info(
+        f"Final pre-processed field from satellite plugin is {s}")
+
+    return s
 
 
 def matrix_multiply(a, b, atr=False, btr=False):
@@ -246,10 +360,15 @@ def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
     print("Returning fieldlist of:", len(v), v)
 
     # Unpacking stage, if a FieldList of length 1:
-    if len(v) == 1:
+    if len(v) != 1:
+        print("Warning! Have a FieldList of non-singular size.")
+    else:
         v = v[0]
 
-    return v
+    # Return the data not the field! For the algorithm conversion, work in
+    # numpy array space until we get it working, then can conert to cf-python
+    # space.
+    return v.data
 
 
 def setup_linear(x0, x1, i0, i1, w0, w1, vl=False, extra=False):
@@ -921,24 +1040,29 @@ def main(fi=None, lun=None, nret=None, approx=False):
     dsx_ev = ncdf_get(fi, "dsx_c", lun=lun, noclo=True, undo=True, ova=True)
     csx_ev = ncdf_get(fi, "csx_c", lun=lun, noclo=True, undo=True, ova=True)
     print("Example netcdf variable got, pf:", pf)
-
-    # Special case from above: takes value
     do_ret = (
-        ncdf_get(fi, "do_retrieval", lun=lun, noclo=True)).data  # IDL: .value
+        ncdf_get(fi, "do_retrieval", lun=lun, noclo=True))
     print("do_ret:", do_ret)
 
     # SLB: flake8 says this variable is not used, so comment out
     # dsn_ev = ncdf_get(fi, "dsxn_c", lun=lun, noclo=True, undo=True, ova=True)
     # csn_ev = ncdf_get(fi, "csxn_c", lun=lun, undo=True, ova=True)
 
-    # Get indices of retrieved scenes
-    # - code assumes all retrieved scenes have AK and covariance
-    # - this is true for all current ims files for co and o3 and minor gases (but not h2o or T)
-    print("nret:", nret)
-    # PY np space: (iret,) = np.where(do_ret, nret)
-    # PY ALT cf space: Field.where()
-    (iret,) = do_ret.where(nret)
+    # Advice from RS:
+    # nret is defined by the line iret=where(do_ret,nret)
+    # In that do_ret is the variable do_retrieval from the L2 file which is an array of values 0,1 for each scene, where 1 indicates a retrieval was done.
+    # (In most cases all values will be 1)
+    # The IDL where function (see https://www.nv5geospatialsoftware.com/docs/WHERE.html)
+    # returns (in iret) the indices of the elements of do_ret which are not zero (i.e. the scenes in the L2 files for which a retrieval is carried out)
+    # It also returns nret which is the number of elements in iret (i.e. the number of retrievals).
+    # Keep in numpy space (not cf/field space) since indices on
+    # data is not a field-like operation
+    # Numpy argwhere "Find the indices of array elements that are
+    # non-zero, grouped by element" so works out the box here
+    iret = np.argwhere(do_ret).flatten()  # flatten so not (1, 6000) shape
+    nret = len(iret)
     print("iret:", iret)
+    print("nret:", nret)
 
     if nret == 0:
         raise ValueError("No retrievals in file!")
@@ -946,24 +1070,32 @@ def main(fi=None, lun=None, nret=None, approx=False):
     # Convert time to julian day
     # TODO SLB check with DH operation order intended here - for IDL
     # Orig. IDL: sensingtime_day+sensingtime_msec/1000d0/60d0/60d0/24d0+2451544.5d0
+    print("sensingtime_day", sensingtime_day)
+    print("sensingtime_msec", sensingtime_msec)
+    # Processing as in satellite_compliance_converter!
     jday = (
         sensingtime_day
         + sensingtime_msec / (1000.0 * 60.0 * 60.0 * 24.0)  # msec - millisec
         + 2451544.5
     )
+    print("jday", jday)
 
     # Subset lat/lon/time/sp to the pixels for which retrieval exist
     lat = lat[iret]
     lon = lon[iret]
     jday = jday[iret]
     sp = sp[iret]
+    print("Example, lat:", lat)
 
     # Get dimensions
     nz = len(pf)  # number of fine vertical levels
     nsc = len(scs[:, 0])  # number of subcolumns
+    print("nz:", nz)
+    print("nsc:", nsc)
 
     # SLB: flake8 says this variable is not used, so comment out
     nev = len(evecs[:, 0])  # number of Eigenvectors used to represent profile
+    print("nev:", nev)
 
     # Interpolate the set of prior profiles in latitude
     c_ap_lnvmr = irc_interp_ap(c_ap_lnvmr, lat)
