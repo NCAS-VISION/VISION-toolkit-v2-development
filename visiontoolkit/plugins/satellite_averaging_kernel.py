@@ -151,6 +151,13 @@ numpy.isfortran(a)
 19. Add statement at top to include STFC OSS notes.
 
 20. Include the fix for the error RS pointed out!
+-> done.
+
+21. For IDL where, a variable is defined via the 'call'! I.e. with
+    (A,) = where(C, D) in IDL creates A as where query and a new variable called
+    D as the the number of elements in iret, so convert that to:
+        A = np.where(C)
+        D = len(A)
 """
 
 
@@ -177,119 +184,6 @@ DEFAULT_FILEPATH = (
     # From orig IDL, used: "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-"
     # "20110718141155z_20110718155058z_000_049-v1000.nc"
 )
-
-
-# Configuration based on variable names etc. These defaults are used unless
-# the user specifies any config. to override this
-PLUGIN_CONFIG_DEFAULTS = {
-    "latitude": "latitude",
-    "longitude": "longitude",
-    "sensingtime": "sensingtime",
-    "do_retrieval": "do_retrieval",
-    "sensingtime_msec": "sensingtime_msec",
-    "sensingtime_day": "sensingtime_day",
-    "sensingtime": "sensingtime",
-    "npres": "npres",
-    "npi": "npi",
-}
-
-
-def satellite_compliance_plugin(fieldlist, config=None):
-    """The converter.
-
-    Configuration may be provided to override the defaults.
-    """
-    logger.info(
-        f"Before pre-processing, fieldlist to satellite plugin is {fieldlist}"
-    )
-
-    plugin_config = PLUGIN_CONFIG_DEFAULTS
-    if config:
-        # Basic validation of input as dict of keys
-        try:
-            dict(config)
-        except TypeError:
-            raise TypeError(
-                f"Bad configuration, require dictionary but got: {config}"
-            )
-
-        # Only update keys which will do something, else warn of irrelevance
-        for config_key, config_value in config.items():
-            if config_key in plugin_config:
-                plugin_config[config_key] = config_value
-            else:
-                logger.warning(
-                    f"Unrecognised satellite plugin config. item: {config_key}"
-                )
-
-    logger.info(
-        f"Final configuration for satellite plugin is {pformat(plugin_config)}"
-    )
-
-    s0 = fieldlist.select_by_identity("air_temperature")[0]
-
-    # Remove the vertical axis
-    index = []
-    for i, key in enumerate(s0.get_data_axes()):
-        if s0.domain_axis(key).nc_get_dimension() == plugin_config["npres"]:
-            index.append(slice(None))
-            npres_position = i
-        else:
-            index.append(0)
-
-    if len(index) != s0.ndim:
-        raise ValueError("Unexpected dimensions. TODO EXPAND")
-
-    s = s0[tuple(index)].squeeze()
-
-    # Satellite time - applying standard units
-    # TODO could use select_by_ncvar, but should check is size one fieldlist?
-    time_of_day = fieldlist.select_field(
-        f"ncvar%{plugin_config['sensingtime_msec']}"
-    )
-    time_of_day.override_units("ms", inplace=True)
-    time_of_day.dtype = float
-
-    day = fieldlist.select_field(f"ncvar%{plugin_config['sensingtime_day']}")
-    day.override_units("day since 2000-01-01", inplace=True)
-    day.dtype = float
-
-    time = day.copy()
-    time.data += time_of_day.data
-
-    time.clear_properties()
-    time.set_property("standard_name", "time")
-
-    # Satellite latitude and longitude
-    lat = fieldlist.select_field(f"ncvar%{plugin_config['latitude']}")
-    lon = fieldlist.select_field(f"ncvar%{plugin_config['longitude']}")
-
-    # Check for spatial subsetting
-    if lat.size == s.size:
-        do_retrival = fieldlist.select_field("ncvar%do_retrieval")
-        mask = do_retrival.data.where(1, None, cf.masked).mask.persist()
-
-        for f in (time, lat, lon):
-            f.where(mask, cf.masked, inplace=True)
-            data = f.del_data()
-            data.compressed(inplace=True)
-            if data.size != s.size:
-                raise ValueError("Incompatible sizes. TODO EXPAND")
-
-            f.domain_axis().set_size(s.size)
-            f.set_data(data.compressed())
-
-        del mask
-
-    # Create satellite "trajectory"
-    s.set_construct(cf.AuxiliaryCoordinate(source=lat))
-    s.set_construct(cf.AuxiliaryCoordinate(source=lon))
-    s.set_construct(cf.AuxiliaryCoordinate(source=time))
-    s.set_property("featureType", "trajectory")
-
-    logger.info(f"Final pre-processed field from satellite plugin is {s}")
-
-    return s
 
 
 def matrix_multiply(a, b, atr=False, btr=False):
@@ -377,14 +271,14 @@ def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
 def setup_linear(
     x0,
     x1,
-    i1,
-    i2,
-    w1,
-    w2,
-    wc,
-    wd,
+    i1=None,
+    i2=None,
+    w1=None,
+    w2=None,
+    wc=None,
+    wd=None,
     zero=False,
-    extra=False,
+    ext=False,
     nn=False,
     op=False,
     dwdx=False,
@@ -478,16 +372,19 @@ def setup_linear(
         # I remain dubious but will check this at run-through time
         ilow = np.searchsorted(x0, x1)  # IDL: value_locate(x0, x1)
         ihigh = ilow + 1
-        (wh,) = np.where(ilow < 0, nw)
+        wh = np.where(ilow < 0)
+        nw = len(wh)
         if nw > 0:
             ilow[wh] = 0
-        (wh,) = np.where(ihigh >= n0, nw)
+
+        wh = np.where(ihigh >= n0)
+        nw = len(wh)
         if nw > 0:
             ihigh[wh] = n0 - 1
     else:
         nns = get_nns(x1, x0, ilow, ihigh, glh=True)
 
-    sz = size(x1)
+    sz = x1.shape
     # if sz(sz[0] + 1) == 5:
     w2 = np.zeros(n1)
     # else:
@@ -496,19 +393,21 @@ def setup_linear(
     dwdx = w2
     if ext:
         n0 = len(x0)
-        (whoor,) = np.where(ihigh == ilow, noor)
+        whoor = np.where(ihigh == ilow)
+        noor = len(whoor)
         if noor > 0:
-            (wh0,) = np.where(ihigh(whoor) == 0)
+            wh0 = np.where(ihigh(whoor) == 0)
             if wh0[0] != -1:
                 ihigh[whoor[wh0]] = 1
 
-            (wh0,) = np.where(ihigh(whoor) == n0 - 1)
+            wh0 = np.where(ihigh(whoor) == n0 - 1)
             if wh0[0] != -1:
                 ilow[whoor[wh0]] = n0 - 2
 
     i1 = ilow
     i2 = ihigh
-    (wh,) = np.where(ihigh != ilow, nne)
+    wh = np.where(ihigh != ilow)
+    nne = len(wh)
     if nne != 0:
         dwdx[wh] = 1.0 / (x0[ihigh[wh]] - x0[ilow[wh]])
         w2[wh] = (x1[wh] - x0[ilow[wh]]) / (x0[ihigh[wh]] - x0[ilow[wh]])
@@ -520,9 +419,9 @@ def setup_linear(
         w2 = float(w2)
 
     w1 = 1.0 - w2
-    if keyword_set(zero):
+    if zero:
         xmax = max(x0, min=xmin)
-        (wh,) = np.where(x1 > xmax or x1 < xmin)
+        wh = np.where(x1 > xmax or x1 < xmin)
         if wh[0] != -1:
             w1[wh] = 0.0
             w2[wh] = 0.0
@@ -695,7 +594,7 @@ def setup_integration_matrix(
         # TODO SLB was originally an 'and' here but that might be
         # problematic, DH advice to convert to ampersand which works
         # - see cf-python codebase examples.
-        (wh,) = np.where((x > orig_xrange[0]) & (x < orig_xrange[1], nw))
+        wh = np.where((x > orig_xrange[0]) & (x < orig_xrange[1], nw))
         if nw > 0:
             xi = [orig_xrange[0], x[wh], orig_xrange[1]]
         else:
@@ -1021,7 +920,7 @@ def f_diagonal(matrix, orig_input):
 
 # TODO SLB: latitude is probably not relevant so we can ignore this!
 # added internal undefined vars to arguments: i0, i1, w0, w1
-def irc_interp_ap(xap, latitude, i0, i1, w0, w1):
+def irc_interp_ap(xap, latitude):
     """CONV DONE
     Interpolate prior in 18 latitude bands to latitude of measurement
 
@@ -1032,7 +931,7 @@ def irc_interp_ap(xap, latitude, i0, i1, w0, w1):
     """
     # Latitude grid associated with the prior values
     lats_ap = np.arange(18.0) * 10 - 85  # IDL: dindgen(18) * 10 - 85d0
-    setup_linear(lats_ap, latitude, i0, i1, w0, w1, vl=True)
+    setup_linear(lats_ap, latitude, vl=True)
 
     # SLB: care, original IDL code has 'np' as variable, must use another to
     # avoid nameclash with numpy alias!
@@ -1074,7 +973,8 @@ def irc_ak_exp(ak, evecs, pf, sp, nz, nev, ns, w0, i0, i1, w1):
     ak_101 = matrix_multiply(evecs, ak_101, btr=True)
 
     # Make sure AK is zero below surface pressure
-    (ws,) = np.where(pf > sp, ns)  # TODO SLB is the comma / unpacking needed?
+    ws = np.where(pf > sp)  # TODO SLB is the comma / unpacking needed?
+    ns = len(ws)
     if ns > 0:  # Set levels below surface to 0
         ak_101[ws,] = 0
 
@@ -1104,9 +1004,10 @@ def irc_integration_matrix(scs, pf, sp, nz, nsc, n0, w0, approx=False):
             sc1[1] = sp
         if approx:
             msc1 = dpf
-            (w0,) = np.where(
-                pf < sc1[0] or pf > sc1[1], n0
+            w0 = np.where(
+                pf < sc1[0] or pf > sc1[1]
             )  # levels outside required layer
+            n0 = len(w0)
             if n0 > 0:
                 msc1[w0] = 0
         else:
@@ -1222,6 +1123,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     print("nev:", nev)
 
     # Interpolate the set of prior profiles in latitude
+    # SLB UPTO
     c_ap_lnvmr = irc_interp_ap(c_ap_lnvmr, lat)
 
     # Expand the total and noise  covariance matrices to full vertical grid (nz,nz) with units (ln(ppmv))^2
