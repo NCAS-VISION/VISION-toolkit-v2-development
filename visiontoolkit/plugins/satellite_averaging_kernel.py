@@ -172,8 +172,8 @@ DEFAULT_FILEPATH = (
     "marias-satellite-example-data/satellite-data/"
     "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_"
     "20170703215054z_700_749-v1000.nc"  # nret is 5040, better
-    #"ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_"
-    #"20170703215054z_000_049-v1000.nc"  # all 6000 retrievals, try another,
+    # "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_"
+    # "20170703215054z_000_049-v1000.nc"  # all 6000 retrievals, try another,
     # From orig IDL, used: "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-"
     # "20110718141155z_20110718155058z_000_049-v1000.nc"
 )
@@ -210,7 +210,8 @@ def satellite_compliance_plugin(fieldlist, config=None):
             dict(config)
         except TypeError:
             raise TypeError(
-                f"Bad configuration, require dictionary but got: {config}")
+                f"Bad configuration, require dictionary but got: {config}"
+            )
 
         # Only update keys which will do something, else warn of irrelevance
         for config_key, config_value in config.items():
@@ -243,8 +244,9 @@ def satellite_compliance_plugin(fieldlist, config=None):
 
     # Satellite time - applying standard units
     # TODO could use select_by_ncvar, but should check is size one fieldlist?
-    time_of_day =  fieldlist.select_field(
-        f"ncvar%{plugin_config['sensingtime_msec']}")
+    time_of_day = fieldlist.select_field(
+        f"ncvar%{plugin_config['sensingtime_msec']}"
+    )
     time_of_day.override_units("ms", inplace=True)
     time_of_day.dtype = float
 
@@ -285,8 +287,7 @@ def satellite_compliance_plugin(fieldlist, config=None):
     s.set_construct(cf.AuxiliaryCoordinate(source=time))
     s.set_property("featureType", "trajectory")
 
-    logger.info(
-        f"Final pre-processed field from satellite plugin is {s}")
+    logger.info(f"Final pre-processed field from satellite plugin is {s}")
 
     return s
 
@@ -355,7 +356,9 @@ def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
     """
     # Note: noclo arg to not close file irrelevant in cf-python
     # Undo and ova args also probably not relevant but check this later.
-    fl = cf.read(fi, aggregate=False)  # DH advice: agg=False for speed and improv.
+    fl = cf.read(
+        fi, aggregate=False
+    )  # DH advice: agg=False for speed and improv.
     v = fl.select_by_ncvar(varname)
     print("Returning fieldlist of:", len(v), v)
 
@@ -371,7 +374,25 @@ def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
     return v.data
 
 
-def setup_linear(x0, x1, i0, i1, w0, w1, vl=False, extra=False):
+def setup_linear(
+    x0,
+    x1,
+    i1,
+    i2,
+    w1,
+    w2,
+    wc,
+    wd,
+    zero=False,
+    extra=False,
+    nn=False,
+    op=False,
+    dwdx=False,
+    vl=False,
+    spline=False,
+    dcdx=False,
+    dddx=False,
+):
     """Implement IDL code 'setup_linear' function in Python.
 
         This procedure was stored in its own module, with the functional code
@@ -423,13 +444,116 @@ def setup_linear(x0, x1, i0, i1, w0, w1, vl=False, extra=False):
     ;	DCDX	Return derivative of spline parameter
     ;	DDDX	Return derivative of spline parameter
 
-    IGNORING IDL CODE AS THIS IS TRIVIAL IN CF-PYTHON SO NO NEED TO CHECK THEIR APPROACH
     """
-    # SLB TODO: how to deal with specified existing weights? Gues via
-    # RegridOperator(weights, ...) somehow, but not yet sure.
-    # SLB TODO what are these 'indexes to y' and how to deal with?
-    r = x0.regrids(x1, method="linear")
-    return r
+    n1 = len(x1)
+    if spline:
+        if len(ext) == 0:
+            ext = 1
+
+    if len(x0) == 0:
+        raise ValueError("X0 undefined")
+    if len(x0) == 1:
+        # Deal with case of only 1 element in input array
+        if zero:
+            raise ValueError(
+                "ZERO extrapolation with only 1 data value not implemented !"
+            )
+        else:
+            i1 = np.zeros(n1, dtype=int)
+            i2 = np.zeros(n1, dtype=int)
+            w2 = np.zeros(n1)
+            w1 = w2 + 1
+            dwdx = np.zeros(n1)
+            if len(x1) == 1 and op:
+                i1 = i1[0]
+                i2 = i2[0]
+                w1 = w1[0]
+                w2 = w2[0]
+                dwdx = dwdx[0]
+            return
+
+    if vl:
+        n0 = len(x0)
+        # SLB ChatGPT's suggestion of Python equivalent to IDL value_locate,
+        # I remain dubious but will check this at run-through time
+        ilow = np.searchsorted(x0, x1)  # IDL: value_locate(x0, x1)
+        ihigh = ilow + 1
+        (wh,) = np.where(ilow < 0, nw)
+        if nw > 0:
+            ilow[wh] = 0
+        (wh,) = np.where(ihigh >= n0, nw)
+        if nw > 0:
+            ihigh[wh] = n0 - 1
+    else:
+        nns = get_nns(x1, x0, ilow, ihigh, glh=True)
+
+    sz = size(x1)
+    # if sz(sz[0] + 1) == 5:
+    w2 = np.zeros(n1)
+    # else:
+    #    w2 = np.zeros(n1)
+
+    dwdx = w2
+    if ext:
+        n0 = len(x0)
+        (whoor,) = np.where(ihigh == ilow, noor)
+        if noor > 0:
+            (wh0,) = np.where(ihigh(whoor) == 0)
+            if wh0[0] != -1:
+                ihigh[whoor[wh0]] = 1
+
+            (wh0,) = np.where(ihigh(whoor) == n0 - 1)
+            if wh0[0] != -1:
+                ilow[whoor[wh0]] = n0 - 2
+
+    i1 = ilow
+    i2 = ihigh
+    (wh,) = np.where(ihigh != ilow, nne)
+    if nne != 0:
+        dwdx[wh] = 1.0 / (x0[ihigh[wh]] - x0[ilow[wh]])
+        w2[wh] = (x1[wh] - x0[ilow[wh]]) / (x0[ihigh[wh]] - x0[ilow[wh]])
+    if nn:
+        w2 = int(w2 + 0.5)
+        # if sz(sz[0] + 1) == 5:
+        #    w2 = double(w2)
+        # else:
+        w2 = float(w2)
+
+    w1 = 1.0 - w2
+    if keyword_set(zero):
+        xmax = max(x0, min=xmin)
+        (wh,) = np.where(x1 > xmax or x1 < xmin)
+        if wh[0] != -1:
+            w1[wh] = 0.0
+            w2[wh] = 0.0
+            dwdx[wh] = 0.0
+
+    if len(x1) == 1 and op:
+        i1 = i1[0]
+        i2 = i2[0]
+        w1 = w1[0]
+        w2 = w2[0]
+        dwdx = dwdx[0]
+
+    if spline:
+        # Compute coefs of spline interpolation and derivatives wrt x
+        if min(abs(dwdx)) == 0:
+            raise ValueError("Issue! See code. Original IDL aborted ('stop').")
+
+        dx2 = dwdx * dwdx * 6
+        w12 = w1 * w1
+        w22 = w2 * w2
+        wc = (w12 * w1 - w1) / dx2
+        dcdx = -dwdx * (3 * w12 - 1) / dx2
+        wd = (w22 * w2 - w2) / dx2
+        dddx = dwdx * (3 * w22 - 1) / dx2
+
+        if noor > 0:
+            # Do not apply spline out of range - do linear extrapolation
+            wc[whoor] = 0
+            wd[whoor] = 0
+            dcdx[whoor] = 0
+            dddx[whoor] = 0
 
 
 def sqrt_nz(a):
@@ -468,7 +592,8 @@ def sqrt_nz(a):
 
 # added internal undefined vars to arguments: nw, i0, i1, w0, w1
 def setup_integration_matrix(
-        x1, orig_xrange, extra, tol, box, nw, i0, i1, w0, w1):
+    x1, orig_xrange, extra, tol, box, nw, i0, i1, w0, w1
+):
     """Implement IDL code 'setup_integration_matrix' function in Python.
 
         This procedure was stored in its own module, with the functional code
@@ -607,7 +732,7 @@ def setup_integration_matrix(
                 nz = len(x)
                 m = np.zeros((nz - 1, nz - 1))
                 for iz in np.arange(1, nz):
-                    m[iz - 1, 0] = dx[0: iz - 1]
+                    m[iz - 1, 0] = dx[0 : iz - 1]
             else:
                 m = dx
         else:
@@ -616,7 +741,7 @@ def setup_integration_matrix(
                 m = np.zeros((nz, nz - 1))
                 for iz in np.arange(1, nz):
                     m[iz - 1, 0] = 0.5 * (
-                        [0.0, dx[0: iz - 1]] + [dx[0: iz - 1], 0.0]
+                        [0.0, dx[0 : iz - 1]] + [dx[0 : iz - 1], 0.0]
                     )
             else:
                 m = 0.5 * ([0.0, dx] + [dx, 0.0])
@@ -725,12 +850,12 @@ def iasimhs_vsx2cov(vsx, diag):
 
         for i in range(n):
             if i == 0:  # diagonals
-                sx1 = np.diag(vsx1[j: j + n - i - 1])
+                sx1 = np.diag(vsx1[j : j + n - i - 1])
             else:
                 sx1 = (
                     sx1
-                    + np.diag(vsx1[j: j + n - i - 1], i)
-                    + np.diag(vsx1[j: j + n - i - 1], -i)
+                    + np.diag(vsx1[j : j + n - i - 1], i)
+                    + np.diag(vsx1[j : j + n - i - 1], -i)
                 )  # off-diagonals
             j = j + n - i
         if correl:
@@ -968,7 +1093,7 @@ def irc_integration_matrix(scs, pf, sp, nz, nsc, n0, w0, approx=False):
         # the defined bounds as weights.
         # Full method treats the layer bounds more exactly, by also including interpolation
         # from the fine grid to the defined pressure bounds (and surface pressure).
-        dp1 = pf[1: nz - 1] - pf[0: nz - 2]  # IDL: =pf(1:nz-1)-pf(0:nz-2)
+        dp1 = pf[1 : nz - 1] - pf[0 : nz - 2]  # IDL: =pf(1:nz-1)-pf(0:nz-2)
         dpf = ([0.0, dp1] + [dp1, 0]) / 2
 
     for isc in range(nsc):
@@ -1040,8 +1165,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     dsx_ev = ncdf_get(fi, "dsx_c", lun=lun, noclo=True, undo=True, ova=True)
     csx_ev = ncdf_get(fi, "csx_c", lun=lun, noclo=True, undo=True, ova=True)
     print("Example netcdf variable got, pf:", pf)
-    do_ret = (
-        ncdf_get(fi, "do_retrieval", lun=lun, noclo=True))
+    do_ret = ncdf_get(fi, "do_retrieval", lun=lun, noclo=True)
     print("do_ret:", do_ret)
 
     # SLB: flake8 says this variable is not used, so comment out
