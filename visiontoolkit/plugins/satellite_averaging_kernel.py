@@ -894,7 +894,8 @@ def iasimhs_vsx2cov(vsx, diag):
 
 
 def iasimhs_sx_exp(s1, evecs, log=False, x=False):
-    """Implement IDL code 'iasimhs_sx_exp' function in Python.
+    """CONV DONE
+    Implement IDL code 'iasimhs_sx_exp' function in Python.
 
         This procedure was stored in its own module, with the functional code
         and important docs as follows:
@@ -922,6 +923,7 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
     end
 
     """
+    # Transpose input and output, 1. input
     sz = [s1.ndim,] + list(s1.shape)[::-1]
     print("SZ IS", sz)
     if sz[0] == 3:
@@ -931,19 +933,21 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
     else:
         orig_np = 1
 
-    if sz[1] != sz[2]:
+    print("sz", sz)
+    if sz[-1] != sz[-2]:  # IDL: if sz[1] != sz[2], but Py dims reverse order
         raise ValueError("Expected first 2 dims to be same size!")
 
     sz = [evecs.ndim,] + list(evecs.shape)[::-1]
+    print("evecs:", evecs)
     nz = sz[1]
     s = np.zeros((nz, nz, orig_np), dtype=np.float32)
     print("s shape:", s.shape, "orig_np int:", orig_np)
     for ip in range(orig_np):
         print("ip is:", ip)
-        sipi = s1[ip, :, :]
-        pre_sipi = matrix_multiply(evecs, sipi, atr=True, btr=False)
+        sipi = s1[:, :, ip]
+        pre_sipi = matrix_multiply(evecs, sipi, atr=True, btr=True)
         sipi = matrix_multiply(
-            pre_sipi, evecs, atr=True, btr=True
+            pre_sipi, evecs, atr=False, btr=False
         )  # map to rttov levels
         if log:
             xipi = x[ip,]
@@ -953,10 +957,8 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
         # NOTE: relative to raw IDL, apply T to transpose whole result
         # so have shape (10, 45)
         # to fit s shape (10, 10, 45), not shape (45, 10)
-        ####sipi = sipi.reshape(sipi.shape, order="F")
-        #new_sipi = sipi.T
-        print("shape sipi", sipi.shape, "shape other", s[ip, 0, :].shape)
-        s[ip, :, :] = sipi  ###.T
+        print("shape sipi", sipi.shape, "shape other", s[ip, :, :].shape)
+        s[:, :, ip] = sipi
 
     print("Final return value s:", s.shape)
     return s
@@ -1154,7 +1156,8 @@ def irc_ak_exp(ak, evecs, pf, sp, nz, nev, ns, w0, i0, i1, w1):
 
 
 # added internal undefined vars to arguments: n0, w0
-def irc_integration_matrix(scs, pf, sp, nz, nsc, n0, w0, approx=False):
+def irc_integration_matrix(
+        scs, pf, sp, nz, nsc, n0=False, w0=False, approx=False):
     """CONV DONE
     (No docstring in corresponding IDL procedure).
     """
@@ -1165,32 +1168,46 @@ def irc_integration_matrix(scs, pf, sp, nz, nsc, n0, w0, approx=False):
         # the defined bounds as weights.
         # Full method treats the layer bounds more exactly, by also including interpolation
         # from the fine grid to the defined pressure bounds (and surface pressure).
-        dp1 = pf[1 : nz - 1] - pf[0 : nz - 2]  # IDL: =pf(1:nz-1)-pf(0:nz-2)
-        dpf = ([0.0, dp1] + [dp1, 0]) / 2
+        # IDL: =pf(1:nz-1)-pf(0:nz-2) - convert for Python exclusiveness by + 1
+        dp1 = pf[1: nz] - pf[0: nz - 1]
+        print("dp1", dp1.shape)
+        # Use explicit concat form for Python/numpy from IDL implicit concat
+        dpf = (np.concatenate((np.array([0.0]), dp1)) +
+               np.concatenate((dp1, np.array([0.0])))) / 2
+        print("dpf", dpf.shape, dpf)
+        ###dpf = ([0.0, dp1] + [dp1, 0]) / 2
 
     for isc in range(nsc):
         # Pressure levels of this layer in ascending order
-        sc1 = scs[[1, 0], isc]
+        # SLB UPTO
+        print("isc:", isc)
+        sc1 = np.array([1, 0, isc])  # scs[[1, 0], isc]
+        print("sc1", sc1)
         # if lower bound indicated as 1000 or lower bound below surface then truncate layer to the surface
-        if sc1[1] == 1000 or sc1(1) > sp:
+        if sc1[1] == 1000 or sc1[1] > sp:
             sc1[1] = sp
         if approx:
             msc1 = dpf
-            w0 = np.where(
-                pf < sc1[0] or pf > sc1[1]
+            print("HERE", pf < sc1[0], "AND", pf > sc1[1])
+            w0 = np.where(np.logical_or(pf < sc1[0], pf > sc1[1])
             )[0]  # levels outside required layer
+            print("w0", w0)
             n0 = len(w0)
+            print("n0", n0)
             if n0 > 0:
+                print("msc1", msc1.shape, msc1)
                 msc1[w0] = 0
         else:
             # used function to set up weights to do trapezoid integration over defined interval
-            msc1 = setup_integration_matrix(pf, xran=sc1)
+            msc1 = setup_integration_matrix(pf, orig_xrange=sc1)
 
         msc1 = msc1 / np.sum(
             msc1
         )  # this normalises result to sub-column average
-        msc[0, isc] = msc1
+        print("msc1", msc1.shape, "msc", msc.shape, "msc[0, isc]", msc[0, isc])
+        msc[:, isc] = msc1
 
+    print("FINAL IRC_INTEGRATION_MATRIX VAR MSC IS:", msc)
     return msc
 
 
@@ -1300,7 +1317,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     except:  #if True:  #except:
         c_ap_lnvmr = irc_interp_ap(c_ap_lnvmr, lat)
         np.save('c_ap_lnvmr.npy', c_ap_lnvmr, allow_pickle=True)
-    print("Found c_ap_lnvmr to be:", c_ap_lnvmr)
+    print("Found c_ap_lnvmr to be:", c_ap_lnvmr, c_ap_lnvmr.shape)
 
     # Expand the total and noise covariance matrices to full vertical grid (nz,nz) with units (ln(ppmv))^2
     try:  # pre-calculated
@@ -1310,8 +1327,11 @@ def main(fi=None, lun=None, nret=None, approx=False):
         np.save('sx_ev.npy', sx_ev, allow_pickle=True)
     print("Found sx_ev to be:", sx_ev, sx_ev.shape)
 
-    # SLB UPTO
-    sx_lnvmr = iasimhs_sx_exp(sx_ev, evecs)  # nz,nz matrix
+    try:  # pre-calculated
+        sx_lnvmr = np.load('sx_lnvmr.npy')
+    except:
+        sx_lnvmr = iasimhs_sx_exp(sx_ev, evecs)
+        np.save('sx_lnvmr.npy', sx_lnvmr, allow_pickle=True)
 
     # SLB: flake8 says this variable is not used, so comment out
     # sn_ev = iasimhs_vsx2cov(csn_ev, diag=dsn_ev)  # nev,nev matrix
@@ -1349,7 +1369,8 @@ def main(fi=None, lun=None, nret=None, approx=False):
         c_vmr = np.exp(c_lnvmr[iret,])  # undo log unit
 
         # Calculate weights which will compute the subcolumn via matrix multiply
-        msc = irc_integration_matrix(scs, pf, sp[iret], nz, nsc, approx=approx)
+        # SLB UPTO
+        msc = irc_integration_matrix(scs, pf, sp[iret], nz, nsc, approx=True)
 
         # Calculate the sub columns
         c_sc[iret, 0] = matrix_multiply(msc, c_vmr, atr=True)
