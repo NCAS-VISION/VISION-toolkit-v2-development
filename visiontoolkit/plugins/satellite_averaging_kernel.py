@@ -171,6 +171,10 @@ and be careful with it.
 e.g. https://numpy.org/doc/2.1/reference/generated/numpy.isfortran.html
 numpy.isfortran(a)
 
+Row major vs colum major:
+https://stackoverflow.com/questions/20341614/numpy-array-row-major-and-column-major
+
+
 17. Also check slowest-moving indexing part - is it always first?
 
 18. Intpreting the output structure in terms of size.
@@ -190,6 +194,8 @@ numpy.isfortran(a)
 22. Care with use of len()! n_elements from IDL is better to do to .size for
     arrays, since len can given misleading results e.g. 1 where size is 101
     etc.
+
+
 """
 
 
@@ -300,7 +306,9 @@ def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
     # Return the data not the field! For the algorithm conversion, work in
     # numpy array space until we get it working, then can conert to cf-python
     # space.
-    return v.data
+    d = v.data
+    d.persist(inplace=True)  # for speed
+    return d
 
 
 def setup_linear(
@@ -751,8 +759,9 @@ def iasimhs_vsx2cov(vsx, diag):
             return, sx
     end
     """
-    print("vsx", vsx, vsx.shape)
-    print("diag", diag, diag.shape)
+    print("vsx", vsx, type(vsx), vsx.shape)
+    ###vsx = vsx.array
+    print("diag", diag, type(diag), diag.shape)
     # Reconstruct covariance matrix from vector representing one half of
     # covariance matrix unwrapped
     sz = vsx.shape
@@ -803,31 +812,49 @@ def iasimhs_vsx2cov(vsx, diag):
     print("N IS", n, n[0])
     n = int(n[1] + 0.1)  # IDL: long(n(1) + 0.1)
     sx = np.zeros((n, n, npi))
-    print("sx", sx)
+    print("sx", sx.shape)
     for ipi in range(npi):  # Do for more than one pixel
         j = 0
         vsx1 = vsx[ipi,]
         if correl:
-            vsx1 = [vsx1, covd]
+            ### print("HERE", vsx1.shape, covd.shape)
+            # Orig:
+            vsx1 = vsx1.squeeze()  # needed?
+            covd = covd.squeeze()  # needed?
+            vsx1 = np.concatenate((vsx1, covd), axis=0)
+            # IDL->Py, also need to remove size 1 axis to avoid later
+            # need to unpack
+            vsx1 = vsx1.squeeze()
+            print("VSX1 IS", vsx1, vsx1.shape)
             diag1 = diag[ipi,]
             diag2 = matrix_multiply(diag1, diag1)
 
         print("N IS", n)
         for i in range(n):
             if i == 0:  # diagonals
-                sx1 = np.diag(vsx1[j : j + n - i - 1])
+                # IDL:  vsx1[j: j + n - i - 1] has but inclusive endpoints
+                # therefore +1 -> - 1 + 1 = 0
+                sx1 = np.diag(vsx1[j: j + n - i])
             else:
+                print("woo")
+                # IDL:  vsx1[j: j + n - i - 1] has but inclusive endpoints
+                # therefore +1 -> - 1 + 1 = 0
                 sx1 = (
                     sx1
-                    + np.diag(vsx1[j : j + n - i - 1], i)
-                    + np.diag(vsx1[j : j + n - i - 1], -i)
+                    + np.diag(vsx1[j: j + n - i], i)
+                    + np.diag(vsx1[j: j + n - i], -i)
                 )  # off-diagonals
             j = j + n - i
+            print("J IS", j)  ###, "sx1 is", sx1)
+
         if correl:
+            ###print("yes", sx1, diag2)
             sx1 = sx1 * diag2
 
-        sx[ipi, 0, 0] = sx1
+        print("sx1", sx1.shape)  #, sx[ipi, 0, 0].shape)
+        sx[: , :, ipi] = sx1  #sx[ipi, 0, 0] = sx1
 
+    print("FINAL SX IS", sx, sx.shape)
     return sx
 
 
@@ -1139,7 +1166,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
             [450.0, 170.0],
         ]
     )  # i.e. 6-12km (approx)
-    print("scs:", scs)
+    print("scs:", scs, np.isfortran(scs))
 
     # Read necessary info from the file
     # ncdf_get will apply scale_factor and add offset (/undo keyword)
@@ -1162,7 +1189,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     csx_ev = ncdf_get(fi, "csx_c", lun=lun, noclo=True, undo=True, ova=True)
     print("Example netcdf variable got, pf:", pf)
     do_ret = ncdf_get(fi, "do_retrieval", lun=lun, noclo=True)
-    print("do_ret:", do_ret)
+    print("do_ret:", do_ret, np.isfortran(do_ret.array))
 
     # SLB: flake8 says this variable is not used, so comment out
     # dsn_ev = ncdf_get(fi, "dsxn_c", lun=lun, noclo=True, undo=True, ova=True)
@@ -1225,9 +1252,15 @@ def main(fi=None, lun=None, nret=None, approx=False):
         np.save('c_ap_lnvmr.npy', c_ap_lnvmr, allow_pickle=True)
     print("Found c_ap_lnvmr to be:", c_ap_lnvmr)
 
-    # SLB UPTO
     # Expand the total and noise covariance matrices to full vertical grid (nz,nz) with units (ln(ppmv))^2
-    sx_ev = iasimhs_vsx2cov(csx_ev, diag=dsx_ev)  # nev,nev matrix
+    try:  # pre-calculated
+        sx_ev = np.load('sx_ev.npy')
+    except:
+        sx_ev = iasimhs_vsx2cov(csx_ev, diag=dsx_ev)  # nev,nev matrix
+        np.save('sx_ev.npy', sx_ev, allow_pickle=True)
+    print("Found sx_ev to be:", sx_ev, sx_ev.shape)
+
+    # SLB UPTO
     sx_lnvmr = iasimhs_sx_exp(sx_ev, evecs)  # nz,nz matrix
 
     # SLB: flake8 says this variable is not used, so comment out
