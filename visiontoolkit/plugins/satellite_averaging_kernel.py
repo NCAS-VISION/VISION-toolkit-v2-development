@@ -195,6 +195,22 @@ https://stackoverflow.com/questions/20341614/numpy-array-row-major-and-column-ma
     arrays, since len can given misleading results e.g. 1 where size is 101
     etc.
 
+23. CONVERTING SIZE!
+Note that (from https://lweb.cfa.harvard.edu/~atripath/idlrefguide.pdf, p2385):
+
+If no keywords are set, SIZE returns a vector of integer type. The first element is
+equal to the number of dimensions of Expression. This value is zero if Expression is
+scalar or undefined. The next elements contain the size of each dimension, one
+element per dimension (none if Expression is scalar or undefined). After the
+dimension sizes, the last two elements contain the type code (zero if undefined) and
+the number of elements in Expression, respectively. The type codes are listed below.
+If a keyword is set, SIZE returns the specified information
+
+Therefore IDL size(N) becomes Python
+(N.ndim, [unpacked] N.shape, [ignore last one if can, is a type code])
+so use:
+size(a) -> [a.ndim,] + list(a.shape)
+24. Rename 'np' var to avoid obvious clash!
 
 """
 
@@ -427,7 +443,7 @@ def setup_linear(
     else:
         nns = get_nns(x1, x0, ilow, ihigh, glh=True)
 
-    sz = x1.shape
+    sz = [x1.ndim,] + list(x1.shape)
     # if sz(sz[0] + 1) == 5:
     w2 = np.zeros(n1)
     # else:
@@ -703,7 +719,8 @@ def setup_integration_matrix(
 
 
 def iasimhs_vsx2cov(vsx, diag):
-    """Implement IDL code 'iasimhs_vsx2cov' function in Python.
+    """CONV DONE
+    Implement IDL code 'iasimhs_vsx2cov' function in Python.
 
         This procedure was stored in its own module, with the functional code
         and important docs as follows:
@@ -764,21 +781,21 @@ def iasimhs_vsx2cov(vsx, diag):
     print("diag", diag, type(diag), diag.shape)
     # Reconstruct covariance matrix from vector representing one half of
     # covariance matrix unwrapped
-    sz = vsx.shape
+    sz = [vsx.ndim,] + list(vsx.shape)
     print("vsx", vsx, vsx.shape)
     if sz[0] == 1:
         npi = 1
     else:
-        npi = sz[1]  # SLB IDL [2] -> Py [1] seems to work in context, but why?
+        npi = sz[2]
 
     nv = sz[1]
     if len(diag) > 0:
-        szd = diag.shape
+        szd = [diag.ndim,] + list(diag.shape)
         nd = szd[1]
         if szd[0] == 1:
             npid = 1
         else:
-            npid = sz[1]  # SLB IDL [2] -> Py [1] seems to work in context?
+            npid = sz[2]
         print("npi", npi, "npid", npid)
         if npi != npid:
             raise ValueError("DIAG,VSX: not match!")
@@ -819,15 +836,18 @@ def iasimhs_vsx2cov(vsx, diag):
         if correl:
             ### print("HERE", vsx1.shape, covd.shape)
             # Orig:
-            vsx1 = vsx1.squeeze()  # needed?
-            covd = covd.squeeze()  # needed?
-            vsx1 = np.concatenate((vsx1, covd), axis=0)
-            # IDL->Py, also need to remove size 1 axis to avoid later
-            # need to unpack
+            print("VSX1 IS", vsx1.shape)
+            print("COVD IS", covd.shape)
+            #vsx1 = vsx1.squeeze()
+            #covd = covd.squeeze()  # needed?
+            # Applied implicit concat in IDL
+            # https://www.nv5geospatialsoftware.com/docs/Creating_Arrays.html
+            vsx1 = np.concatenate((covd, vsx1), axis=1)
             vsx1 = vsx1.squeeze()
             print("VSX1 IS", vsx1, vsx1.shape)
             diag1 = diag[ipi,]
             diag2 = matrix_multiply(diag1, diag1)
+            print("Diags", diag1.shape, diag2.shape)
 
         print("N IS", n)
         for i in range(n):
@@ -835,10 +855,12 @@ def iasimhs_vsx2cov(vsx, diag):
                 # IDL:  vsx1[j: j + n - i - 1] has but inclusive endpoints
                 # therefore +1 -> - 1 + 1 = 0
                 sx1 = np.diag(vsx1[j: j + n - i])
+                print("1. Shapes are:", "sx1:", sx1.shape)
             else:
-                print("woo")
                 # IDL:  vsx1[j: j + n - i - 1] has but inclusive endpoints
                 # therefore +1 -> - 1 + 1 = 0
+                print("Shapes are", i, ": sx1:", sx1.shape)
+                print("expr attempt", np.diag(vsx1[j: j + n - i], i))
                 sx1 = (
                     sx1
                     + np.diag(vsx1[j: j + n - i], i)
@@ -848,7 +870,7 @@ def iasimhs_vsx2cov(vsx, diag):
             print("J IS", j)  ###, "sx1 is", sx1)
 
         if correl:
-            ###print("yes", sx1, diag2)
+            print("yes", sx1, diag2)
             sx1 = sx1 * diag2
 
         print("sx1", sx1.shape)  #, sx[ipi, 0, 0].shape)
@@ -858,7 +880,7 @@ def iasimhs_vsx2cov(vsx, diag):
     return sx
 
 
-def iasimhs_sx_exp(s1, evecs, log, x):
+def iasimhs_sx_exp(s1, evecs, log=False, x=False):
     """Implement IDL code 'iasimhs_sx_exp' function in Python.
 
         This procedure was stored in its own module, with the functional code
@@ -885,20 +907,24 @@ def iasimhs_sx_exp(s1, evecs, log, x):
             endfor
             return,s
     end
+
     """
-    sz = s1.shape
+    sz = [s1.ndim,] + list(s1.shape)
+    print("SZ IS", sz)
     if sz[0] == 3:
-        np = sz[3]
+        # NOTE: renaming 'np' var used here to avoid nameclash with numpy
+        # alias, calling it orig_np now
+        orig_np = sz[3]
     else:
-        np = 1
+        orig_np = 1
 
     if sz[1] != sz[2]:
         raise ValueError("Expected first 2 dims to be same size!")
 
-    sz = evecs.shape
+    sz = [evecs.ndim,] + list(evecs.shape)
     nz = sz[1]
-    s = np.zeros((nz, nz, np), dtype=np.float32)
-    for ip in range(np):
+    s = np.zeros((nz, nz, orig_np), dtype=np.float32)
+    for ip in range(orig_np):
         sipi = s1[ip, :, :]
         sipi = matrix_multiply(
             matrix_multiply(evecs, sipi), evecs, btr=True
@@ -1247,15 +1273,15 @@ def main(fi=None, lun=None, nret=None, approx=False):
     # Interpolate the set of prior profiles in latitude
     try:  # pre-calculated
         c_ap_lnvmr = np.load('c_ap_lnvmr.npy')
-    except:
+    except:  #if True:  #except:
         c_ap_lnvmr = irc_interp_ap(c_ap_lnvmr, lat)
         np.save('c_ap_lnvmr.npy', c_ap_lnvmr, allow_pickle=True)
     print("Found c_ap_lnvmr to be:", c_ap_lnvmr)
 
     # Expand the total and noise covariance matrices to full vertical grid (nz,nz) with units (ln(ppmv))^2
-    try:  # pre-calculated
-        sx_ev = np.load('sx_ev.npy')
-    except:
+    #try:  # pre-calculated
+    #    sx_ev = np.load('sx_ev.npy')
+    if True:  #except:
         sx_ev = iasimhs_vsx2cov(csx_ev, diag=dsx_ev)  # nev,nev matrix
         np.save('sx_ev.npy', sx_ev, allow_pickle=True)
     print("Found sx_ev to be:", sx_ev, sx_ev.shape)
