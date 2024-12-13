@@ -209,7 +209,11 @@ If a keyword is set, SIZE returns the specified information
 Therefore IDL size(N) becomes Python
 (N.ndim, [unpacked] N.shape, [ignore last one if can, is a type code])
 so use:
-size(a) -> [a.ndim,] + list(a.shape)
+ALSO NOTE YOU NEED TO REVERSE THE SHAPE! SINCE IN IDL THE COLUMNS ARE
+QUOTED FIRST RELATIVE TO NP.SHAPE WHICH QUOTES ROWS FIRST. Hence the [-1]:
+
+size(a) -> [a.ndim,] + list(a.shape)[::-1]
+
 24. Rename 'np' var to avoid obvious clash!
 
 """
@@ -249,13 +253,22 @@ def matrix_multiply(a, b, atr=False, btr=True):
     Note: having B tranposed as default to ensure shapes are compatible for
     dot operation from IDL code conversion.
     """
-    a_dot = a
+    a_dot = a.copy()
+    print("a", a.shape, type(a))
     if atr:
-        a_dot = a.transpose()
+        if isinstance(a_dot, cf.Data):  # cf to np space, cf transpose issues
+            print("a.T applied")
+            a_dot = a_dot.array
+        a_dot = a_dot.T
 
-    b_dot = b
+    b_dot = b.copy()
+    print("b", b.shape, type(b))
     if btr:
-        b_dot = b.transpose()
+        print("b", b.shape, type(b))
+        if isinstance(b_dot, cf.Data):  # cf to np space
+            print("b.T applied")
+            b_dot = b_dot.array
+        b_dot = b_dot.T
 
     return np.dot(a_dot, b_dot)  #.transpose() need final one for overall res?
 
@@ -443,7 +456,7 @@ def setup_linear(
     else:
         nns = get_nns(x1, x0, ilow, ihigh, glh=True)
 
-    sz = [x1.ndim,] + list(x1.shape)
+    sz = [x1.ndim,] + list(x1.shape)[::-1]
     # if sz(sz[0] + 1) == 5:
     w2 = np.zeros(n1)
     # else:
@@ -781,7 +794,7 @@ def iasimhs_vsx2cov(vsx, diag):
     print("diag", diag, type(diag), diag.shape)
     # Reconstruct covariance matrix from vector representing one half of
     # covariance matrix unwrapped
-    sz = [vsx.ndim,] + list(vsx.shape)
+    sz = [vsx.ndim,] + list(vsx.shape)[::-1]
     print("vsx", vsx, vsx.shape)
     if sz[0] == 1:
         npi = 1
@@ -790,7 +803,7 @@ def iasimhs_vsx2cov(vsx, diag):
 
     nv = sz[1]
     if len(diag) > 0:
-        szd = [diag.ndim,] + list(diag.shape)
+        szd = [diag.ndim,] + list(diag.shape)[::-1]
         nd = szd[1]
         if szd[0] == 1:
             npid = 1
@@ -909,7 +922,7 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
     end
 
     """
-    sz = [s1.ndim,] + list(s1.shape)
+    sz = [s1.ndim,] + list(s1.shape)[::-1]
     print("SZ IS", sz)
     if sz[0] == 3:
         # NOTE: renaming 'np' var used here to avoid nameclash with numpy
@@ -921,20 +934,31 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
     if sz[1] != sz[2]:
         raise ValueError("Expected first 2 dims to be same size!")
 
-    sz = [evecs.ndim,] + list(evecs.shape)
+    sz = [evecs.ndim,] + list(evecs.shape)[::-1]
     nz = sz[1]
     s = np.zeros((nz, nz, orig_np), dtype=np.float32)
+    print("s shape:", s.shape, "orig_np int:", orig_np)
     for ip in range(orig_np):
+        print("ip is:", ip)
         sipi = s1[ip, :, :]
+        pre_sipi = matrix_multiply(evecs, sipi, atr=True, btr=False)
         sipi = matrix_multiply(
-            matrix_multiply(evecs, sipi), evecs, btr=True
+            pre_sipi, evecs, atr=True, btr=True
         )  # map to rttov levels
         if log:
             xipi = x[ip,]
             sipi = sipi * matrix_multiply(xipi, xipi)  # Multiply out log unit
 
-        s[ip, 0, 0] = sipi
+        print("Attempt", sipi.shape)
+        # NOTE: relative to raw IDL, apply T to transpose whole result
+        # so have shape (10, 45)
+        # to fit s shape (10, 10, 45), not shape (45, 10)
+        ####sipi = sipi.reshape(sipi.shape, order="F")
+        #new_sipi = sipi.T
+        print("shape sipi", sipi.shape, "shape other", s[ip, 0, :].shape)
+        s[ip, :, :] = sipi  ###.T
 
+    print("Final return value s:", s.shape)
     return s
 
 
@@ -1279,9 +1303,9 @@ def main(fi=None, lun=None, nret=None, approx=False):
     print("Found c_ap_lnvmr to be:", c_ap_lnvmr)
 
     # Expand the total and noise covariance matrices to full vertical grid (nz,nz) with units (ln(ppmv))^2
-    #try:  # pre-calculated
-    #    sx_ev = np.load('sx_ev.npy')
-    if True:  #except:
+    try:  # pre-calculated
+        sx_ev = np.load('sx_ev.npy')
+    except:
         sx_ev = iasimhs_vsx2cov(csx_ev, diag=dsx_ev)  # nev,nev matrix
         np.save('sx_ev.npy', sx_ev, allow_pickle=True)
     print("Found sx_ev to be:", sx_ev, sx_ev.shape)
