@@ -78,6 +78,15 @@ a(*,0) -> a[0,]
 a(0,*) ->       a[:,0]
 a(*,1:*) ->     a[1:,]
 
+https://www.johnny-lin.com/cdat_tips/tips_array/idl2num.html
+ Order of indices in Numeric/numarray is opposite of IDL! For a 2-dimension array:
+a[i,j] in IDL is equivalent to a[j,i] in Python
+ANOTHER SOURCE SAYS:
+i:j 	i:j (except for different interpretation for j)
+i:* 	i:
+*:i 	:i
+a[i,*] 	a[:,i]
+
 Assuming ak_lnvmr(*,*,iret) therefore ->
 but need to check. ChatGPT says:
 In IDL, a[*, *, 0] selects a 2D slice from a 3D array a. The * acts as a wildcard, meaning "include all elements along this dimension." Specifically:
@@ -134,6 +143,24 @@ https://www.nv5geospatialsoftware.com/docs/FZ_ROOTS.html
 "IDL slice endpoints are inclusive, while Python slice endpoints are exclusive. For example, in IDL, x[1:4] extracts a subarray of length 4 (elements at indices 1, 2, 3, 4), while in Python, x[1:4] extracts a sub-array of length 3 (elements at indices 1, 2, 3)."
 so go and account for that.
 
+MAINFESTS AS, E.G:
+Traceback (most recent call last):
+  File "/home/slb93/git-repos/vision-project-resources/visiontoolkit/plugins/satellite_averaging_kernel.py", line 1280, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/slb93/git-repos/vision-project-resources/visiontoolkit/plugins/satellite_averaging_kernel.py", line 1127, in main
+    c_ap_lnvmr = irc_interp_ap(c_ap_lnvmr, lat)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/slb93/git-repos/vision-project-resources/visiontoolkit/plugins/satellite_averaging_kernel.py", line 934, in irc_interp_ap
+    setup_linear(lats_ap, latitude, vl=True)
+  File "/home/slb93/git-repos/vision-project-resources/visiontoolkit/plugins/satellite_averaging_kernel.py", line 412, in setup_linear
+    dwdx[wh] = 1.0 / (x0[ihigh[wh]] - x0[ilow[wh]])
+                                      ~~^^^^^^^^^^
+IndexError: index 18 is out of bounds for axis 0 with size 18
+
+so must change from IDL [n] to Python [n + 1] ???
+
+
 16. Does the IDL ncdf_get return everything in Fortran major - since
     we are in C major, but resources like (as ref#'d for matrix_multiply);
 https://stackoverflow.com/questions/23128788/what-is-the-python-numpy-equivalent-of-the-idl-operator
@@ -155,9 +182,14 @@ numpy.isfortran(a)
 
 21. For IDL where, a variable is defined via the 'call'! I.e. with
     (A,) = where(C, D) in IDL creates A as where query and a new variable called
-    D as the the number of elements in iret, so convert that to:
-        A = np.where(C)
+    D as the the number of elements in iret, and need to unpack from a resultant
+    tuple (use 0 index), so convert that to:
+        A = np.where(C)[0]
         D = len(A)
+
+22. Care with use of len()! n_elements from IDL is better to do to .size for
+    arrays, since len can given misleading results e.g. 1 where size is 101
+    etc.
 """
 
 
@@ -186,21 +218,24 @@ DEFAULT_FILEPATH = (
 )
 
 
-def matrix_multiply(a, b, atr=False, btr=False):
+def matrix_multiply(a, b, atr=False, btr=True):
     """Implement IDL 'matrix_multiply' function in Python.
 
     Note:
     https://stackoverflow.com/questions/23128788/what-is-the-python-numpy-equivalent-of-the-idl-operator
+
+    Note: having B tranposed as default to ensure shapes are compatible for
+    dot operation from IDL code conversion.
     """
     a_dot = a
-    if not atr:
-        a_dot = a.T
+    if atr:
+        a_dot = a.transpose()
 
     b_dot = b
-    if not btr:
-        b_dot = b.T
+    if btr:
+        b_dot = b.transpose()
 
-    return np.dot(a_dot, b_dot).T
+    return np.dot(a_dot, b_dot)  #.transpose() need final one for overall res?
 
 
 def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
@@ -258,7 +293,7 @@ def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
 
     # Unpacking stage, if a FieldList of length 1:
     if len(v) != 1:
-        print("Warning! Have a FieldList of non-singular size.")
+        raise ValueError("!!! Have a FieldList of non-singular size.")
     else:
         v = v[0]
 
@@ -372,12 +407,12 @@ def setup_linear(
         # I remain dubious but will check this at run-through time
         ilow = np.searchsorted(x0, x1)  # IDL: value_locate(x0, x1)
         ihigh = ilow + 1
-        wh = np.where(ilow < 0)
+        wh = np.where(ilow < 0)[0]
         nw = len(wh)
         if nw > 0:
             ilow[wh] = 0
 
-        wh = np.where(ihigh >= n0)
+        wh = np.where(ihigh >= n0)[0]
         nw = len(wh)
         if nw > 0:
             ihigh[wh] = n0 - 1
@@ -393,24 +428,28 @@ def setup_linear(
     dwdx = w2
     if ext:
         n0 = len(x0)
-        whoor = np.where(ihigh == ilow)
+        whoor = np.where(ihigh == ilow)[0]
         noor = len(whoor)
         if noor > 0:
-            wh0 = np.where(ihigh(whoor) == 0)
+            wh0 = np.where(ihigh(whoor) == 0)[0]
             if wh0[0] != -1:
                 ihigh[whoor[wh0]] = 1
 
-            wh0 = np.where(ihigh(whoor) == n0 - 1)
+            wh0 = np.where(ihigh(whoor) == n0 - 1)[0]
             if wh0[0] != -1:
                 ilow[whoor[wh0]] = n0 - 2
 
     i1 = ilow
     i2 = ihigh
-    wh = np.where(ihigh != ilow)
+    wh = np.where(ihigh != ilow)[0]
+    print("WH", wh, type(wh), len(wh))
     nne = len(wh)
     if nne != 0:
-        dwdx[wh] = 1.0 / (x0[ihigh[wh]] - x0[ilow[wh]])
-        w2[wh] = (x1[wh] - x0[ilow[wh]]) / (x0[ihigh[wh]] - x0[ilow[wh]])
+        print("ilow is", ilow, type(ilow), ilow[wh], ilow[wh] - 1)
+        py_ilow = ilow[wh] - 1  # SLB NEW VARS
+        py_ihigh = ihigh[wh] - 1
+        dwdx[wh] = 1.0 / (x0[py_ihigh] - x0[py_ilow])
+        w2[wh] = (x1[wh] - x0[py_ilow]) / (x0[py_ihigh] - x0[py_ilow])
     if nn:
         w2 = int(w2 + 0.5)
         # if sz(sz[0] + 1) == 5:
@@ -421,7 +460,7 @@ def setup_linear(
     w1 = 1.0 - w2
     if zero:
         xmax = max(x0, min=xmin)
-        wh = np.where(x1 > xmax or x1 < xmin)
+        wh = np.where(x1 > xmax or x1 < xmin)[0]
         if wh[0] != -1:
             w1[wh] = 0.0
             w2[wh] = 0.0
@@ -453,6 +492,9 @@ def setup_linear(
             wd[whoor] = 0
             dcdx[whoor] = 0
             dddx[whoor] = 0
+
+    # x, xi, i0, i1, w0, w1
+    return i1, i2, w1, w2
 
 
 def sqrt_nz(a):
@@ -594,7 +636,7 @@ def setup_integration_matrix(
         # TODO SLB was originally an 'and' here but that might be
         # problematic, DH advice to convert to ampersand which works
         # - see cf-python codebase examples.
-        wh = np.where((x > orig_xrange[0]) & (x < orig_xrange[1], nw))
+        wh = np.where((x > orig_xrange[0]) & (x < orig_xrange[1], nw))[0]
         if nw > 0:
             xi = [orig_xrange[0], x[wh], orig_xrange[1]]
         else:
@@ -602,7 +644,7 @@ def setup_integration_matrix(
 
         # x is in ascending order so can use value locate to do this
         # as fast as possible
-        setup_linear(x, xi, i0, i1, w0, w1, vl=True, extra=extra)
+        i0, i1, w0, w1 = setup_linear(x, xi, vl=True, extra=extra)
         nx = len(x)
         nxi = len(xi)
         mi = np.zeros((nxi, nx))
@@ -709,13 +751,16 @@ def iasimhs_vsx2cov(vsx, diag):
             return, sx
     end
     """
+    print("vsx", vsx, vsx.shape)
+    print("diag", diag, diag.shape)
     # Reconstruct covariance matrix from vector representing one half of
     # covariance matrix unwrapped
     sz = vsx.shape
+    print("vsx", vsx, vsx.shape)
     if sz[0] == 1:
         npi = 1
     else:
-        npi = sz[2]
+        npi = sz[1]  # SLB IDL [2] -> Py [1] seems to work in context, but why?
 
     nv = sz[1]
     if len(diag) > 0:
@@ -724,7 +769,8 @@ def iasimhs_vsx2cov(vsx, diag):
         if szd[0] == 1:
             npid = 1
         else:
-            npid = sz[2]
+            npid = sz[1]  # SLB IDL [2] -> Py [1] seems to work in context?
+        print("npi", npi, "npid", npid)
         if npi != npid:
             raise ValueError("DIAG,VSX: not match!")
 
@@ -736,9 +782,28 @@ def iasimhs_vsx2cov(vsx, diag):
 
     # Find expected dimensions of covariance based on unwrapped
     # vector of half of the off-diagonals and the diagonals
-    n = np.roots([2 * nv, -1, -1])
-    n = int(n[1] + 0.1)
-    sx = np.zeros((n, n, npi), dtype=np.float32)
+    n = np.polynomial.polynomial.polyroots([2 * nv, -1, -1])
+    # NOTE: 'roots' accounts for complex roots, so gives FOR EXAMPLE:
+    # https://www.nv5geospatialsoftware.com/docs/FZ_ROOTS.html
+    # says IDL gives:
+    # IDL: ( -0.500000, 0.00000)( -0.333333, 0.00000)( 2.00000, 0.00000)
+    # >>> import numpy as np
+    # >>> coeffs = [-2.0, -9.0, -7.0, 6.0]
+    # >>> roots = np.roots(coeffs)
+    # >>> roots
+    # array([-3. , -2. ,  0.5])
+    # AH! arguments need to be reversed for equivalent output:
+    # >>> np.roots([6, -7, -9, -2])
+    # array([ 2.        , -0.5       , -0.33333333])
+    # np.polynomial.polynomial.polyroots([6, -7, -9, -2])
+    #array([-3. , -2. ,  0.5])
+    # WHY IS THE IDL VERSION IS A WEIRD ORDER?
+    # AH, this works: np.polynomial.polynomial.polyroots(<same order>)
+    # So note, do *not* try older np.roots. Unreliable.
+    print("N IS", n, n[0])
+    n = int(n[1] + 0.1)  # IDL: long(n(1) + 0.1)
+    sx = np.zeros((n, n, npi))
+    print("sx", sx)
     for ipi in range(npi):  # Do for more than one pixel
         j = 0
         vsx1 = vsx[ipi,]
@@ -747,6 +812,7 @@ def iasimhs_vsx2cov(vsx, diag):
             diag1 = diag[ipi,]
             diag2 = matrix_multiply(diag1, diag1)
 
+        print("N IS", n)
         for i in range(n):
             if i == 0:  # diagonals
                 sx1 = np.diag(vsx1[j : j + n - i - 1])
@@ -931,17 +997,46 @@ def irc_interp_ap(xap, latitude):
     """
     # Latitude grid associated with the prior values
     lats_ap = np.arange(18.0) * 10 - 85  # IDL: dindgen(18) * 10 - 85d0
-    setup_linear(lats_ap, latitude, vl=True)
+    print("lats_ap", lats_ap, lats_ap.shape)
+    i0, i1, w0, w1 = setup_linear(lats_ap, latitude, vl=True)
+    print(
+        "i0", i0, len(i0), "i1", i1, len(i1), "w0", w0, len(w0),
+        "w1", w1, len(w1)
+    )
 
     # SLB: care, original IDL code has 'np' as variable, must use another to
     # avoid nameclash with numpy alias!
-    orig_np = len(latitude)
-    nz = len(xap[0,])  # IDL: xap(*,0)
+    orig_np = latitude.size
+    print("orig_np", orig_np, latitude.shape)
+    print("xap", xap.shape)
+    nz = xap[0,].size  # IDL: xap(*,0)
+    print("nz", nz)
     xapi = np.zeros((nz, orig_np))  # IDL: dblarr(nz, np)
+    print("xapi", xapi, xapi.shape)
 
-    for ip in np.arange(0, orig_np):
+    for ip in range(0, orig_np):
+        print("ITER:", ip)
         # IDL: xapi(0, ip) = xap(*,i0(ip)) * w0(ip) + xap(*,i1(ip)) * w1(ip)
-        xapi[ip, 0] = xap[i0[ip]] * w0[ip] + xap[i1[ip]] * w1[ip]
+        ###res = xap[i0[ip]] * w0[ip] + xap[i1[ip]] * w1[ip]
+        ###print("RES", res, res.shape, type(res))
+        ###print("OUTCOME", xapi[ip, 0], type(xapi[ip, 0]))
+        # SLB PY: got immediate error:
+        # aging_kernel.py", line 973, in irc_interp_ap
+        # xapi[ip, 0] = xap[i0[ip]] * w0[ip] + xap[i1[ip]] * w1[ip]
+        # ~~~~^^^^^^^
+        # ValueError: setting an array element with a sequence.
+        # So to fix, for now calulcate the array immediately
+        ###print("BIT IS", w0[ip], "AND", xap[i0[ip],])
+
+        # SLB DEBUGGED BASED ON SHAPES FITTING, THOUGHT IT SHOULD BE
+        # xapi[ip, 0] = result logically but that wouldn't broadcast,
+        # go with this for now
+        ###result = xap[i0[ip],] * w0[ip] + xap[i1[ip],] * w1[ip]  ##.flatten()
+        ###print("RESULT", result, type(result), result.shape)
+        try:
+            xapi[:, ip] = xap[i0[ip],] * w0[ip] + xap[i1[ip],] * w1[ip]
+        except:
+            xapi[:, ip] = cf.masked
 
     return xapi
 
@@ -962,7 +1057,7 @@ def irc_ak_exp(ak, evecs, pf, sp, nz, nev, ns, w0, i0, i1, w1):
     # Index of PF used to store true grid perturbations in file
     idx = np.arange(nz / 2 + 1) * 2  # IDL: lindgen(nz / 2 + 1) * 2
     pfs = pf[idx]
-    setup_linear(pfs, pf, i0, i1, w0, w1, vl=True)
+    i0, i1, w0, w1 = setup_linear(pfs, pf, vl=True)
     akt = ak.T
     ak_101 = np.zeros((nz, nev))  # IDL: dblarr(nz, nev)
 
@@ -973,7 +1068,7 @@ def irc_ak_exp(ak, evecs, pf, sp, nz, nev, ns, w0, i0, i1, w1):
     ak_101 = matrix_multiply(evecs, ak_101, btr=True)
 
     # Make sure AK is zero below surface pressure
-    ws = np.where(pf > sp)  # TODO SLB is the comma / unpacking needed?
+    ws = np.where(pf > sp)[0]
     ns = len(ws)
     if ns > 0:  # Set levels below surface to 0
         ak_101[ws,] = 0
@@ -1006,7 +1101,7 @@ def irc_integration_matrix(scs, pf, sp, nz, nsc, n0, w0, approx=False):
             msc1 = dpf
             w0 = np.where(
                 pf < sc1[0] or pf > sc1[1]
-            )  # levels outside required layer
+            )[0]  # levels outside required layer
             n0 = len(w0)
             if n0 > 0:
                 msc1[w0] = 0
@@ -1123,10 +1218,15 @@ def main(fi=None, lun=None, nret=None, approx=False):
     print("nev:", nev)
 
     # Interpolate the set of prior profiles in latitude
-    # SLB UPTO
-    c_ap_lnvmr = irc_interp_ap(c_ap_lnvmr, lat)
+    try:  # pre-calculated
+        c_ap_lnvmr = np.load('c_ap_lnvmr.npy')
+    except:
+        c_ap_lnvmr = irc_interp_ap(c_ap_lnvmr, lat)
+        np.save('c_ap_lnvmr.npy', c_ap_lnvmr, allow_pickle=True)
+    print("Found c_ap_lnvmr to be:", c_ap_lnvmr)
 
-    # Expand the total and noise  covariance matrices to full vertical grid (nz,nz) with units (ln(ppmv))^2
+    # SLB UPTO
+    # Expand the total and noise covariance matrices to full vertical grid (nz,nz) with units (ln(ppmv))^2
     sx_ev = iasimhs_vsx2cov(csx_ev, diag=dsx_ev)  # nev,nev matrix
     sx_lnvmr = iasimhs_sx_exp(sx_ev, evecs)  # nz,nz matrix
 
@@ -1160,6 +1260,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     )  # IDL: dblarr(nsc, nret)  # Estimated noise standard deviation / ppmv
 
     # Loop individual retrievals
+    print("STARTING ITERATION")
     for iret in np.arange(0, nret):
         # Get vmr from lnvmr
         c_vmr = np.exp(c_lnvmr[iret,])  # undo log unit
