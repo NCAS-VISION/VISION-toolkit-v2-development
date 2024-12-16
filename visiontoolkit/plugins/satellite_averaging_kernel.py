@@ -954,7 +954,7 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
         orig_np = 1
 
     print("sz", sz)
-    if sz[-1] != sz[-2]:  # IDL: if sz[1] != sz[2], but Py dims reverse order
+    if sz[1] != sz[2]:  # IDL: if sz[1] != sz[2, but Py dims reverse order
         raise ValueError("Expected first 2 dims to be same size!")
 
     sz = [evecs.ndim,] + list(evecs.shape)[::-1]
@@ -1156,21 +1156,34 @@ def irc_ak_exp(
         NZ      Number of fine vertical levels
         NEV     Number of eigenvectors
     """
-    # Index of PF used to store true grid perturbations in file
-    idx = np.arange(nz / 2 + 1) * 2  # IDL: lindgen(nz / 2 + 1) * 2
-    print("IS", pf.shape, idx.shape)
+    ak = ak.squeeze()
 
-    pfs = pf[idx[0]]  # [0] to unpack from size (N,) to use as index
+    # Index of PF used to store true grid perturbations in file
+    # Python conv: need to take one away because from nz hence (nz - 1)
+    # due to idx being prepared as indices and IDL indexing being
+    # inclusive, so we need one less value.
+    idx = np.arange((nz - 1) / 2 + 1) * 2  # IDL: lindgen(nz / 2 + 1) * 2
+    print("IS", pf, pf.shape, idx, idx.shape)
+
+    pfs = pf[idx]
     print("Xs are:", pfs, pfs.shape, pf, pf.shape)
     i0, i1, w0, w1 = setup_linear(pfs, pf, vl=True)
-    akt = ak.T
-    ak_101 = np.zeros((nz, nev))  # IDL: dblarr(nz, nev)
+    akt = ak.transpose()
+    ak_101 = np.zeros((nev, nz))  # IDL: dblarr(nz, nev) Python reverse order
 
     for iev in range(nev):  # Interpolate to full grid
         # IDL: ak_101(0, iev) = akt(i0, iev) * w0 + akt(i1, iev) * w1
-        ak_101[iev, 0] = akt[iev, i0] * w0 + akt[iev, i1] * w1
+        # print(
+        #     "ak_101", ak_101.shape,
+        #     "akt", akt.shape,
+        #     "akt[iev, i0]", akt[iev, i0].shape
+        # )
+        ak_101[iev, :] = akt[iev, i0] * w0 + akt[iev, i1] * w1
 
-    ak_101 = matrix_multiply(evecs, ak_101, btr=True)
+    ###print("evecs", evecs.shape, "ak_101", ak_101.shape)
+    # NOTE THESE ARGS, opposite to IDL but tranpose necessitates, give
+    # (101, 101) required shape
+    ak_101 = matrix_multiply(evecs, ak_101, atr=True, btr=False)
 
     # Make sure AK is zero below surface pressure
     ws = np.where(pf > sp)[0]
@@ -1178,6 +1191,7 @@ def irc_ak_exp(
     if ns > 0:  # Set levels below surface to 0
         ak_101[ws,] = 0
 
+    print("FINAL ak_101", ak_101.shape, ak_101)
     return ak_101
 
 
@@ -1428,7 +1442,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         print("OVERALL c_ap_vmr:", c_ap_vmr.shape, c_ap_vmr)
         # %%% shape: (101,)
 
-        print(msc.shape, )
+        print(msc.shape)
         c_ap_sc = matrix_multiply(msc, c_ap_vmr, atr=True)
         print("OVERALL msc:", c_ap_sc.shape)
         # %%% shape: (3,)
@@ -1442,7 +1456,6 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # ak_vmr_sq=ak_lnvmr*matrix_multiply(c_vmr,1d0/c_vmr)
         # now corrected to
         # ak_vmr_sq=ak_lnvmr_sq*matrix_multiply(c_vmr,1d0/c_vmr)
-        # UPTO
         print("UPTO args are:",
               ak_lnvmr[iret, :, :].shape, evecs.shape, pf.shape,
               sp[iret].shape, nz, nev  # final two are ints
@@ -1450,12 +1463,19 @@ def main(fi=None, lun=None, nret=None, approx=False):
         ak_lnvmr_sq = irc_ak_exp(
             ak_lnvmr[iret, :, :], evecs, pf, sp[iret], nz, nev
         )
+        print("OVERALL ak_lnvmr_sq:", ak_lnvmr_sq.shape)
+        # %%% shape: (101, 101)
 
         # Convert from ln(vmr)/ln(vmr) to vmr/vmr
         ak_vmr_sq = ak_lnvmr_sq * matrix_multiply(c_vmr, 1.0 / c_vmr)
+        print("OVERALL ak_vmr_sq:", ak_vmr_sq.shape)
+        # %%% shape: (101, 101)
 
+        # UPTO
         # Convert AK to d_sub-columns/d_vmr
         ak_sc[iret, 0, 0] = matrix_multiply(msc, ak_vmr_sq, atr=True)
+        print("OVERALL ak_sc:", ak_sc.shape)
+        # %%% shape:
 
         # Calculate a priori contribution so can layer apply AKs by doing simply
         # c_sc_model = c_apc + matrix_cultiply(ak_c,c_vmr_model)
@@ -1464,6 +1484,8 @@ def main(fi=None, lun=None, nret=None, approx=False):
         c_apc_sc[iret, 0] = c_ap_sc - matrix_multiply(
             ak_sc[iret, :, :], c_ap_vmr
         )
+        print("OVERALL c_apc_sc:", c_apc_sc.shape)
+        # %%% shape:
 
         # Now deal with errors...
         # convert matrices to vmr from ln(vmr)  (error in ln(x) is
