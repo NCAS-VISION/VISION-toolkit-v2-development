@@ -264,7 +264,6 @@ def matrix_multiply(a, b, atr=False, btr=True):
     b_dot = b.copy()
     print("b", b.shape, type(b))
     if btr:
-        print("b", b.shape, type(b))
         if isinstance(b_dot, cf.Data):  # cf to np space
             print("b.T applied")
             b_dot = b_dot.array
@@ -350,7 +349,7 @@ def setup_linear(
     wc=None,
     wd=None,
     zero=False,
-    ext=False,
+    extra=False,
     nn=False,
     op=False,
     dwdx=False,
@@ -392,7 +391,7 @@ def setup_linear(
     ;
     ; KEYWORDS
     ;	ZERO	Set to zero extrapolations
-    ;	EXT	Set to perform extrapolations
+    ;	EXTRA	Set to perform extrapolations
     ;	NN 	Set up to do nearest neighbour (still apply ZERO keyword)
     ;	OP	If n_elements(x1) eq 1, then return scaler not vector
     ;		results from I1,I2,W1,W2
@@ -413,8 +412,8 @@ def setup_linear(
     """
     n1 = len(x1)
     if spline:
-        if len(ext) == 0:
-            ext = 1
+        if len(extra) == 0:
+            extra = 1
 
     if len(x0) == 0:
         raise ValueError("X0 undefined")
@@ -463,7 +462,7 @@ def setup_linear(
     #    w2 = np.zeros(n1)
 
     dwdx = w2
-    if ext:
+    if extra:
         n0 = len(x0)
         whoor = np.where(ihigh == ilow)[0]
         noor = len(whoor)
@@ -570,7 +569,8 @@ def sqrt_nz(a):
 
 # added internal undefined vars to arguments: nw, i0, i1, w0, w1
 def setup_integration_matrix(
-    x1, orig_xrange, extra, tol, box, nw, i0, i1, w0, w1
+        x1, orig_xrange=None, extra=False, tol=None, box=None, nw=None,
+        i0=None, i1=None, w0=None, w1=None,
 ):
     """Implement IDL code 'setup_integration_matrix' function in Python.
 
@@ -665,28 +665,39 @@ def setup_integration_matrix(
     end
     """
     # Sort into ascending order so this can be assumed throughout
+    # SLB TODO - under VISION assumptions this is not required, because we
+    # assume already monotonically increasing.
     so = np.argsort(x1)
+    print("so", so)
     x = x1[so]
 
-    if orig_xrange:
+    if orig_xrange is not None:
         # Get matrix to perform interpolation...
         # TODO SLB was originally an 'and' here but that might be
         # problematic, DH advice to convert to ampersand which works
         # - see cf-python codebase examples.
-        wh = np.where((x > orig_xrange[0]) & (x < orig_xrange[1], nw))[0]
+        wh = np.where(
+            np.logical_and(x > orig_xrange[0], x < orig_xrange[1])
+        )[0]
+        nw = len(wh)
         if nw > 0:
             xi = [orig_xrange[0], x[wh], orig_xrange[1]]
         else:
             xi = orig_xrange
+        print("wh:", wh.shape, wh, "xi:", xi.shape)
 
         # x is in ascending order so can use value locate to do this
         # as fast as possible
         i0, i1, w0, w1 = setup_linear(x, xi, vl=True, extra=extra)
         nx = len(x)
         nxi = len(xi)
-        mi = np.zeros((nxi, nx))
-        mi[i0, np.arange(nxi)] = w0
-        mi[i1, np.arange(nxi)] = mi[i1, np.array(nxi)] + w1
+        mi = np.zeros((nx, nxi))
+        print("POINT 1", mi.shape, [i0, np.arange(nxi)], "i0", i0)
+        print("THIS IS", np.concatenate((i0, np.arange(nxi))))
+        mi[np.concatenate((i0, np.arange(nxi)))] = w0
+        print("j:", )
+        mi[np.concatenate((i1, np.arange(nxi)))] = mi[
+            np.concatenate((i1, np.arange(nxi)))] + w1
 
         # Now get vector which would perform the integration
         # on interpolated array
@@ -701,16 +712,18 @@ def setup_integration_matrix(
         # of size 1 removed." therefore is a squeeze operation here
         m = np.squeeze(matrix_multiply(mii, mi))
     else:
-        dx = [x[:, 1:] - x]  # IDL: [x(1: *) - x]
+        print("x", x.shape, x[:1].shape)
+        # Note that dx was in IDL array form [<this>] so wrap with np.array
+        dx = np.array(x[1:][0] - x)  # IDL: [x(1: *) - x], [0] to unpack from shape (1,)
         if box:
             # need to sort based on 1 value per layer not level,
             # in order for sorting back to work below
-            so = np.argsort(x1[:, 1:])  # IDL: np.argsort(x1(1: *))
+            so = np.argsort(x1[1:])  # IDL: np.argsort(x1(1: *))
             if tol:
                 nz = len(x)
                 m = np.zeros((nz - 1, nz - 1))
                 for iz in np.arange(1, nz):
-                    m[iz - 1, 0] = dx[0 : iz - 1]
+                    m[iz - 1, 0] = dx[0: iz - 1]
             else:
                 m = dx
         else:
@@ -719,14 +732,21 @@ def setup_integration_matrix(
                 m = np.zeros((nz, nz - 1))
                 for iz in np.arange(1, nz):
                     m[iz - 1, 0] = 0.5 * (
-                        [0.0, dx[0 : iz - 1]] + [dx[0 : iz - 1], 0.0]
+                        [0.0, dx[0: iz - 1]] + [dx[0: iz - 1], 0.0]
                     )
             else:
-                m = 0.5 * ([0.0, dx] + [dx, 0.0])
+                print("dx:", dx)
+                m = 0.5 * (
+                    np.concatenate((np.array([0.0]), dx)) +
+                    np.concatenate((dx, np.array([0.0])))
+                )
+                print("FINAL m:", m)
 
     # Sort m back to original order
     bk = np.argsort(so)
-    m = m[:, bk]  # IDL: m(bk, *)
+    print("m:", m.shape, "bk:", bk.shape, bk)  #, "m[:, bk]:", m[:, bk].shape)
+    m = m[bk]  # IDL: m(bk, *)
+    ###print("FINAL m:", m)
 
     return m
 
@@ -1121,7 +1141,10 @@ def irc_interp_ap(xap, latitude):
 
 
 # added internal undefined vars to arguments: ns, w0, i0, i1, w1
-def irc_ak_exp(ak, evecs, pf, sp, nz, nev, ns, w0, i0, i1, w1):
+def irc_ak_exp(
+        ak, evecs, pf, sp, nz, nev,
+        ns=False, w0=False, i0=False, i1=False, w1=False
+    ):
     """CONV DONE
     Recreate full averaging kernel from IASI-MHS state vector representation
 
@@ -1135,7 +1158,10 @@ def irc_ak_exp(ak, evecs, pf, sp, nz, nev, ns, w0, i0, i1, w1):
     """
     # Index of PF used to store true grid perturbations in file
     idx = np.arange(nz / 2 + 1) * 2  # IDL: lindgen(nz / 2 + 1) * 2
-    pfs = pf[idx]
+    print("IS", pf.shape, idx.shape)
+
+    pfs = pf[idx[0]]  # [0] to unpack from size (N,) to use as index
+    print("Xs are:", pfs, pfs.shape, pf, pf.shape)
     i0, i1, w0, w1 = setup_linear(pfs, pf, vl=True)
     akt = ak.T
     ak_101 = np.zeros((nz, nev))  # IDL: dblarr(nz, nev)
@@ -1207,7 +1233,7 @@ def irc_integration_matrix(
         print("msc1", msc1.shape, "msc", msc.shape, "msc[0, isc]", msc[0, isc])
         msc[:, isc] = msc1
 
-    print("FINAL IRC_INTEGRATION_MATRIX VAR MSC IS:", msc)
+    ###print("FINAL IRC_INTEGRATION_MATRIX VAR MSC IS:", msc)
     return msc
 
 
@@ -1257,6 +1283,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     print("Example netcdf variable got, pf:", pf)
     do_ret = ncdf_get(fi, "do_retrieval", lun=lun, noclo=True)
     print("do_ret:", do_ret, np.isfortran(do_ret.array))
+    print("pf:", pf.shape)  # (101,)
 
     # SLB: flake8 says this variable is not used, so comment out
     # dsn_ev = ncdf_get(fi, "dsxn_c", lun=lun, noclo=True, undo=True, ova=True)
@@ -1312,12 +1339,14 @@ def main(fi=None, lun=None, nret=None, approx=False):
     print("nev:", nev)
 
     # Interpolate the set of prior profiles in latitude
+    print("ORIG SHAPE", c_ap_lnvmr.shape)  # (18, 101)
     try:  # pre-calculated
         c_ap_lnvmr = np.load('c_ap_lnvmr.npy')
     except:  #if True:  #except:
         c_ap_lnvmr = irc_interp_ap(c_ap_lnvmr, lat)
         np.save('c_ap_lnvmr.npy', c_ap_lnvmr, allow_pickle=True)
-    print("Found c_ap_lnvmr to be:", c_ap_lnvmr, c_ap_lnvmr.shape)
+    print("AFTER Found c_ap_lnvmr to be:", c_ap_lnvmr, c_ap_lnvmr.shape)
+    # %%% shape: (101, 5040)
 
     # Expand the total and noise covariance matrices to full vertical grid (nz,nz) with units (ln(ppmv))^2
     try:  # pre-calculated
@@ -1326,12 +1355,15 @@ def main(fi=None, lun=None, nret=None, approx=False):
         sx_ev = iasimhs_vsx2cov(csx_ev, diag=dsx_ev)  # nev,nev matrix
         np.save('sx_ev.npy', sx_ev, allow_pickle=True)
     print("Found sx_ev to be:", sx_ev, sx_ev.shape)
+    # %%% shape: (10, 10, 5040)
 
     try:  # pre-calculated
         sx_lnvmr = np.load('sx_lnvmr.npy')
     except:
         sx_lnvmr = iasimhs_sx_exp(sx_ev, evecs)
         np.save('sx_lnvmr.npy', sx_lnvmr, allow_pickle=True)
+    print("Found sx_lnvmr to be:", sx_lnvmr, sx_lnvmr.shape)
+    # %%% shape: (101, 101, 10)
 
     # SLB: flake8 says this variable is not used, so comment out
     # sn_ev = iasimhs_vsx2cov(csn_ev, diag=dsn_ev)  # nev,nev matrix
@@ -1366,18 +1398,40 @@ def main(fi=None, lun=None, nret=None, approx=False):
     print("STARTING ITERATION")
     for iret in np.arange(0, nret):
         # Get vmr from lnvmr
+        print(iret, "Before", c_lnvmr.shape, c_lnvmr[iret,].shape)
         c_vmr = np.exp(c_lnvmr[iret,])  # undo log unit
+        print("c_vmr:", c_vmr.shape)  #, c_vmr)
+        # %%% shape: (1, 101)
 
         # Calculate weights which will compute the subcolumn via matrix multiply
-        # SLB UPTO
-        msc = irc_integration_matrix(scs, pf, sp[iret], nz, nsc, approx=True)
+        msc = irc_integration_matrix(scs, pf, sp[iret], nz, nsc)  #, approx=True)
+        print("OVERALL msc:", msc.shape)  #, msc)
+        # %%% shape: (101, 3)
 
         # Calculate the sub columns
-        c_sc[iret, 0] = matrix_multiply(msc, c_vmr, atr=True)
+        res = matrix_multiply(msc, c_vmr, atr=True)
+        print("OVERALL res:", res.shape)  #, res)
+        # %%% shape: (3, 1)
+
+        c_sc[:, iret] = res.squeeze()
+        print("OVERALL c_sc:", c_sc.shape)  #, c_sc)
+        # %%% shape: (3, 5040)
 
         # Get corresponding prior profile and subcolumns
+        # SLB IMPORTANT! c_ap_lnvmr is output from irc_interp_ap
+        # and has shape (101, 5040) when that is called but above for
+        # equivalent call c_lnvmr has shape '0 Before (5040, 101) (1, 101)'
+        # so need to transpose overall!
+        c_ap_lnvmr = c_ap_lnvmr.T
+        print("BEFORE", c_ap_lnvmr.shape, c_ap_lnvmr[iret,].shape)
         c_ap_vmr = np.exp(c_ap_lnvmr[iret,])
+        print("OVERALL c_ap_vmr:", c_ap_vmr.shape, c_ap_vmr)
+        # %%% shape: (101,)
+
+        print(msc.shape, )
         c_ap_sc = matrix_multiply(msc, c_ap_vmr, atr=True)
+        print("OVERALL msc:", c_ap_sc.shape)
+        # %%% shape: (3,)
 
         # Make the square (nz,nz) AK array
         # IDL for first arg: ak_lnvmr(*,*,iret)
@@ -1388,6 +1442,11 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # ak_vmr_sq=ak_lnvmr*matrix_multiply(c_vmr,1d0/c_vmr)
         # now corrected to
         # ak_vmr_sq=ak_lnvmr_sq*matrix_multiply(c_vmr,1d0/c_vmr)
+        # UPTO
+        print("UPTO args are:",
+              ak_lnvmr[iret, :, :].shape, evecs.shape, pf.shape,
+              sp[iret].shape, nz, nev  # final two are ints
+              )
         ak_lnvmr_sq = irc_ak_exp(
             ak_lnvmr[iret, :, :], evecs, pf, sp[iret], nz, nev
         )
