@@ -440,7 +440,19 @@ def setup_linear(
         n0 = len(x0)
         # SLB ChatGPT's suggestion of Python equivalent to IDL value_locate,
         # I remain dubious but will check this at run-through time
-        ilow = np.searchsorted(x0, x1)  # IDL: value_locate(x0, x1)
+        # NOTE PYTHON CONV to go from IDL value_locate to np.searchsorted,
+        # based on the example in the IDL ref guide, we need to take one away
+        # for every element:
+        # >>> np.searchsorted([2, 5, 8, 10], [0, 3, 5, 6, 12])
+        # array([0, 1, 1, 2, 4])
+        # whereas the ref guide has result:
+        # -1 0 1 1 3
+        # so take away one.
+        print("x0", x0, x0.shape, "x1", x1, len(x1))
+        #if isinstance(x0, cf.Data):
+        #    print("CONVERT CF DATA TO NP ARRAY")
+        #    x0 = x0.array
+        ilow = np.searchsorted(x0, x1) - 1  # IDL: value_locate(x0, x1)
         ihigh = ilow + 1
         wh = np.where(ilow < 0)[0]
         nw = len(wh)
@@ -680,7 +692,9 @@ def setup_integration_matrix(
         )[0]
         nw = len(wh)
         if nw > 0:
-            xi = [orig_xrange[0], x[wh], orig_xrange[1]]
+            print("ISSUE", x[wh])
+            xi = [orig_xrange[0], x[wh].array[0], orig_xrange[1]]
+            print("xi", xi)
         else:
             xi = orig_xrange
 
