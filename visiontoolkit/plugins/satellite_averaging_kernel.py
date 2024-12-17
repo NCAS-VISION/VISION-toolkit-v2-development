@@ -1219,9 +1219,9 @@ def irc_integration_matrix(
 
     for isc in range(nsc):
         # Pressure levels of this layer in ascending order
-        # SLB UPTO
         print("isc:", isc)
-        sc1 = np.array([1, 0, isc])  # scs[[1, 0], isc]
+        # NEEDS SCS IN
+        sc1 = scs[[1, 0], isc - 1]  # scs[[1, 0], isc], minus one since inclusive
         print("sc1", sc1)
         # if lower bound indicated as 1000 or lower bound below surface then truncate layer to the surface
         if sc1[1] == 1000 or sc1[1] > sp:
@@ -1352,7 +1352,6 @@ def main(fi=None, lun=None, nret=None, approx=False):
     print("nev:", nev)
 
     # Interpolate the set of prior profiles in latitude
-    print("ORIG SHAPE", c_ap_lnvmr.shape)  # (18, 101)
     try:  # pre-calculated
         c_ap_lnvmr = np.load('c_ap_lnvmr.npy')
     except:  #if True:  #except:
@@ -1408,7 +1407,6 @@ def main(fi=None, lun=None, nret=None, approx=False):
     ak_sc = np.zeros(
         (nsc, nz, nret), # (3, 101, 5040)
     )  # IDL: dblarr(nsc, nz, nret)  # Averaging kernels for retrieved sub-column wrt true profile vmr / ppmv/ppmv
-    print("ORIG SHAPE ak_sc", ak_sc.shape)
     sx_sc = np.zeros(
         (nsc, nsc, nret),  # (3, 3, 5040)
     )  # IDL: dblarr(nsc, nsc, nret)  # Total (Noise + smoothing) covariance for sub-col.avg.vmrs / ppmv^2
@@ -1434,7 +1432,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         c_vmr = np.exp(c_lnvmr[orig_iret,])  # undo log unit
         ###print("OVERALL c_vmr:", c_vmr.shape, c_vmr)
         # %%% shape: (1, 101)
-        c_vmr = c_vmr.squeeze()
+        ###c_vmr = c_vmr.squeeze()
         print("OVERALL c_vmr:", c_vmr.shape, c_vmr)
         # %%% shape: (101,)
 
@@ -1444,15 +1442,15 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # %%% shape: (101, 3)
 
         # Calculate the sub columns
-        res = matrix_multiply(msc, c_vmr, atr=True)
-        ###print("OVERALL res:", res.shape)  #, res)
+        res = matrix_multiply(msc, c_vmr, atr=True, btr=True)
+        print("OVERALL res:", res.shape, msc.shape, c_vmr.shape)  #, res)
         # %%% shape: (3, 1)
+
         # Python conversion new
-        res = res.squeeze()
+        ###res = res.squeeze()
         print("OVERALL res:", res.shape)  #, res)
         # %%% shape: (3,)
-
-        c_sc[:, orig_iret] = res.squeeze()
+        c_sc[:, orig_iret] = res.squeeze()   ###.squeeze()
         print("OVERALL c_sc:", c_sc.shape)  #, c_sc)
         # %%% shape: (3, 5040)
 
@@ -1517,7 +1515,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # convert matrices to vmr from ln(vmr)  (error in ln(x) is
         # fractional error in x)
         vmr_sq = matrix_multiply(c_vmr, c_vmr)
-        vmr_sq = vmr_sq.squeeze()
+        ###vmr_sq = vmr_sq.squeeze()
         print("OVERALL vmr_sq:", vmr_sq.shape, vmr_sq)
         # %%% shape: (1, 1) -> (1,) after squeeze
         # Unpack vmr_sq to single value
