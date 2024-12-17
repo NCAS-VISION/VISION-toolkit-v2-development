@@ -683,7 +683,6 @@ def setup_integration_matrix(
             xi = [orig_xrange[0], x[wh], orig_xrange[1]]
         else:
             xi = orig_xrange
-        print("wh:", wh.shape, wh, "xi:", xi.shape)
 
         # x is in ascending order so can use value locate to do this
         # as fast as possible
@@ -691,10 +690,10 @@ def setup_integration_matrix(
         nx = len(x)
         nxi = len(xi)
         mi = np.zeros((nx, nxi))
-        print("POINT 1", mi.shape, [i0, np.arange(nxi)], "i0", i0)
-        print("THIS IS", np.concatenate((i0, np.arange(nxi))))
+        ###print("POINT 1", mi.shape, [i0, np.arange(nxi)], "i0", i0)
+        ###print("THIS IS", np.concatenate((i0, np.arange(nxi))))
         mi[np.concatenate((i0, np.arange(nxi)))] = w0
-        print("j:", )
+        ###print("j:", )
         mi[np.concatenate((i1, np.arange(nxi)))] = mi[
             np.concatenate((i1, np.arange(nxi)))] + w1
 
@@ -711,7 +710,7 @@ def setup_integration_matrix(
         # of size 1 removed." therefore is a squeeze operation here
         m = np.squeeze(matrix_multiply(mii, mi))
     else:
-        print("x", x.shape, x[:1].shape)
+        ###print("x", x.shape, x[:1].shape)
         # Note that dx was in IDL array form [<this>] so wrap with np.array
         dx = np.array(x[1:][0] - x)  # IDL: [x(1: *) - x], [0] to unpack from shape (1,)
         if box:
@@ -734,16 +733,16 @@ def setup_integration_matrix(
                         [0.0, dx[0: iz - 1]] + [dx[0: iz - 1], 0.0]
                     )
             else:
-                print("dx:", dx)
+                ###print("dx:", dx)
                 m = 0.5 * (
                     np.concatenate((np.array([0.0]), dx)) +
                     np.concatenate((dx, np.array([0.0])))
                 )
-                print("FINAL m:", m)
+                ###print("FINAL m:", m)
 
     # Sort m back to original order
     bk = np.argsort(so)
-    print("m:", m.shape, "bk:", bk.shape, bk)  #, "m[:, bk]:", m[:, bk].shape)
+    print("m:", m.shape, "bk:", bk.shape)  #, "m[:, bk]:", m[:, bk].shape)
     m = m[bk]  # IDL: m(bk, *)
     ###print("FINAL m:", m)
 
@@ -1455,16 +1454,9 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # %%% shape: (3, 5040)
 
         # Get corresponding prior profile and subcolumns
-        # SLB IMPORTANT! c_ap_lnvmr is output from irc_interp_ap
-        # and has shape (101, 5040) when that is called but above for
-        # equivalent call c_lnvmr has shape '0 Before (5040, 101) (1, 101)'
-        # so need to transpose overall!
-        c_ap_lnvmr = c_ap_lnvmr.T
-        print("BEFORE", c_ap_lnvmr.shape, c_ap_lnvmr[orig_iret,].shape)
-        c_ap_vmr = np.exp(c_ap_lnvmr[orig_iret,])
-        print("OVERALL c_ap_vmr:", c_ap_vmr.shape, c_ap_vmr)
+        c_ap_vmr = np.exp(c_ap_lnvmr[:, orig_iret])
+        print("OVERALL c_ap_vmr:", c_ap_vmr.shape)
         # %%% shape: (101,)
-
         print(msc.shape)
         c_ap_sc = matrix_multiply(msc, c_ap_vmr, atr=True)
         print("OVERALL c_ap_sc:", c_ap_sc.shape)
@@ -1527,6 +1519,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         print("OVERALL sn_vmr:", sn_vmr.shape)
         # %%% shape: (101, 10)
 
+        """
         print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ UPTO")
         print("msc", msc.shape, "sx_vmr", sx_vmr.shape)
         temp1 = matrix_multiply(sx_vmr, msc, atr=True, btr=False)
@@ -1567,7 +1560,9 @@ def main(fi=None, lun=None, nret=None, approx=False):
         c_noise_sc[orig_iret, 0] = sqrt_nz(f_diagonal(sn_sc[orig_iret, :, :]))
         print("OVERALL c_noise_sc:", c_noise_sc.shape)
         # %%% shape:
+        """
 
+    """
     # Make result structure
     # Everything given for sub columns so drop the _sc in the tag names
     s = {
@@ -1600,14 +1595,15 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # Estimated noise standard deviation (nsc,np) / ppmv
         "c_noise": c_noise_sc,
     }
+    """
     # Reduced s just to calculate the AK
-    # s = {
-    #     # Averaging kernels for retrieved sub-column wrt true profile
-    #     # vmr (nsc,nz,np) / ppmv/ppmv
-    #     "ak": ak_sc,  # MAIN FOR AK
-    #     # A priori contribution to each sub-column (nsc,np) / ppmv
-    #     "c_apc": c_apc_sc,  # MAIN FOR AK
-    # }
+    s = {
+        # Averaging kernels for retrieved sub-column wrt true profile
+        # vmr (nsc,nz,np) / ppmv/ppmv
+        "ak": ak_sc,  # MAIN FOR AK
+        # A priori contribution to each sub-column (nsc,np) / ppmv
+        "c_apc": c_apc_sc,  # MAIN FOR AK
+    }
 
     return s
 
