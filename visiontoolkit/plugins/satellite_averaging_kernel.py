@@ -86,7 +86,6 @@ i:j 	i:j (except for different interpretation for j)
 i:* 	i:
 *:i 	:i
 a[i,*] 	a[:,i]
-
 Assuming ak_lnvmr(*,*,iret) therefore ->
 but need to check. ChatGPT says:
 In IDL, a[*, *, 0] selects a 2D slice from a 3D array a. The * acts as a wildcard, meaning "include all elements along this dimension." Specifically:
@@ -478,10 +477,10 @@ def setup_linear(
     i1 = ilow
     i2 = ihigh
     wh = np.where(ihigh != ilow)[0]
-    print("WH", wh, type(wh), len(wh))
+    ### print("WH", wh, type(wh), len(wh))
     nne = len(wh)
     if nne != 0:
-        print("ilow is", ilow, type(ilow), ilow[wh], ilow[wh] - 1)
+        ###print("ilow is", ilow, type(ilow), ilow[wh], ilow[wh] - 1)
         py_ilow = ilow[wh] - 1  # SLB NEW VARS
         py_ihigh = ihigh[wh] - 1
         dwdx[wh] = 1.0 / (x0[py_ihigh] - x0[py_ilow])
@@ -954,7 +953,7 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
         orig_np = 1
 
     print("sz", sz)
-    if sz[1] != sz[2]:  # IDL: if sz[1] != sz[2, but Py dims reverse order
+    if sz[-1] != sz[-2]:  # IDL: if sz[1] != sz[2], but Py dims reverse order
         raise ValueError("Expected first 2 dims to be same size!")
 
     sz = [evecs.ndim,] + list(evecs.shape)[::-1]
@@ -1201,6 +1200,7 @@ def irc_integration_matrix(
     """CONV DONE
     (No docstring in corresponding IDL procedure).
     """
+    print("nz:", nz, "nsc:", nsc)
     msc = np.zeros((nz, nsc))  # IDL: dblarr(nz, nsc)
 
     if approx:
@@ -1240,6 +1240,7 @@ def irc_integration_matrix(
         else:
             # used function to set up weights to do trapezoid integration over defined interval
             msc1 = setup_integration_matrix(pf, orig_xrange=sc1)
+            print("%%%%% FINAL MSC1", msc1, msc1.shape)
 
         msc1 = msc1 / np.sum(
             msc1
@@ -1247,7 +1248,7 @@ def irc_integration_matrix(
         print("msc1", msc1.shape, "msc", msc.shape, "msc[0, isc]", msc[0, isc])
         msc[:, isc] = msc1
 
-    ###print("FINAL IRC_INTEGRATION_MATRIX VAR MSC IS:", msc)
+    print("FINAL IRC_INTEGRATION_MATRIX VAR MSC IS:", msc.shape)
     return msc
 
 
@@ -1298,10 +1299,8 @@ def main(fi=None, lun=None, nret=None, approx=False):
     do_ret = ncdf_get(fi, "do_retrieval", lun=lun, noclo=True)
     print("do_ret:", do_ret, np.isfortran(do_ret.array))
     print("pf:", pf.shape)  # (101,)
-
-    # SLB: flake8 says this variable is not used, so comment out
-    # dsn_ev = ncdf_get(fi, "dsxn_c", lun=lun, noclo=True, undo=True, ova=True)
-    # csn_ev = ncdf_get(fi, "csxn_c", lun=lun, undo=True, ova=True)
+    dsn_ev = ncdf_get(fi, "dsxn_c", lun=lun, noclo=True, undo=True, ova=True)
+    csn_ev = ncdf_get(fi, "csxn_c", lun=lun, undo=True, ova=True)
 
     # Advice from RS:
     # nret is defined by the line iret=where(do_ret,nret)
@@ -1379,55 +1378,79 @@ def main(fi=None, lun=None, nret=None, approx=False):
     print("Found sx_lnvmr to be:", sx_lnvmr, sx_lnvmr.shape)
     # %%% shape: (101, 101, 10)
 
-    # SLB: flake8 says this variable is not used, so comment out
-    # sn_ev = iasimhs_vsx2cov(csn_ev, diag=dsn_ev)  # nev,nev matrix
+    try:  # pre-calculated
+        sn_ev = np.load('sn_ev.npy')
+    except:
+        sn_ev = iasimhs_vsx2cov(csn_ev, diag=dsn_ev)  # nev,nev matrix
+        np.save('sn_ev.npy', sn_ev, allow_pickle=True)
+    print("Found sn_ev to be:", sn_ev, sn_ev.shape)
+    # %%% shape: (10, 10, 5040)
 
-    # SLB: flake8 says this variable is not used, so comment out
-    # sn_lnvmr = iasimhs_sx_exp(sn_ev, evecs)  # nz,nz matrix
+    # UPTO
+    try:  # pre-calculated
+        sn_lnvmr = np.load('sn_lnvmr.npy')
+    except:
+        sn_lnvmr = iasimhs_sx_exp(sn_ev, evecs)
+        np.save('sn_lnvmr.npy', sn_lnvmr, allow_pickle=True)
+    print("Found sn_lnvmr to be:", sn_lnvmr, sn_lnvmr.shape)
+    # %%% shape: ???
 
     # Make arrays to hold the results which are neeeded for model comparisons
+    #
+    # DESIRED SHAPES HAVE, FOR EXAMPLE:
+    # nsc: 3
+    # nz: 5040
+    # nret: 101
     c_sc = np.zeros(
-        (nsc, nret),
+        (nsc, nret),  # (3, 101)
     )  # IDL: dblarr(nsc, nret)  # CO sub-column average mixing ratios / ppmv
     ak_sc = np.zeros(
-        (nsc, nz, nret),
+        (nsc, nz, nret), # (3, 5040, 101)
     )  # IDL: dblarr(nsc, nz, nret)  # Averaging kernels for retrieved sub-column wrt true profile vmr / ppmv/ppmv
     sx_sc = np.zeros(
-        (nsc, nsc, nret),
+        (nsc, nsc, nret),  # (3, 3, 101)
     )  # IDL: dblarr(nsc, nsc, nret)  # Total (Noise + smoothing) covariance for sub-col.avg.vmrs / ppmv^2
     sn_sc = np.zeros(
-        (nsc, nsc, nret),
+        (nsc, nsc, nret),  # (3, 3, 101)
     )  # IDL: dblarr(nsc, nsc, nret)  # Noise covariance  / ppmv^2
     c_apc_sc = np.zeros(
-        (nsc, nret),
+        (nsc, nret),  # (3, 101)
     )  # IDL: dblarr(nsc, nret)  # A priori contribution to each sub-column / ppmv
     c_err_sc = np.zeros(
-        (nsc, nret),
+        (nsc, nret),  # (3, 101)
     )  # IDL: dblarr(nsc, nret)  # Estimated total standard deviation of retrieved sub-cols / ppmv
     c_noise_sc = np.zeros(
-        (nsc, nret),
+        (nsc, nret),  # (3, 101)
     )  # IDL: dblarr(nsc, nret)  # Estimated noise standard deviation / ppmv
 
     # Loop individual retrievals
     print("STARTING ITERATION")
-    for iret in np.arange(0, nret):
+    # Rename iret to avoid confusion with iret variable above (no longer req'd)
+    for orig_iret in np.arange(0, nret):
         # Get vmr from lnvmr
-        print(iret, "Before", c_lnvmr.shape, c_lnvmr[iret,].shape)
-        c_vmr = np.exp(c_lnvmr[iret,])  # undo log unit
-        print("c_vmr:", c_vmr.shape)  #, c_vmr)
+        print(orig_iret, "Before", c_lnvmr.shape, c_lnvmr[orig_iret,].shape)
+        c_vmr = np.exp(c_lnvmr[orig_iret,])  # undo log unit
+        ###print("OVERALL c_vmr:", c_vmr.shape, c_vmr)
         # %%% shape: (1, 101)
+        c_vmr = c_vmr.squeeze()
+        print("OVERALL c_vmr:", c_vmr.shape, c_vmr)
+        # %%% shape: (101,)
 
         # Calculate weights which will compute the subcolumn via matrix multiply
-        msc = irc_integration_matrix(scs, pf, sp[iret], nz, nsc)  #, approx=True)
+        msc = irc_integration_matrix(scs, pf, sp[orig_iret], nz, nsc)  #, approx=True)
         print("OVERALL msc:", msc.shape)  #, msc)
         # %%% shape: (101, 3)
 
         # Calculate the sub columns
         res = matrix_multiply(msc, c_vmr, atr=True)
-        print("OVERALL res:", res.shape)  #, res)
+        ###print("OVERALL res:", res.shape)  #, res)
         # %%% shape: (3, 1)
+        # Python conversion new
+        res = res.squeeze()
+        print("OVERALL res:", res.shape)  #, res)
+        # %%% shape: (3,)
 
-        c_sc[:, iret] = res.squeeze()
+        c_sc[:, orig_iret] = res.squeeze()
         print("OVERALL c_sc:", c_sc.shape)  #, c_sc)
         # %%% shape: (3, 5040)
 
@@ -1437,18 +1460,18 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # equivalent call c_lnvmr has shape '0 Before (5040, 101) (1, 101)'
         # so need to transpose overall!
         c_ap_lnvmr = c_ap_lnvmr.T
-        print("BEFORE", c_ap_lnvmr.shape, c_ap_lnvmr[iret,].shape)
-        c_ap_vmr = np.exp(c_ap_lnvmr[iret,])
+        print("BEFORE", c_ap_lnvmr.shape, c_ap_lnvmr[orig_iret,].shape)
+        c_ap_vmr = np.exp(c_ap_lnvmr[orig_iret,])
         print("OVERALL c_ap_vmr:", c_ap_vmr.shape, c_ap_vmr)
         # %%% shape: (101,)
 
         print(msc.shape)
         c_ap_sc = matrix_multiply(msc, c_ap_vmr, atr=True)
-        print("OVERALL msc:", c_ap_sc.shape)
+        print("OVERALL c_ap_sc:", c_ap_sc.shape)
         # %%% shape: (3,)
 
         # Make the square (nz,nz) AK array
-        # IDL for first arg: ak_lnvmr(*,*,iret)
+        # IDL for first arg: ak_lnvmr(*,*,orig_iret)
         # IMPORTANT! fix relative to original code provided by RS, updated:
         # In doing this I found an error in ims_rd_co4ak - the modified
         # version is in also in that directory.
@@ -1456,12 +1479,8 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # ak_vmr_sq=ak_lnvmr*matrix_multiply(c_vmr,1d0/c_vmr)
         # now corrected to
         # ak_vmr_sq=ak_lnvmr_sq*matrix_multiply(c_vmr,1d0/c_vmr)
-        print("UPTO args are:",
-              ak_lnvmr[iret, :, :].shape, evecs.shape, pf.shape,
-              sp[iret].shape, nz, nev  # final two are ints
-              )
         ak_lnvmr_sq = irc_ak_exp(
-            ak_lnvmr[iret, :, :], evecs, pf, sp[iret], nz, nev
+            ak_lnvmr[orig_iret, :, :], evecs, pf, sp[orig_iret], nz, nev
         )
         print("OVERALL ak_lnvmr_sq:", ak_lnvmr_sq.shape)
         # %%% shape: (101, 101)
@@ -1471,42 +1490,83 @@ def main(fi=None, lun=None, nret=None, approx=False):
         print("OVERALL ak_vmr_sq:", ak_vmr_sq.shape)
         # %%% shape: (101, 101)
 
-        # UPTO
         # Convert AK to d_sub-columns/d_vmr
-        ak_sc[iret, 0, 0] = matrix_multiply(msc, ak_vmr_sq, atr=True)
+        print(
+            "^^^^^ msc", msc.shape, "ak_sc", ak_sc.shape, "orig_iret",
+            orig_iret
+        )
+        fin_mm = matrix_multiply(
+            msc, ak_vmr_sq, atr=True, btr=True).transpose()
+        ak_sc[:, :, orig_iret] = fin_mm.transpose()
         print("OVERALL ak_sc:", ak_sc.shape)
-        # %%% shape:
+        # %%% shape: (3, 101, 5040)
 
         # Calculate a priori contribution so can layer apply AKs by doing simply
         # c_sc_model = c_apc + matrix_cultiply(ak_c,c_vmr_model)
         # for sub-columns, ak_c is non square and returned in units of
         # d_retrieved_subcolumn_average_vmr/d_true_profile_vmr
-        c_apc_sc[iret, 0] = c_ap_sc - matrix_multiply(
-            ak_sc[iret, :, :], c_ap_vmr
+        c_apc_sc[:, orig_iret] = c_ap_sc - matrix_multiply(
+            ak_sc[:, :, orig_iret], c_ap_vmr, atr=False, btr=False,
         )
         print("OVERALL c_apc_sc:", c_apc_sc.shape)
-        # %%% shape:
+        # %%% shape: (3, 5040)
 
         # Now deal with errors...
         # convert matrices to vmr from ln(vmr)  (error in ln(x) is
         # fractional error in x)
         vmr_sq = matrix_multiply(c_vmr, c_vmr)
-        sx_vmr = sx_lnvmr[iret, :, :] * vmr_sq
-        # flake8: below variable not used and is dupe to above, so ignore
-        # SLB sn_vmr = sn_lnvmr[iret, :, :] * vmr_sq
+        vmr_sq = vmr_sq.squeeze()
+        print("OVERALL vmr_sq:", vmr_sq.shape, vmr_sq)
+        # %%% shape: (1, 1) -> (1,) after squeeze
+        # Unpack vmr_sq to single value
+        # UPTO
+        sx_vmr = sx_lnvmr[orig_iret, :, :] * vmr_sq
+        print("OVERALL sx_vmr:", sx_vmr.shape)
+        # %%% shape: (101, 10)
+        sn_vmr = sn_lnvmr[orig_iret, :, :] * vmr_sq
+        print("OVERALL sx_vmr:", sx_vmr.shape)
+        # %%% shape: (101, 10)
 
-        # Convert these to (nsc,nsc) matrices for the sub-columns
-        sx_sc[iret, 0, 0] = matrix_multiply(
-            matrix_multiply(sx_vmr, msc), msc, atr=True
+        print(
+            "$$$$$$$$$$$$$$$$$ msc", msc.shape, "sx_vmr", sx_vmr.shape)
+        temp1 = matrix_multiply(sx_vmr, msc, atr=True, btr=False)
+        print("temp1", temp1.shape)
+        temp2 = matrix_multiply(temp1, msc, atr=False, btr=True)
+        print("temp2", temp2.shape)
+        print("set to", sx_sc.shape)
+        sx_sc[orig_iret, :, :] = temp2
+        #matrix_multiply(
+        #matrix_multiply(sx_vmr, msc, atr=True, btr=False),
+        #msc, atr=False, btr=True
+        #)  #, atr=True)
+        print("sx_sc", sx_sc.shape, sx_sc[orig_iret, :, :].shape)
+        result = matrix_multiply(
+            matrix_multiply(sx_vmr, msc, atr=True, btr=False), msc
+            ###msc, atr=False, btr=False
         )
-        sn_sc[iret, 0, 0] = matrix_multiply(
-            matrix_multiply(sx_vmr, msc), msc, atr=True
+        print("result", result)
+        print("OVERALL sx_sc:", sx_sc.shape)
+        # %%% shape: (3, 3, 5040)
+
+        # SLB Note, fixed likely issue where this is same as sx_sc, due to
+        # input of sx_vmr when it is liekly to have meant to have been sn_vmr
+        print("%%%%%%%" * 15)
+        print("sn_sc", sn_sc.shape, "sx_vmr", sx_vmr.shape,
+              "msc", msc.shape)
+        sn_sc[orig_iret, 0, 0] = matrix_multiply(
+            matrix_multiply(sn_vmr, msc), msc, atr=True
         )
+        print("OVERALL sn_sc:", sn_sc.shape)
+        # %%% shape:
 
         # Just get sqrt-diagonals of the covariances (Estimated total random
         # error std.deviation and the noise std.deviation)
-        c_err_sc[iret, 0] = sqrt_nz(f_diagonal(sx_sc[iret, :, :]))
-        c_noise_sc[iret, 0] = sqrt_nz(f_diagonal(sn_sc[iret, :, :]))
+        c_err_sc[orig_iret, 0] = sqrt_nz(f_diagonal(sx_sc[orig_iret, :, :]))
+        print("OVERALL c_err_sc:", c_err_sc.shape)
+        # %%% shape:
+        c_noise_sc[orig_iret, 0] = sqrt_nz(f_diagonal(sn_sc[orig_iret, :, :]))
+        print("OVERALL c_noise_sc:", c_noise_sc.shape)
+        # %%% shape:
 
     # Make result structure
     # Everything given for sub columns so drop the _sc in the tag names
@@ -1527,19 +1587,27 @@ def main(fi=None, lun=None, nret=None, approx=False):
         "c": c_sc,
         # Averaging kernels for retrieved sub-column wrt true profile
         # vmr (nsc,nz,np) / ppmv/ppmv
-        "ak": ak_sc,
+        "ak": ak_sc,  # MAIN FOR AK
         # Total (Noise + smoothing) covariance for sub-col.avg.vmrs
         # (nsc,nsc) / ppmv^2
         "sx": sx_sc,
         # Noise covariance (nsc,nsc) / ppmv^2
         "sn": sn_sc,
         # A priori contribution to each sub-column (nsc,np) / ppmv
-        "c_apc": c_apc_sc,
+        "c_apc": c_apc_sc,  # MAIN FOR AK
         # Estimated total standard deviation of retrieved sub-cols (nsc,np) / ppmv
         "c_err": c_err_sc,
         # Estimated noise standard deviation (nsc,np) / ppmv
         "c_noise": c_noise_sc,
     }
+    # Reduced s just to calculate the AK
+    # s = {
+    #     # Averaging kernels for retrieved sub-column wrt true profile
+    #     # vmr (nsc,nz,np) / ppmv/ppmv
+    #     "ak": ak_sc,  # MAIN FOR AK
+    #     # A priori contribution to each sub-column (nsc,np) / ppmv
+    #     "c_apc": c_apc_sc,  # MAIN FOR AK
+    # }
 
     return s
 
