@@ -1399,28 +1399,30 @@ def main(fi=None, lun=None, nret=None, approx=False):
     #
     # DESIRED SHAPES HAVE, FOR EXAMPLE:
     # nsc: 3
-    # nz: 5040
-    # nret: 101
+    # nz: 101
+    # nret: 5040
+    print("nsc", nsc, "nz", nz, "nret", nret)  # nsc 3 nz 101 nret 5040
     c_sc = np.zeros(
-        (nsc, nret),  # (3, 101)
+        (nsc, nret),  # (3, 5040)
     )  # IDL: dblarr(nsc, nret)  # CO sub-column average mixing ratios / ppmv
     ak_sc = np.zeros(
-        (nsc, nz, nret), # (3, 5040, 101)
+        (nsc, nz, nret), # (3, 101, 5040)
     )  # IDL: dblarr(nsc, nz, nret)  # Averaging kernels for retrieved sub-column wrt true profile vmr / ppmv/ppmv
+    print("ORIG SHAPE ak_sc", ak_sc.shape)
     sx_sc = np.zeros(
-        (nsc, nsc, nret),  # (3, 3, 101)
+        (nsc, nsc, nret),  # (3, 3, 5040)
     )  # IDL: dblarr(nsc, nsc, nret)  # Total (Noise + smoothing) covariance for sub-col.avg.vmrs / ppmv^2
     sn_sc = np.zeros(
-        (nsc, nsc, nret),  # (3, 3, 101)
+        (nsc, nsc, nret),  # (3, 3, 5040)
     )  # IDL: dblarr(nsc, nsc, nret)  # Noise covariance  / ppmv^2
     c_apc_sc = np.zeros(
-        (nsc, nret),  # (3, 101)
+        (nsc, nret),  # (3, 5040)
     )  # IDL: dblarr(nsc, nret)  # A priori contribution to each sub-column / ppmv
     c_err_sc = np.zeros(
-        (nsc, nret),  # (3, 101)
+        (nsc, nret),  # (3, 5040)
     )  # IDL: dblarr(nsc, nret)  # Estimated total standard deviation of retrieved sub-cols / ppmv
     c_noise_sc = np.zeros(
-        (nsc, nret),  # (3, 101)
+        (nsc, nret),  # (3, 5040)
     )  # IDL: dblarr(nsc, nret)  # Estimated noise standard deviation / ppmv
 
     # Loop individual retrievals
@@ -1491,13 +1493,13 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # %%% shape: (101, 101)
 
         # Convert AK to d_sub-columns/d_vmr
-        print(
-            "^^^^^ msc", msc.shape, "ak_sc", ak_sc.shape, "orig_iret",
-            orig_iret
-        )
+        #print(
+        #    "^^^^^ msc", msc.shape, "ak_sc", ak_sc.shape, "orig_iret",
+        #    orig_iret,
+        #)
         fin_mm = matrix_multiply(
-            msc, ak_vmr_sq, atr=True, btr=True).transpose()
-        ak_sc[:, :, orig_iret] = fin_mm.transpose()
+            msc, ak_vmr_sq, atr=True, btr=True)  ##.transpose()
+        ak_sc[:, :, orig_iret] = fin_mm  ##.transpose()
         print("OVERALL ak_sc:", ak_sc.shape)
         # %%% shape: (3, 101, 5040)
 
@@ -1524,11 +1526,11 @@ def main(fi=None, lun=None, nret=None, approx=False):
         print("OVERALL sx_vmr:", sx_vmr.shape)
         # %%% shape: (101, 10)
         sn_vmr = sn_lnvmr[orig_iret, :, :] * vmr_sq
-        print("OVERALL sx_vmr:", sx_vmr.shape)
+        print("OVERALL sn_vmr:", sn_vmr.shape)
         # %%% shape: (101, 10)
 
-        print(
-            "$$$$$$$$$$$$$$$$$ msc", msc.shape, "sx_vmr", sx_vmr.shape)
+        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ UPTO")
+        print("msc", msc.shape, "sx_vmr", sx_vmr.shape)
         temp1 = matrix_multiply(sx_vmr, msc, atr=True, btr=False)
         print("temp1", temp1.shape)
         temp2 = matrix_multiply(temp1, msc, atr=False, btr=True)
