@@ -409,14 +409,14 @@ def setup_linear(
     ;	DDDX	Return derivative of spline parameter
 
     """
-    n1 = len(x1)
+    n1 = len(x1)  # list so len() is appropriately
     if spline:
-        if len(extra) == 0:
+        if extra.size == 0:
             extra = 1
 
-    if len(x0) == 0:
+    if x0.size == 0:
         raise ValueError("X0 undefined")
-    if len(x0) == 1:
+    if x0.size == 1:
         # Deal with case of only 1 element in input array
         if zero:
             raise ValueError(
@@ -437,7 +437,7 @@ def setup_linear(
             return
 
     if vl:
-        n0 = len(x0)
+        n0 = x0.size
         # SLB ChatGPT's suggestion of Python equivalent to IDL value_locate,
         # I remain dubious but will check this at run-through time
         # NOTE PYTHON CONV to go from IDL value_locate to np.searchsorted,
@@ -448,19 +448,19 @@ def setup_linear(
         # whereas the ref guide has result:
         # -1 0 1 1 3
         # so take away one.
-        print("x0", x0, x0.shape, "x1", x1, len(x1))
+        print("x0", x0, x0.shape, "x1", x1, len(x1), type(x1))
         #if isinstance(x0, cf.Data):
         #    print("CONVERT CF DATA TO NP ARRAY")
         #    x0 = x0.array
         ilow = np.searchsorted(x0, x1) - 1  # IDL: value_locate(x0, x1)
         ihigh = ilow + 1
         wh = np.where(ilow < 0)[0]
-        nw = len(wh)
+        nw = wh.size
         if nw > 0:
             ilow[wh] = 0
 
         wh = np.where(ihigh >= n0)[0]
-        nw = len(wh)
+        nw = wh.size
         if nw > 0:
             ihigh[wh] = n0 - 1
     else:
@@ -474,9 +474,9 @@ def setup_linear(
 
     dwdx = w2
     if extra:
-        n0 = len(x0)
+        n0 = x0.size
         whoor = np.where(ihigh == ilow)[0]
-        noor = len(whoor)
+        noor = whoor.size
         if noor > 0:
             wh0 = np.where(ihigh(whoor) == 0)[0]
             if wh0[0] != -1:
@@ -489,8 +489,7 @@ def setup_linear(
     i1 = ilow
     i2 = ihigh
     wh = np.where(ihigh != ilow)[0]
-    ### print("WH", wh, type(wh), len(wh))
-    nne = len(wh)
+    nne = wh.size
     if nne != 0:
         ###print("ilow is", ilow, type(ilow), ilow[wh], ilow[wh] - 1)
         py_ilow = ilow[wh] - 1  # SLB NEW VARS
@@ -513,7 +512,7 @@ def setup_linear(
             w2[wh] = 0.0
             dwdx[wh] = 0.0
 
-    if len(x1) == 1 and op:
+    if x1.size == 1 and op:
         i1 = i1[0]
         i2 = i2[0]
         w1 = w1[0]
@@ -690,10 +689,10 @@ def setup_integration_matrix(
         wh = np.where(
             np.logical_and(x > orig_xrange[0], x < orig_xrange[1])
         )[0]
-        nw = len(wh)
+        nw = wh.size
         if nw > 0:
             print("ISSUE", x[wh])
-            xi = [orig_xrange[0], x[wh].array[0], orig_xrange[1]]
+            xi = np.array([orig_xrange[0], x[wh].array[0], orig_xrange[1]])
             print("xi", xi)
         else:
             xi = orig_xrange
@@ -701,8 +700,8 @@ def setup_integration_matrix(
         # x is in ascending order so can use value locate to do this
         # as fast as possible
         i0, i1, w0, w1 = setup_linear(x, xi, vl=True, extra=extra)
-        nx = len(x)
-        nxi = len(xi)
+        nx = x.size
+        nxi = xi.size
         mi = np.zeros((nx, nxi))
         ###print("POINT 1", mi.shape, [i0, np.arange(nxi)], "i0", i0)
         ###print("THIS IS", np.concatenate((i0, np.arange(nxi))))
@@ -732,7 +731,7 @@ def setup_integration_matrix(
             # in order for sorting back to work below
             so = np.argsort(x1[1:])  # IDL: np.argsort(x1(1: *))
             if tol:
-                nz = len(x)
+                nz = x.size
                 m = np.zeros((nz - 1, nz - 1))
                 for iz in np.arange(1, nz):
                     m[iz - 1, 0] = dx[0: iz - 1]
@@ -740,7 +739,7 @@ def setup_integration_matrix(
                 m = dx
         else:
             if tol:
-                nz = len(x)
+                nz = x.size
                 m = np.zeros((nz, nz - 1))
                 for iz in np.arange(1, nz):
                     m[iz - 1, 0] = 0.5 * (
@@ -834,7 +833,7 @@ def iasimhs_vsx2cov(vsx, diag):
         npi = sz[2]
 
     nv = sz[1]
-    if len(diag) > 0:
+    if diag.size > 0:
         szd = [diag.ndim,] + list(diag.shape)[::-1]
         nd = szd[1]
         if szd[0] == 1:
@@ -956,7 +955,7 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
 
     """
     # Transpose input and output, 1. input
-    sz = [s1.ndim,] + list(s1.shape)[::-1]
+    sz = [s1.ndim,] + list(s1.shape)  #[::-1]
     print("SZ IS", sz)
     if sz[0] == 3:
         # NOTE: renaming 'np' var used here to avoid nameclash with numpy
@@ -966,7 +965,7 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
         orig_np = 1
 
     print("sz", sz)
-    if sz[-1] != sz[-2]:  # IDL: if sz[1] != sz[2], but Py dims reverse order
+    if sz[1] != sz[2]:  # IDL: if sz[1] != sz[2], but Py dims reverse order
         raise ValueError("Expected first 2 dims to be same size!")
 
     sz = [evecs.ndim,] + list(evecs.shape)[::-1]
@@ -989,10 +988,10 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
         # NOTE: relative to raw IDL, apply T to transpose whole result
         # so have shape (10, 45)
         # to fit s shape (10, 10, 45), not shape (45, 10)
-        print("shape sipi", sipi.shape, "shape other", s[ip, :, :].shape)
+        ###print("shape sipi", sipi.shape, "shape other", s[ip, :, :].shape)
         s[:, :, ip] = sipi
 
-    print("Final return value s:", s.shape)
+    print("££££££££££" * 30, "Final return value s:", s.shape)
     return s
 
 
@@ -1049,7 +1048,7 @@ def f_diagonal(matrix, orig_input):
     end
     """
     # dimensions
-    nel = len(matrix)
+    nel = matrix.size
     if nel == 1:
         matrix_save = matrix
         # https://lweb.cfa.harvard.edu/~atripath/idlrefguide.pdf
@@ -1059,9 +1058,9 @@ def f_diagonal(matrix, orig_input):
 
     # SLB: flake8 says this variable is not used, so comment out
     # dim_in = orig_input.shape
-    nin = len(orig_input)
+    nin = orig_input.size
     dim_mat = matrix.shape
-    nmat = len(matrix)
+    nmat = matrix.size
 
     if nin == 0:
         # SLB: think type is handled natively by Python so can drop 'type='
@@ -1199,7 +1198,7 @@ def irc_ak_exp(
 
     # Make sure AK is zero below surface pressure
     ws = np.where(pf > sp)[0]
-    ns = len(ws)
+    ns = ws.size
     if ns > 0:  # Set levels below surface to 0
         ak_101[ws,] = 0
 
@@ -1245,7 +1244,7 @@ def irc_integration_matrix(
             w0 = np.where(np.logical_or(pf < sc1[0], pf > sc1[1])
             )[0]  # levels outside required layer
             print("w0", w0)
-            n0 = len(w0)
+            n0 = w0.size
             print("n0", n0)
             if n0 > 0:
                 print("msc1", msc1.shape, msc1)
@@ -1253,7 +1252,7 @@ def irc_integration_matrix(
         else:
             # used function to set up weights to do trapezoid integration over defined interval
             msc1 = setup_integration_matrix(pf, orig_xrange=sc1)
-            print("%%%%% FINAL MSC1", msc1, msc1.shape)
+            ###print("%%%%% FINAL MSC1", msc1, msc1.shape)
 
         msc1 = msc1 / np.sum(
             msc1
@@ -1327,7 +1326,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     # Numpy argwhere "Find the indices of array elements that are
     # non-zero, grouped by element" so works out the box here
     iret = np.argwhere(do_ret).flatten()  # flatten so not (1, 6000) shape
-    nret = len(iret)
+    nret = iret.size
     print("iret:", iret)
     print("nret:", nret)
 
@@ -1355,13 +1354,13 @@ def main(fi=None, lun=None, nret=None, approx=False):
     print("Example, lat:", lat)
 
     # Get dimensions
-    nz = len(pf)  # number of fine vertical levels
-    nsc = len(scs[:, 0])  # number of subcolumns
+    nz = pf.size  # number of fine vertical levels
+    nsc = scs[:, 0].size  # number of subcolumns
     print("nz:", nz)
     print("nsc:", nsc)
 
     # SLB: flake8 says this variable is not used, so comment out
-    nev = len(evecs[:, 0])  # number of Eigenvectors used to represent profile
+    nev = evecs[:, 0].size  # number of Eigenvectors used to represent profile
     print("nev:", nev)
 
     # Interpolate the set of prior profiles in latitude
@@ -1440,13 +1439,14 @@ def main(fi=None, lun=None, nret=None, approx=False):
     print("STARTING ITERATION")
     # Rename iret to avoid confusion with iret variable above (no longer req'd)
     for orig_iret in np.arange(0, nret):
+        print("+++++++++++++++++++++++ ONTO", orig_iret)
         # Get vmr from lnvmr
         print(orig_iret, "Before", c_lnvmr.shape, c_lnvmr[orig_iret,].shape)
         c_vmr = np.exp(c_lnvmr[orig_iret,])  # undo log unit
         ###print("OVERALL c_vmr:", c_vmr.shape, c_vmr)
         # %%% shape: (1, 101)
         ###c_vmr = c_vmr.squeeze()
-        print("OVERALL c_vmr:", c_vmr.shape, c_vmr)
+        print("OVERALL c_vmr:", c_vmr.shape)  #, c_vmr)
         # %%% shape: (101,)
 
         # Calculate weights which will compute the subcolumn via matrix multiply
@@ -1521,15 +1521,17 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # convert matrices to vmr from ln(vmr)  (error in ln(x) is
         # fractional error in x)
         vmr_sq = matrix_multiply(c_vmr, c_vmr)
-        ###vmr_sq = vmr_sq.squeeze()
+        vmr_sq = vmr_sq.squeeze()
         print("OVERALL vmr_sq:", vmr_sq.shape, vmr_sq)
         # %%% shape: (1, 1) -> (1,) after squeeze
         # Unpack vmr_sq to single value
         # UPTO
-        sx_vmr = sx_lnvmr[orig_iret, :, :] * vmr_sq
+        print(
+            "INDEX IS", orig_iret, "sx_lnvmr", sx_lnvmr.shape)
+        sx_vmr = sx_lnvmr[:, :, orig_iret] * vmr_sq
         print("OVERALL sx_vmr:", sx_vmr.shape)
         # %%% shape: (101, 10)
-        sn_vmr = sn_lnvmr[orig_iret, :, :] * vmr_sq
+        sn_vmr = sn_lnvmr[:, :, orig_iret] * vmr_sq
         print("OVERALL sn_vmr:", sn_vmr.shape)
         # %%% shape: (101, 10)
 
