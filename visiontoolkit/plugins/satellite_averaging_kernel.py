@@ -1,221 +1,45 @@
 #!/usr/bin/env python
 
 """
+Implementation of the averaging kernel application for satellite data.
+Translated to Python by SLB, */12/2024 from IDL code sa documented below.
+Note that only relevant parts of that code were taken, and some refactoring
+and consolidation has taken place for performance and to facilitate the
+change to using numpy arrays as the underlying approach.
 
-SLB TODOs:
-- once converted IDL -> Python:
-  - lint
-  - look for ways to improve Python
-  - look for ways to use cf-python to simplify/streamline
-  - look for ways to Daskify instead of use plain numpy
+Leading documentation string from original algorithm:
 
-***
+    IMS_RD_CO4AK
 
-IMS_RD_CO4AK
+    Read IMS L2 file to construct CO sub-columns and averaging kernels only
+    (cut down from ims_rd_basic to serve as simple e.g. code for Vision project)
 
-Read IMS L2 file to construct CO sub-columns and averaging kernels only
-(cut down from ims_rd_basic to serve as simple e.g. code for Vision project)
+    From the resulting structure "s" averaging kernels can be applied to model
+    c_vmr_model (ppmv on 101 fine grid levels) to obtain sub-columns accounting
+    for the retrieval averaging kernel, c_sc_model (in ppmv) via
 
-From the resulting structure "s" averaging kernels can be applied to model
-c_vmr_model (ppmv on 101 fine grid levels) to obtain sub-columns accounting
-for the retrieval averaging kernel, c_sc_model (in ppmv) via
+    c_sc_model = s.c_apc + matrix_multiply(s.ak,c_vmr_model)
 
-c_sc_model = s.c_apc + matrix_multiply(s.ak,c_vmr_model)
+    If required to apply to model profiles on a different grid then the AKs will
+    need to be (a) normalised by dividing (in the fine vertical grid dimension)
+    by the pressure differences between the fine grid (dpf)
+    (b) interpolated in that dimension to the new model pressure grid.
+    (c) multiplied by the layer pressure differences of the model grid.
+    Pressure differences,dp can be obtained by
+            dp1=pf(1:nz-1)-pf(0:nz-2)
+            dpf=([0,dp1]+[dp1,0])/2
 
-If required to apply to model profiles on a different grid then the AKs will
-need to be (a) normalised by dividing (in the fine vertical grid dimension)
-by the pressure differences between the fine grid (dpf)
-(b) interpolated in that dimension to the new model pressure grid.
-(c) multiplied by the layer pressure differences of the model grid.
-Pressure differences,dp can be obtained by
-        dp1=pf(1:nz-1)-pf(0:nz-2)
-        dpf=([0,dp1]+[dp1,0])/2
+    PARAMETERS
+             FILE   Name of IMS L2 file to read
 
-PARAMETERS
-         FILE   Name of IMS L2 file to read
-
-KEYWORDS
-        APPROX  Compute sub-columns approximately
-                (mainly to illustrate basic approach, but
-                treats the bounds of the defined pressure layers
-                in an approximate way)
+    KEYWORDS
+            APPROX  Compute sub-columns approximately
+                    (mainly to illustrate basic approach, but
+                    treats the bounds of the defined pressure layers
+                    in an approximate way)
 
 
-R.S. 30/10/2024 (original IDL module)
-Translated to Python by SLB, */12/2024
-
-CONVERSION NOTES:
-1. Used package to auto-convert as much as possible:
-   https://github.com/dnidever/idl2py
-2. Applied basic linting to view better - manually since 'black'
-   or other linter would fail on invalid Python at this stage
-3. Using IDL reference to convert some undefined keywords e.g.
-  https://lweb.cfa.harvard.edu/~atripath/idlrefguide.pdf
-  e.g. KEYWORD_SET "It returns a True (1) if its argument is defined
-  and nonzero, and False (0) otherwise"
-4. Using this 'NumPy for IDL users' to convert precision and array stuff,
-   really helpful resource!:
-   https://mathesaurus.sourceforge.net/idl-numpy.html
-5. This explains constant setting, esp. how double precision objs are set,
-   useful for converting numbers with letters in e.g. '85d0':
-   https://www.nv5geospatialsoftware.com/docs/Defining_and_Using_Const.html
-   and this one:
-   https://www.irya.unam.mx/computo/sites/manuales/IDL/Content/Creating%20IDL%20Programs/Components%20of%20the%20IDL%20Language/IDL_Data_Types.html
-6. 'matrix_multiply' is a bit tricky, see:
-   https://stackoverflow.com/questions/23128788/what-is-the-python-numpy-equivalent-of-the-idl-operator
-7. Further complications, see:
-https://stackoverflow.com/questions/78656111/converting-idl-into-python-taking-verbatim-translation-and-making-it-pythonic
-"IDL slice endpoints are inclusive, while Python slice endpoints are exclusive. For example, in IDL, x[1:4] extracts a subarray of length 4 (elements at indices 1, 2, 3, 4), while in Python, x[1:4] extracts a sub-array of length 3 (elements at indices 1, 2, 3)."
-8. Slicing! Parentheses in Python indicate a function call but in IDL they
-   indicate an array slice, at least most or all of the time for this script
-   context. Note asterisks e.g. a(*, N) or a(N, *) including with
-   multiple asterisk e.g.
-   a(*, *, N) have special slice meaning, see 'Indexing and accessing elements
-   (Python: slicing)' in https://mathesaurus.sourceforge.net/idl-numpy.html
-   for tips on how to convert. Examples there:
-a(2,1) -> a[1,2]
-a(*,0) -> a[0,]
-a(0,*) ->       a[:,0]
-a(*,1:*) ->     a[1:,]
-
-https://www.johnny-lin.com/cdat_tips/tips_array/idl2num.html
- Order of indices in Numeric/numarray is opposite of IDL! For a 2-dimension array:
-a[i,j] in IDL is equivalent to a[j,i] in Python
-ANOTHER SOURCE SAYS:
-i:j 	i:j (except for different interpretation for j)
-i:* 	i:
-*:i 	:i
-a[i,*] 	a[:,i]
-Assuming ak_lnvmr(*,*,iret) therefore ->
-but need to check. ChatGPT says:
-In IDL, a[*, *, 0] selects a 2D slice from a 3D array a. The * acts as a wildcard, meaning "include all elements along this dimension." Specifically:
-
-    The first * selects all elements along the first dimension (rows).
-    The second * selects all elements along the second dimension (columns).
-    The 0 selects the first slice (index 0) along the third dimension (depth).
-
-This is equivalent to indexing a 3D NumPy array in Python as:
-
-a[:, :, 0]
-
-BUT I think it is instead a[0, :, :] somehow - due to reversal w.r.t
-Python order specified.
-
-9. 'flake8' is returning a lot of 'F821 undefined name' failures which are
-   caused by variables not being defined in function (and nothing globally) so
-   there is scope to consider (quoting from ChatGPT):
-   ```
-   1. Inheritance of Scope from the Caller
-
-   If a procedure is called without defining all its variables internally or passing them as arguments, it can access variables from the calling scope. This behavior is unique to IDL and can lead
-   to implicit dependencies.
-   Example:
-
-   PRO my_procedure
-     PRINT, a  ; Accesses 'a' from the caller's scope if it exists
-   END
-
-   a = 42
-   my_procedure  ; Outputs: 42
-
-   So to get around this, add these as function arguments and go edit code
-   appropriately.
-   2. Common Blocks
-
-   IDL allows variables to be shared among multiple procedures or functions using common blocks. A common block acts like a shared memory space that multiple procedures can use to access and modify the same variables.
-   ```
-10. SLB: care, original IDL code has 'np' as variable, must use another to
-    # avoid nameclash with numpy alias!
-So renamed these orig_np
-
-11. IDL case statement, see:
-https://www.nv5geospatialsoftware.com/docs/CASE_Versus_SWITCH.html
-12. SORTED fz_roots is actually built-in IDL - see here:
-https://www.nv5geospatialsoftware.com/docs/FZ_ROOTS.html
-13. Note converted keyword arguments to arguments where the argument is
-    undefined gloally e.g. tol=tol, box=box. Can be input as args anyway
-    so should be harmless but necessary to work in Python script.
-
-14. NOTE IDL is DL is a zero-index language - was good to check
-
-15. SLB TODO
-"IDL slice endpoints are inclusive, while Python slice endpoints are exclusive. For example, in IDL, x[1:4] extracts a subarray of length 4 (elements at indices 1, 2, 3, 4), while in Python, x[1:4] extracts a sub-array of length 3 (elements at indices 1, 2, 3)."
-so go and account for that.
-
-MAINFESTS AS, E.G:
-Traceback (most recent call last):
-  File "/home/slb93/git-repos/vision-project-resources/visiontoolkit/plugins/satellite_averaging_kernel.py", line 1280, in <module>
-    sys.exit(main())
-             ^^^^^^
-  File "/home/slb93/git-repos/vision-project-resources/visiontoolkit/plugins/satellite_averaging_kernel.py", line 1127, in main
-    c_ap_lnvmr = irc_interp_ap(c_ap_lnvmr, lat)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/slb93/git-repos/vision-project-resources/visiontoolkit/plugins/satellite_averaging_kernel.py", line 934, in irc_interp_ap
-    setup_linear(lats_ap, latitude, vl=True)
-  File "/home/slb93/git-repos/vision-project-resources/visiontoolkit/plugins/satellite_averaging_kernel.py", line 412, in setup_linear
-    dwdx[wh] = 1.0 / (x0[ihigh[wh]] - x0[ilow[wh]])
-                                      ~~^^^^^^^^^^
-IndexError: index 18 is out of bounds for axis 0 with size 18
-
-so must change from IDL [n] to Python [n + 1] ???
-
-
-16. Does the IDL ncdf_get return everything in Fortran major - since
-    we are in C major, but resources like (as ref#'d for matrix_multiply);
-https://stackoverflow.com/questions/23128788/what-is-the-python-numpy-equivalent-of-the-idl-operator
-imply we deal with this via the transpose operations.
-As for more general case, check ncdf_get for row-column major bit.
--> potetnially query in numpy to see what row-column thing we have
-and be careful with it.
-e.g. https://numpy.org/doc/2.1/reference/generated/numpy.isfortran.html
-numpy.isfortran(a)
-
-Row major vs colum major:
-https://stackoverflow.com/questions/20341614/numpy-array-row-major-and-column-major
-
-
-17. Also check slowest-moving indexing part - is it always first?
-
-18. Intpreting the output structure in terms of size.
-
-19. Add statement at top to include STFC OSS notes.
-
-20. Include the fix for the error RS pointed out!
--> done.
-
-21. For IDL where, a variable is defined via the 'call'! I.e. with
-    (A,) = where(C, D) in IDL creates A as where query and a new variable called
-    D as the the number of elements in iret, and need to unpack from a resultant
-    tuple (use 0 index), so convert that to:
-        A = np.where(C)[0]
-        D = A.size   # or len(A) but A.size better actually, see below
-
-22. Care with use of len()! n_elements from IDL is better to do to .size for
-    arrays, since len can given misleading results e.g. 1 where size is 101
-    etc.
-
-23. CONVERTING SIZE!
-Note that (from https://lweb.cfa.harvard.edu/~atripath/idlrefguide.pdf, p2385):
-
-If no keywords are set, SIZE returns a vector of integer type. The first element is
-equal to the number of dimensions of Expression. This value is zero if Expression is
-scalar or undefined. The next elements contain the size of each dimension, one
-element per dimension (none if Expression is scalar or undefined). After the
-dimension sizes, the last two elements contain the type code (zero if undefined) and
-the number of elements in Expression, respectively. The type codes are listed below.
-If a keyword is set, SIZE returns the specified information
-
-Therefore IDL size(N) becomes Python
-(N.ndim, [unpacked] N.shape, [ignore last one if can, is a type code])
-so use:
-ALSO NOTE YOU NEED TO REVERSE THE SHAPE! SINCE IN IDL THE COLUMNS ARE
-QUOTED FIRST RELATIVE TO NP.SHAPE WHICH QUOTES ROWS FIRST. Hence the [-1]:
-
-size(a) -> [a.ndim,] + list(a.shape)[::-1]
-NOPE DON'T REVERSE IT!
-size(a) -> [a.ndim,] + list(a.shape) seems to work - but check
-
-24. Rename 'np' var to avoid obvious clash!
+    R.S. 30/10/2024 (original IDL module)
 
 """
 
@@ -225,8 +49,6 @@ from pathlib import Path
 
 import numpy as np
 import cf  # only using for now to read in to get arrays
-
-import pickle  # temp while dev/debug
 
 
 # START OF NEW FUNCS TO MAP IDL PROCEDURE NAMES TO EQUIVALENT PYTHON
@@ -239,12 +61,13 @@ DEFAULT_FILEPATH = (
     f"{Path(__file__).absolute().parent.parent.parent}/data/"
     "marias-satellite-example-data/satellite-data/"
     "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_"
-    "20170703215054z_700_749-v1000.nc"  # nret is 5040, better
+    "20170703215054z_000_049-v1000.nc"  # all 6000 retrievals
     # "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_"
-    # "20170703215054z_000_049-v1000.nc"  # all 6000 retrievals, try another,
+    # "20170703215054z_700_749-v1000.nc"  # only 5040 retreivals in this one
     # From orig IDL, used: "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-"
     # "20110718141155z_20110718155058z_000_049-v1000.nc"
 )
+APPROX_INTEGRATION_MATRIX = True
 
 
 def matrix_multiply(a, b, atr=False, btr=True):
@@ -257,18 +80,18 @@ def matrix_multiply(a, b, atr=False, btr=True):
     dot operation from IDL code conversion.
     """
     a_dot = a.copy()
-    print("a", a.shape, type(a))
+    ###print("a", a.shape, type(a))
     if atr:
         if isinstance(a_dot, cf.Data):  # cf to np space, cf transpose issues
-            print("a.T applied")
+            ###print("a.T applied")
             a_dot = a_dot.array
         a_dot = a_dot.T
 
     b_dot = b.copy()
-    print("b", b.shape, type(b))
+    ###print("b", b.shape, type(b))
     if btr:
         if isinstance(b_dot, cf.Data):  # cf to np space
-            print("b.T applied")
+            ###print("b.T applied")
             b_dot = b_dot.array
         b_dot = b_dot.T
 
@@ -318,7 +141,9 @@ def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
     ;	QUIET	Suppress warning messages (e.g. cannot read due to unknown data type)
     ;       UNH5    Use h5_get to read a variable which has unknown data type for ncdf reader
     ;
-    IGNORING IDL CODE AS THIS IS TRIVIAL IN CF-PYTHON SO NO NEED TO CHECK THEIR APPROACH
+
+    Ignoring IDL code implementation as this is trivial in cf-python so
+    no need to copy/check their approach.
     """
     # Note: noclo arg to not close file irrelevant in cf-python
     # Undo and ova args also probably not relevant but check this later.
@@ -330,7 +155,7 @@ def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
 
     # Unpacking stage, if a FieldList of length 1:
     if len(v) != 1:
-        raise ValueError("!!! Have a FieldList of non-singular size.")
+        raise ValueError("Unexpected: have a FieldList of non-singular size.")
     else:
         v = v[0]
 
@@ -338,7 +163,7 @@ def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
     # numpy array space until we get it working, then can conert to cf-python
     # space.
     d = v.data
-    d.persist(inplace=True)  # for speed
+    d.persist(inplace=True)  # for performance
     return d
 
 
@@ -564,17 +389,6 @@ def sqrt_nz(a):
     ;	NND	Return number of points set to no-data
     ;
 
-    function sqrt_nz,a,no_data=no_data,nnd=nnd
-            if n_elements(no_data) eq 0 then no_data=-999
-            sz=size(a)
-            if sz(0) eq 0 then begin
-                    if a ge 0 then return,sqrt(a) else return,no_data
-            endif
-            c=make_array(size=sz,value=no_data)
-            wh=where(a gt 0,nw,ncom=nnd)
-            if nw gt 0 then c(wh)=sqrt(a(wh))
-            return,c
-    end
     """
     sqa = np.sqrt(a)
     sqa_mask = np.ma.masked_invalid(sqa)  # SLB update np and cf world mix
@@ -626,58 +440,7 @@ def setup_integration_matrix(
     ;		of each layer (i.e. given N values of X, this will return N-1 weights
     ;		for the N-1 layers defined by N levels).
     ;
-    function setup_integration_matrix,x1,xrange=xrange,_EXTRA=extra,tol=tol,box=box
-    ;
-    ; sort into ascending order so this can be assumed throughout
-    ;
-            so=sort(x1)
-            x=x1(so)
-            if keyword_set(xrange) then begin
-    ;
-    ; get matrix to perform interpolation...
-    ;
-                    wh=where(x gt xrange(0) and x lt xrange(1),nw)
-                    if nw gt 0 then xi=[xrange(0),x(wh),xrange(1)] else xi=xrange
-                    setup_linear,x,xi,i0,i1,w0,w1,/vl,_EXTRA=extra	; x is in ascending order so can use value locate to do this as fast as possible
-                    nx=n_elements(x)
-                    nxi=n_elements(xi)
-                    mi=dblarr(nxi,nx)
-                    mi(lindgen(nxi),i0)=w0
-                    mi(lindgen(nxi),i1)=mi(lindgen(nxi),i1)+w1
-    ;
-    ; now get vector which would perform the integration on interpolated array
-    ;
-                    mii=setup_integration_matrix(xi,box=box)
-    ;
-    ; now combine the two operations into one vector
-    ;
-                    m=reform(matrix_multiply(mii,mi))
-            endif else begin
-                    dx=[x(1:*)-x]
-                    if keyword_set(box) then begin
-                            so=sort(x1(1:*)) ; need to sort based on 1 value per layer not level, in order for sorting back to work below
-                            if keyword_set(tol) then begin
-                                    nz=n_elements(x)
-                                    m=dblarr(nz-1,nz-1)
-                                    for iz=1,nz-1 do m(0,iz-1)=dx(0:iz-1)
-                            endif else m=dx
-                    endif else begin
-                            if keyword_set(tol) then begin
-                                    nz=n_elements(x)
-                                    m=dblarr(nz,nz-1)
-                                    for iz=1,nz-1 do begin
-                                            m(0,iz-1)=0.5d0*([0d0,dx(0:iz-1)]+[dx(0:iz-1),0d0])
-                                    endfor
-                            endif else m=0.5d0*([0d0,dx]+[dx,0d0])
-                    endelse
-            endelse
-    ;
-    ; sort m back to original order
-    ;
-            bk=sort(so)
-            m=m(bk,*)
-            return,m
-    end
+
     """
     # Sort into ascending order so this can be assumed throughout
     # SLB TODO - under VISION assumptions this is not required, because we
@@ -768,8 +531,7 @@ def setup_integration_matrix(
 
 
 def iasimhs_vsx2cov(vsx, diag):
-    """CONV DONE
-    Implement IDL code 'iasimhs_vsx2cov' function in Python.
+    """Implement IDL code 'iasimhs_vsx2cov' function in Python.
 
         This procedure was stored in its own module, with the functional code
         and important docs as follows:
@@ -789,41 +551,6 @@ def iasimhs_vsx2cov(vsx, diag):
     ;
     ; Reconstruct covariance matrix from vector representing one half of covariance matrix unwrapped
     ;
-            sz=size(vsx)
-            if sz(0) eq 1 then npi=1 else npi=sz(2)
-            nv=sz(1)
-            if n_elements(diag) gt 0 then begin
-                    szd=size(diag)
-                    nd=szd(1)
-                    if szd(0) eq 1 then npid=1 else npid=sz(2)
-                    if npi ne npid then message,'DIAG,VSX do not match!'
-                    nv=nv+nd
-                    covd=diag(*,0)*0+1	; array of 1s for diagonal of correlation
-                    correl=1
-            endif else correl=0
-
-            n=fz_roots([2*nv,-1,-1]) ; Find expected dimensions of covariance based on unwrapped vector of half of the off-diagonals and the diagonals
-            n=long(n(1)+0.1)
-            sx=fltarr(n,n,npi)
-            for ipi=0,npi-1 do begin ; Do for more than one pixel
-                    j=0
-                    vsx1=vsx(*,ipi)
-                    if correl then begin
-                            vsx1=[covd,vsx1]
-                            diag1=diag(*,ipi)
-                            diag2=matrix_multiply(diag1,diag1)
-                    endif
-                    for i=0, n-1 do begin
-                            if i eq 0 then sx1=diag_matrix(vsx1(j:j+n-i-1)) $;  diagonals
-                            else sx1=sx1+diag_matrix(vsx1(j:j+n-i-1),i)+diag_matrix(vsx1(j:j+n-i-1),-i) ; off-diagonals
-                            j=j+n-i
-                    endfor
-                    if correl then sx1=sx1*diag2
-                    sx(0,0,ipi)=sx1
-            endfor
-
-            return, sx
-    end
     """
     print("vsx", vsx, type(vsx), vsx.shape)
     ###vsx = vsx.array
@@ -930,8 +657,7 @@ def iasimhs_vsx2cov(vsx, diag):
 
 
 def iasimhs_sx_exp(s1, evecs, log=False, x=False):
-    """CONV DONE
-    Implement IDL code 'iasimhs_sx_exp' function in Python.
+    """Implement IDL code 'iasimhs_sx_exp' function in Python.
 
         This procedure was stored in its own module, with the functional code
         and important docs as follows:
@@ -940,23 +666,6 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
     ;
     ; loop over multiple covariances, reconstructing each
     ;
-            sz=size(s1)
-            if sz(0) eq 3 then np=sz(3) else np=1
-            if sz(1) ne sz(2) then message,'Expected first 2 dims to be same size!'
-            sz=size(evecs)
-            nz=sz(1)
-            s=fltarr(nz,nz,np)
-            for ip=0,np-1 do begin
-                    sipi=s1(*,*,ip)
-                    sipi=matrix_multiply(matrix_multiply(evecs,sipi),evecs,/btr) ; map to rttov levels
-                    if keyword_set(log) then begin
-                            xipi=x(*,ip)
-                            sipi=sipi*matrix_multiply(xipi,xipi) ; Multiply out log unit
-                    endif
-                    s(0,0,ip)=sipi
-            endfor
-            return,s
-    end
 
     """
     # Transpose input and output, 1. input
@@ -996,7 +705,6 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
         ###print("shape sipi", sipi.shape, "shape other", s[ip, :, :].shape)
         s[:, :, ip] = sipi
 
-    print("££££££££££" * 30, "Final return value s:", s.shape)
     return s
 
 
@@ -1020,37 +728,6 @@ def f_diagonal(matrix, orig_input=False):
     ;  If only an input vector is passed a matrix is created.
     ;
 
-    function f_diagonal,matrix,input=in
-
-    nel=n_elements(matrix)
-    if (nel eq 1) then begin
-       matrix_save=matrix  & matrix=replicate(matrix(0),2,2)
-    endif
-    dim_in  = size(in)      &  nin = n_elements(in)
-    dim_mat = size(matrix)  &  nmat = n_elements(matrix)
-
-    case nin of
-        0 : begin
-              result = make_array(dim_mat(1),type=dim_mat(dim_mat(0)+1))
-              for i=0,dim_mat(1)-1 do result(i) = matrix(i,i)
-            end
-        1 : begin
-              result = matrix
-              for i=0,dim_mat(1)-1 do result(i,i) = in
-            end
-      else: begin
-              if (nmat ne 0) then result = matrix
-              if (nmat eq 0) then $
-                 result = make_array(nin,nin,type=dim_in(dim_in(0)+1))
-              for i=0,nin-1 do result(i,i) = in(i)
-            end
-    endcase
-
-    if (nel eq 1) then begin & result=result(0) & matrix=matrix_save & endif
-
-    f_diagonal = result
-    return,f_diagonal
-    end
     """
     # dimensions
     nel = matrix.size
@@ -1106,8 +783,7 @@ def f_diagonal(matrix, orig_input=False):
 # TODO SLB: latitude is probably not relevant so we can ignore this!
 # added internal undefined vars to arguments: i0, i1, w0, w1
 def irc_interp_ap(xap, latitude):
-    """CONV DONE
-    Interpolate prior in 18 latitude bands to latitude of measurement
+    """Interpolate prior in 18 latitude bands to latitude of measurement
 
     Inputs
           xap    prior values
@@ -1165,8 +841,7 @@ def irc_ak_exp(
         ak, evecs, pf, sp, nz, nev,
         ns=False, w0=False, i0=False, i1=False, w1=False
     ):
-    """CONV DONE
-    Recreate full averaging kernel from IASI-MHS state vector representation
+    """Recreate full averaging kernel from IASI-MHS state vector representation
 
     Inputs
         AK      Ak for state vector representation, wrt 51 "true levels" (every other RTTOV level)
@@ -1188,7 +863,12 @@ def irc_ak_exp(
     pfs = pf[idx]
     print("Xs are:", pfs, pfs.shape, pf, pf.shape)
     i0, i1, w0, w1 = setup_linear(pfs, pf, vl=True)
-    akt = ak.transpose()
+    print("ak", ak, type(ak))
+    # TypeError: 'NoneType' object is not iterable issue with cf transpose
+    if isinstance(ak, cf.Data):
+        ak = ak.array
+        akt = ak.T
+    ###akt = ak.transpose()
     ak_101 = np.zeros((nev, nz))  # IDL: dblarr(nz, nev) Python reverse order
 
     for iev in range(nev):  # Interpolate to full grid
@@ -1218,10 +898,9 @@ def irc_ak_exp(
 # added internal undefined vars to arguments: n0, w0
 def irc_integration_matrix(
         scs, pf, sp, nz, nsc, n0=False, w0=False, approx=False):
-    """CONV DONE
-    (No docstring in corresponding IDL procedure).
+    """(No docstring in corresponding IDL procedure).
     """
-    print("nz:", nz, "nsc:", nsc)
+    ###print("nz:", nz, "nsc:", nsc)
     msc = np.zeros((nz, nsc))  # IDL: dblarr(nz, nsc)
 
     if approx:
@@ -1231,32 +910,32 @@ def irc_integration_matrix(
         # from the fine grid to the defined pressure bounds (and surface pressure).
         # IDL: =pf(1:nz-1)-pf(0:nz-2) - convert for Python exclusiveness by + 1
         dp1 = pf[1: nz] - pf[0: nz - 1]
-        print("dp1", dp1.shape)
+        ###print("dp1", dp1.shape)
         # Use explicit concat form for Python/numpy from IDL implicit concat
         dpf = (np.concatenate((np.array([0.0]), dp1)) +
                np.concatenate((dp1, np.array([0.0])))) / 2
-        print("dpf", dpf.shape, dpf)
+        ###print("dpf", dpf.shape, dpf)
         ###dpf = ([0.0, dp1] + [dp1, 0]) / 2
 
     for isc in range(nsc):
         # Pressure levels of this layer in ascending order
-        print("isc:", isc)
+        ###print("isc:", isc)
         # NEEDS SCS IN
         sc1 = scs[[1, 0], isc - 1]  # scs[[1, 0], isc], minus one since inclusive
-        print("sc1", sc1)
+        ###print("sc1", sc1)
         # if lower bound indicated as 1000 or lower bound below surface then truncate layer to the surface
         if sc1[1] == 1000 or sc1[1] > sp:
             sc1[1] = sp
         if approx:
             msc1 = dpf
-            print("HERE", pf < sc1[0], "AND", pf > sc1[1])
+            ###print("HERE", pf < sc1[0], "AND", pf > sc1[1])
             w0 = np.where(np.logical_or(pf < sc1[0], pf > sc1[1])
             )[0]  # levels outside required layer
-            print("w0", w0)
+            ###print("w0", w0)
             n0 = w0.size
-            print("n0", n0)
+            ###print("n0", n0)
             if n0 > 0:
-                print("msc1", msc1.shape, msc1)
+                ###print("msc1", msc1.shape, msc1)
                 msc1[w0] = 0
         else:
             # used function to set up weights to do trapezoid integration over defined interval
@@ -1266,10 +945,10 @@ def irc_integration_matrix(
         msc1 = msc1 / np.sum(
             msc1
         )  # this normalises result to sub-column average
-        print("msc1", msc1.shape, "msc", msc.shape, "msc[0, isc]", msc[0, isc])
+        ###print("msc1", msc1.shape, "msc", msc.shape, "msc[0, isc]", msc[0, isc])
         msc[:, isc] = msc1
 
-    print("FINAL IRC_INTEGRATION_MATRIX VAR MSC IS:", msc.shape)
+    print("IRC_INTEGRATION_MATRIX final shape:", msc.shape)
     return msc
 
 
@@ -1377,7 +1056,6 @@ def main(fi=None, lun=None, nret=None, approx=False):
         "REPORT FOR S VARIABLES:",
         pf.shape, lat.shape, lon.shape, jday.shape, sp.shape
     )
-    ###exit()
     # Interpolate the set of prior profiles in latitude
     try:  # pre-calculated
         c_ap_lnvmr = np.load('c_ap_lnvmr.npy')
@@ -1454,6 +1132,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     print("STARTING ITERATION")
     # Rename iret to avoid confusion with iret variable above (no longer req'd)
     for orig_iret in np.arange(0, nret):
+        ###orig_iret = np.arange(0, nret)
         print("+++++++++++++++++++++++ ONTO", orig_iret)
         # Get vmr from lnvmr
         print(orig_iret, "Before", c_lnvmr.shape, c_lnvmr[orig_iret,].shape)
@@ -1464,21 +1143,32 @@ def main(fi=None, lun=None, nret=None, approx=False):
         print("OVERALL c_vmr:", c_vmr.shape)  #, c_vmr)
         # %%% shape: (101,)
 
+        # SLB FOR NOW USE SAME ARRAY IN EACH CASE
         # Calculate weights which will compute the subcolumn via matrix multiply
-        msc = irc_integration_matrix(scs, pf, sp[orig_iret], nz, nsc)  #, approx=True)
+        try:  # pre-calculated
+            try:
+                msc = np.load('msc-isapprox.npy')
+            except:
+                msc = np.load('msc-isnotapprox.npy')
+        except:  #if True:  #except:
+            for orig_iret in np.arange(0, nret):
+                msc = irc_integration_matrix(
+                    scs, pf, sp[orig_iret], nz, nsc,
+                    approx=APPROX_INTEGRATION_MATRIX
+                )
+            if APPROX_INTEGRATION_MATRIX:
+                np.save('msc-isapprox.npy', msc, allow_pickle=True)
+            else:
+                np.save('msc-isnotapprox.npy', msc, allow_pickle=True)
+            print("For intergration matrix, iteration number:", orig_iret)
+
         print("OVERALL msc:", msc.shape)  #, msc)
         # %%% shape: (101, 3)
 
         # Calculate the sub columns
-        res = matrix_multiply(msc, c_vmr, atr=True, btr=True)
-        print("OVERALL res:", res.shape, msc.shape, c_vmr.shape)  #, res)
-        # %%% shape: (3, 1)
-
-        # Python conversion new
-        ###res = res.squeeze()
-        print("OVERALL res:", res.shape)  #, res)
-        # %%% shape: (3,)
-        c_sc[:, orig_iret] = res.squeeze()   ###.squeeze()
+        print("c_sc", c_sc.shape, )
+        c_sc[:, orig_iret] = matrix_multiply(
+            msc, c_vmr, atr=True, btr=True).squeeze()   ###.squeeze()
         print("OVERALL c_sc:", c_sc.shape)  #, c_sc)
         # %%% shape: (3, 5040)
 
@@ -1487,7 +1177,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         print("OVERALL c_ap_vmr:", c_ap_vmr.shape)
         # %%% shape: (101,)
         print(msc.shape)
-        c_ap_sc = matrix_multiply(msc, c_ap_vmr, atr=True)
+        c_ap_sc = matrix_multiply(msc, c_ap_vmr, atr=True, btr=False)
         print("OVERALL c_ap_sc:", c_ap_sc.shape)
         # %%% shape: (3,)
 
@@ -1607,10 +1297,6 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # Estimated noise standard deviation (nsc,np) / ppmv
         "c_noise": c_noise_sc,
     }
-
-    #print("*FINAL S*:", "ak shape", ak_sc.shape, "c_apc shape", c_apc_sc.shape)
-    #with open("final_s.bin", "wb") as f: # "wb" because we want to write in binary mode
-    #    pickle.dump(s, f)
 
     return s
 
