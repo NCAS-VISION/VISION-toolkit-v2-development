@@ -188,7 +188,7 @@ https://stackoverflow.com/questions/20341614/numpy-array-row-major-and-column-ma
     D as the the number of elements in iret, and need to unpack from a resultant
     tuple (use 0 index), so convert that to:
         A = np.where(C)[0]
-        D = len(A)
+        D = A.size   # or len(A) but A.size better actually, see below
 
 22. Care with use of len()! n_elements from IDL is better to do to .size for
     arrays, since len can given misleading results e.g. 1 where size is 101
@@ -212,6 +212,8 @@ ALSO NOTE YOU NEED TO REVERSE THE SHAPE! SINCE IN IDL THE COLUMNS ARE
 QUOTED FIRST RELATIVE TO NP.SHAPE WHICH QUOTES ROWS FIRST. Hence the [-1]:
 
 size(a) -> [a.ndim,] + list(a.shape)[::-1]
+NOPE DON'T REVERSE IT!
+size(a) -> [a.ndim,] + list(a.shape) seems to work - but check
 
 24. Rename 'np' var to avoid obvious clash!
 
@@ -223,6 +225,8 @@ from pathlib import Path
 
 import numpy as np
 import cf  # only using for now to read in to get arrays
+
+import pickle  # temp while dev/debug
 
 
 # START OF NEW FUNCS TO MAP IDL PROCEDURE NAMES TO EQUIVALENT PYTHON
@@ -573,8 +577,9 @@ def sqrt_nz(a):
     end
     """
     sqa = np.sqrt(a)
-    sqa.masked_invalid()  # SLB update np and cf world mix
-    return sqa
+    sqa_mask = np.ma.masked_invalid(sqa)  # SLB update np and cf world mix
+    print("Outcome of sqrt_nz, from:", a, "to:", sqa_mask)
+    return sqa_mask
 
 
 # added internal undefined vars to arguments: nw, i0, i1, w0, w1
@@ -995,7 +1000,7 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
     return s
 
 
-def f_diagonal(matrix, orig_input):
+def f_diagonal(matrix, orig_input=False):
     """Implement IDL code 'f_diagonal' function in Python.
 
         This procedure was stored in its own module, with the functional code
@@ -1058,8 +1063,12 @@ def f_diagonal(matrix, orig_input):
 
     # SLB: flake8 says this variable is not used, so comment out
     # dim_in = orig_input.shape
-    nin = orig_input.size
-    dim_mat = matrix.shape
+    # SLB use this to handle lack of orig_input variable
+    if orig_input:
+        nin = orig_input.size
+    else:
+        nin = 0
+    dim_mat = [matrix.ndim,] + list(matrix.shape)  #[::-1]
     nmat = matrix.size
 
     if nin == 0:
@@ -1292,6 +1301,8 @@ def main(fi=None, lun=None, nret=None, approx=False):
     # ncdf_get will apply scale_factor and add offset (/undo keyword)
     # /ova makes it just return the values without any attributes
     pf = ncdf_get(fi, "p", lun=lun, noclo=True, undo=True, ova=True)
+    print("Example netcdf variable got, pf:", pf)
+
     lat = ncdf_get(fi, "latitude", lun=lun, noclo=True, undo=True, ova=True)
     lon = ncdf_get(fi, "longitude", lun=lun, noclo=True, undo=True, ova=True)
     sensingtime_msec = ncdf_get(
@@ -1307,7 +1318,6 @@ def main(fi=None, lun=None, nret=None, approx=False):
     ak_lnvmr = ncdf_get(fi, "ak_c", lun=lun, noclo=True, undo=True, ova=True)
     dsx_ev = ncdf_get(fi, "dsx_c", lun=lun, noclo=True, undo=True, ova=True)
     csx_ev = ncdf_get(fi, "csx_c", lun=lun, noclo=True, undo=True, ova=True)
-    print("Example netcdf variable got, pf:", pf)
     do_ret = ncdf_get(fi, "do_retrieval", lun=lun, noclo=True)
     print("do_ret:", do_ret, np.isfortran(do_ret.array))
     print("pf:", pf.shape)  # (101,)
@@ -1363,6 +1373,11 @@ def main(fi=None, lun=None, nret=None, approx=False):
     nev = evecs[:, 0].size  # number of Eigenvectors used to represent profile
     print("nev:", nev)
 
+    print(
+        "REPORT FOR S VARIABLES:",
+        pf.shape, lat.shape, lon.shape, jday.shape, sp.shape
+    )
+    ###exit()
     # Interpolate the set of prior profiles in latitude
     try:  # pre-calculated
         c_ap_lnvmr = np.load('c_ap_lnvmr.npy')
@@ -1535,50 +1550,31 @@ def main(fi=None, lun=None, nret=None, approx=False):
         print("OVERALL sn_vmr:", sn_vmr.shape)
         # %%% shape: (101, 10)
 
-        """
-        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ UPTO")
-        print("msc", msc.shape, "sx_vmr", sx_vmr.shape)
-        temp1 = matrix_multiply(sx_vmr, msc, atr=True, btr=False)
-        print("temp1", temp1.shape)
-        temp2 = matrix_multiply(temp1, msc, atr=False, btr=True)
-        print("temp2", temp2.shape)
-        print("set to", sx_sc.shape)
-        sx_sc[orig_iret, :, :] = temp2
-        #matrix_multiply(
-        #matrix_multiply(sx_vmr, msc, atr=True, btr=False),
-        #msc, atr=False, btr=True
-        #)  #, atr=True)
-        print("sx_sc", sx_sc.shape, sx_sc[orig_iret, :, :].shape)
-        result = matrix_multiply(
-            matrix_multiply(sx_vmr, msc, atr=True, btr=False), msc
-            ###msc, atr=False, btr=False
+        sx_sc[:, :, orig_iret] = matrix_multiply(
+            matrix_multiply(sx_vmr, msc, atr=True, btr=False).transpose(),
+            msc.transpose(),
         )
-        print("result", result)
-        print("OVERALL sx_sc:", sx_sc.shape)
+        print("OVERALL sx_sc:", sn_sc.shape)
         # %%% shape: (3, 3, 5040)
 
         # SLB Note, fixed likely issue where this is same as sx_sc, due to
         # input of sx_vmr when it is liekly to have meant to have been sn_vmr
-        print("%%%%%%%" * 15)
-        print("sn_sc", sn_sc.shape, "sx_vmr", sx_vmr.shape,
-              "msc", msc.shape)
-        sn_sc[orig_iret, 0, 0] = matrix_multiply(
-            matrix_multiply(sn_vmr, msc), msc, atr=True
+        sn_sc[:, :, orig_iret] = matrix_multiply(
+            matrix_multiply(sn_vmr, msc, atr=True, btr=False).transpose(),
+            msc.transpose(),
         )
         print("OVERALL sn_sc:", sn_sc.shape)
-        # %%% shape:
+        # %%% shape: (3, 3, 5040)
 
         # Just get sqrt-diagonals of the covariances (Estimated total random
         # error std.deviation and the noise std.deviation)
-        c_err_sc[orig_iret, 0] = sqrt_nz(f_diagonal(sx_sc[orig_iret, :, :]))
+        c_err_sc[:, orig_iret] = sqrt_nz(f_diagonal(sx_sc[:, :, orig_iret]))
         print("OVERALL c_err_sc:", c_err_sc.shape)
         # %%% shape:
-        c_noise_sc[orig_iret, 0] = sqrt_nz(f_diagonal(sn_sc[orig_iret, :, :]))
+        c_noise_sc[:, orig_iret] = sqrt_nz(f_diagonal(sn_sc[:, :, orig_iret]))
         print("OVERALL c_noise_sc:", c_noise_sc.shape)
         # %%% shape:
-        """
 
-    """
     # Make result structure
     # Everything given for sub columns so drop the _sc in the tag names
     s = {
@@ -1611,15 +1607,10 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # Estimated noise standard deviation (nsc,np) / ppmv
         "c_noise": c_noise_sc,
     }
-    """
-    # Reduced s just to calculate the AK
-    s = {
-        # Averaging kernels for retrieved sub-column wrt true profile
-        # vmr (nsc,nz,np) / ppmv/ppmv
-        "ak": ak_sc,  # MAIN FOR AK
-        # A priori contribution to each sub-column (nsc,np) / ppmv
-        "c_apc": c_apc_sc,  # MAIN FOR AK
-    }
+
+    #print("*FINAL S*:", "ak shape", ak_sc.shape, "c_apc shape", c_apc_sc.shape)
+    #with open("final_s.bin", "wb") as f: # "wb" because we want to write in binary mode
+    #    pickle.dump(s, f)
 
     return s
 
