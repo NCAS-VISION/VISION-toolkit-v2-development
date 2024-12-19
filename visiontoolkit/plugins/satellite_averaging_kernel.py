@@ -75,27 +75,14 @@ def matrix_multiply(a, b, atr=False, btr=False):
 
     Note:
     https://stackoverflow.com/questions/23128788/what-is-the-python-numpy-equivalent-of-the-idl-operator
-
-    Note: having B tranposed as default to ensure shapes are compatible for
-    dot operation from IDL code conversion.
     """
-    a_dot = a.copy()
-    ###print("a", a.shape, type(a))
     if atr:
-        if isinstance(a_dot, cf.Data):  # cf to np space, cf transpose issues
-            ###print("a.T applied")
-            a_dot = a_dot.array
-        a_dot = a_dot.T
+        a = a.transpose()
 
-    b_dot = b.copy()
-    ###print("b", b.shape, type(b))
     if btr:
-        if isinstance(b_dot, cf.Data):  # cf to np space
-            ###print("b.T applied")
-            b_dot = b_dot.array
-        b_dot = b_dot.T
+        b = b.transpose()
 
-    return np.dot(a_dot, b_dot)  #.transpose() need final one for overall res?
+    return np.dot(a, b)
 
 
 def ncdf_get(fi, varname, lun=False, noclo=False, undo=False, ova=False):
@@ -808,24 +795,6 @@ def irc_interp_ap(xap, latitude):
     print("xapi", xapi, xapi.shape)
 
     for ip in range(0, orig_np):
-        print("ITER:", ip)
-        # IDL: xapi(0, ip) = xap(*,i0(ip)) * w0(ip) + xap(*,i1(ip)) * w1(ip)
-        ###res = xap[i0[ip]] * w0[ip] + xap[i1[ip]] * w1[ip]
-        ###print("RES", res, res.shape, type(res))
-        ###print("OUTCOME", xapi[ip, 0], type(xapi[ip, 0]))
-        # SLB PY: got immediate error:
-        # aging_kernel.py", line 973, in irc_interp_ap
-        # xapi[ip, 0] = xap[i0[ip]] * w0[ip] + xap[i1[ip]] * w1[ip]
-        # ~~~~^^^^^^^
-        # ValueError: setting an array element with a sequence.
-        # So to fix, for now calulcate the array immediately
-        ###print("BIT IS", w0[ip], "AND", xap[i0[ip],])
-
-        # SLB DEBUGGED BASED ON SHAPES FITTING, THOUGHT IT SHOULD BE
-        # xapi[ip, 0] = result logically but that wouldn't broadcast,
-        # go with this for now
-        ###result = xap[i0[ip],] * w0[ip] + xap[i1[ip],] * w1[ip]  ##.flatten()
-        ###print("RESULT", result, type(result), result.shape)
         try:
             xapi[:, ip] = xap[i0[ip],] * w0[ip] + xap[i1[ip],] * w1[ip]
         except:
@@ -862,11 +831,7 @@ def irc_ak_exp(
     print("Xs are:", pfs, pfs.shape, pf, pf.shape)
     i0, i1, w0, w1 = setup_linear(pfs, pf, vl=True)
     print("ak", ak, type(ak))
-    # TypeError: 'NoneType' object is not iterable issue with cf transpose
-    if isinstance(ak, cf.Data):
-        ak = ak.array
-        akt = ak.T
-    ###akt = ak.transpose()
+    akt = ak.transpose()
     ak_101 = np.zeros((nev, nz))  # IDL: dblarr(nz, nev) Python reverse order
 
     for iev in range(nev):  # Interpolate to full grid
