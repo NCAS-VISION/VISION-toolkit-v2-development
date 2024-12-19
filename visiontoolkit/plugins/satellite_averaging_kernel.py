@@ -70,7 +70,7 @@ DEFAULT_FILEPATH = (
 APPROX_INTEGRATION_MATRIX = True
 
 
-def matrix_multiply(a, b, atr=False, btr=True):
+def matrix_multiply(a, b, atr=False, btr=False):
     """Implement IDL 'matrix_multiply' function in Python.
 
     Note:
@@ -489,7 +489,7 @@ def setup_integration_matrix(
         # If no dimensions are specified, REFORM returns a copy of
         # Array with all dimensions
         # of size 1 removed." therefore is a squeeze operation here
-        m = np.squeeze(matrix_multiply(mii, mi))
+        m = np.squeeze(matrix_multiply(mii, mi, btr=True))
     else:
         ###print("x", x.shape, x[:1].shape)
         # Note that dx was in IDL array form [<this>] so wrap with np.array
@@ -622,7 +622,7 @@ def iasimhs_vsx2cov(vsx, diag):
             vsx1 = vsx1.squeeze()
             print("VSX1 IS", vsx1, vsx1.shape)
             diag1 = diag[ipi,]
-            diag2 = matrix_multiply(diag1, diag1)
+            diag2 = matrix_multiply(diag1, diag1, btr=True)
             print("Diags", diag1.shape, diag2.shape)
 
         print("N IS", n)
@@ -669,7 +669,7 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
 
     """
     # Transpose input and output, 1. input
-    sz = [s1.ndim,] + list(s1.shape)  #[::-1]
+    sz = [s1.ndim,] + list(s1.shape)[::-1]
     print("SZ IS", sz)
     if sz[0] == 3:
         # NOTE: renaming 'np' var used here to avoid nameclash with numpy
@@ -691,12 +691,10 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
         print("ip is:", ip)
         sipi = s1[:, :, ip]
         pre_sipi = matrix_multiply(evecs, sipi, atr=True, btr=True)
-        sipi = matrix_multiply(
-            pre_sipi, evecs, atr=False, btr=False
-        )  # map to rttov levels
+        sipi = matrix_multiply(pre_sipi, evecs)  # map to rttov levels
         if log:
             xipi = x[ip,]
-            sipi = sipi * matrix_multiply(xipi, xipi)  # Multiply out log unit
+            sipi = sipi * matrix_multiply(xipi, xipi, btr=True)  # Multiply out log unit
 
         print("Attempt", sipi.shape)
         # NOTE: relative to raw IDL, apply T to transpose whole result
@@ -745,7 +743,7 @@ def f_diagonal(matrix, orig_input=False):
         nin = orig_input.size
     else:
         nin = 0
-    dim_mat = [matrix.ndim,] + list(matrix.shape)  #[::-1]
+    dim_mat = [matrix.ndim,] + list(matrix.shape)[::-1]
     nmat = matrix.size
 
     if nin == 0:
@@ -883,7 +881,7 @@ def irc_ak_exp(
     ###print("evecs", evecs.shape, "ak_101", ak_101.shape)
     # NOTE THESE ARGS, opposite to IDL but tranpose necessitates, give
     # (101, 101) required shape
-    ak_101 = matrix_multiply(evecs, ak_101, atr=True, btr=False)
+    ak_101 = matrix_multiply(evecs, ak_101, atr=True)
 
     # Make sure AK is zero below surface pressure
     ws = np.where(pf > sp)[0]
@@ -1177,7 +1175,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         print("OVERALL c_ap_vmr:", c_ap_vmr.shape)
         # %%% shape: (101,)
         print(msc.shape)
-        c_ap_sc = matrix_multiply(msc, c_ap_vmr, atr=True, btr=False)
+        c_ap_sc = matrix_multiply(msc, c_ap_vmr, atr=True)
         print("OVERALL c_ap_sc:", c_ap_sc.shape)
         # %%% shape: (3,)
 
@@ -1217,8 +1215,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # for sub-columns, ak_c is non square and returned in units of
         # d_retrieved_subcolumn_average_vmr/d_true_profile_vmr
         c_apc_sc[:, orig_iret] = c_ap_sc - matrix_multiply(
-            ak_sc[:, :, orig_iret], c_ap_vmr, atr=False, btr=False,
-        )
+            ak_sc[:, :, orig_iret], c_ap_vmr)
         print("OVERALL c_apc_sc:", c_apc_sc.shape)
         # %%% shape: (3, 5040)
 
@@ -1241,7 +1238,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # %%% shape: (101, 10)
 
         sx_sc[:, :, orig_iret] = matrix_multiply(
-            matrix_multiply(sx_vmr, msc, atr=True, btr=False).transpose(),
+            matrix_multiply(sx_vmr, msc, atr=True).transpose(),
             msc.transpose(),
         )
         print("OVERALL sx_sc:", sn_sc.shape)
@@ -1250,7 +1247,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # SLB Note, fixed likely issue where this is same as sx_sc, due to
         # input of sx_vmr when it is liekly to have meant to have been sn_vmr
         sn_sc[:, :, orig_iret] = matrix_multiply(
-            matrix_multiply(sn_vmr, msc, atr=True, btr=False).transpose(),
+            matrix_multiply(sn_vmr, msc, atr=True).transpose(),
             msc.transpose(),
         )
         print("OVERALL sn_sc:", sn_sc.shape)
