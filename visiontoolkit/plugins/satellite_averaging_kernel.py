@@ -68,6 +68,7 @@ DEFAULT_FILEPATH = (
     # "20110718141155z_20110718155058z_000_049-v1000.nc"
 )
 APPROX_INTEGRATION_MATRIX = True
+RET_CUTOFF_DEBUG = 20  # retrievals after which to stop, for dev purposes
 
 
 def matrix_multiply(a, b, atr=False, btr=False):
@@ -607,10 +608,10 @@ def iasimhs_vsx2cov(vsx, diag):
             # https://www.nv5geospatialsoftware.com/docs/Creating_Arrays.html
             vsx1 = np.concatenate((covd, vsx1), axis=1)
             vsx1 = vsx1.squeeze()
-            print("VSX1 IS", vsx1, vsx1.shape)
+            ###print("VSX1:", vsx1.shape)
             diag1 = diag[ipi,]
             diag2 = matrix_multiply(diag1, diag1, btr=True)
-            print("Diags", diag1.shape, diag2.shape)
+            ###print("Diags", diag1.shape, diag2.shape)
 
         print("N IS", n)
         for i in range(n):
@@ -618,11 +619,9 @@ def iasimhs_vsx2cov(vsx, diag):
                 # IDL:  vsx1[j: j + n - i - 1] has but inclusive endpoints
                 # therefore +1 -> - 1 + 1 = 0
                 sx1 = np.diag(vsx1[j: j + n - i])
-                print("1. Shapes are:", "sx1:", sx1.shape)
             else:
                 # IDL:  vsx1[j: j + n - i - 1] has but inclusive endpoints
                 # therefore +1 -> - 1 + 1 = 0
-                print("Shapes are", i, ": sx1:", sx1.shape)
                 print("expr attempt", np.diag(vsx1[j: j + n - i], i))
                 sx1 = (
                     sx1
@@ -633,7 +632,6 @@ def iasimhs_vsx2cov(vsx, diag):
             print("J IS", j)  ###, "sx1 is", sx1)
 
         if correl:
-            print("yes", sx1, diag2)
             sx1 = sx1 * diag2
 
         print("sx1", sx1.shape)  #, sx[ipi, 0, 0].shape)
@@ -666,8 +664,9 @@ def iasimhs_sx_exp(s1, evecs, log=False, x=False):
         orig_np = 1
 
     print("sz", sz)
-    if sz[1] != sz[2]:  # IDL: if sz[1] != sz[2], but Py dims reverse order
-        raise ValueError("Expected first 2 dims to be same size!")
+    if sz[-1] != sz[-2]:  # IDL: if sz[1] != sz[2], but Py dims reverse order
+        raise ValueError(
+            "Expected last (in Python - in IDL first) 2 dims to be same size!")
 
     sz = [evecs.ndim,] + list(evecs.shape)[::-1]
     print("evecs:", evecs)
@@ -966,6 +965,9 @@ def main(fi=None, lun=None, nret=None, approx=False):
     dsn_ev = ncdf_get(fi, "dsxn_c", lun=lun, noclo=True, undo=True, ova=True)
     csn_ev = ncdf_get(fi, "csxn_c", lun=lun, undo=True, ova=True)
 
+    # For dev purposes, only consider a subset of all retrievals
+    do_ret = do_ret[:RET_CUTOFF_DEBUG]
+
     # Advice from RS:
     # nret is defined by the line iret=where(do_ret,nret)
     # In that do_ret is the variable do_retrieval from the L2 file which is an array of values 0,1 for each scene, where 1 indicates a retrieval was done.
@@ -981,6 +983,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     nret = iret.size
     print("iret:", iret)
     print("nret:", nret)
+    ###exit()
 
     if nret == 0:
         raise ValueError("No retrievals in file!")
@@ -1114,11 +1117,11 @@ def main(fi=None, lun=None, nret=None, approx=False):
             except:
                 msc = np.load('msc-isnotapprox.npy')
         except:  #if True:  #except:
-            for orig_iret in np.arange(0, nret):
-                msc = irc_integration_matrix(
-                    scs, pf, sp[orig_iret], nz, nsc,
-                    approx=APPROX_INTEGRATION_MATRIX
-                )
+            ###for orig_iret in np.arange(0, nret):
+            msc = irc_integration_matrix(
+                scs, pf, sp[orig_iret], nz, nsc,
+                approx=APPROX_INTEGRATION_MATRIX
+            )
             if APPROX_INTEGRATION_MATRIX:
                 np.save('msc-isapprox.npy', msc, allow_pickle=True)
             else:
@@ -1160,7 +1163,8 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # %%% shape: (101, 101)
 
         # Convert from ln(vmr)/ln(vmr) to vmr/vmr
-        ak_vmr_sq = ak_lnvmr_sq * matrix_multiply(c_vmr, 1.0 / c_vmr)
+        ak_vmr_sq = ak_lnvmr_sq * matrix_multiply(
+            c_vmr, 1.0 / c_vmr, btr=True)
         print("OVERALL ak_vmr_sq:", ak_vmr_sq.shape)
         # %%% shape: (101, 101)
 
@@ -1187,7 +1191,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # Now deal with errors...
         # convert matrices to vmr from ln(vmr)  (error in ln(x) is
         # fractional error in x)
-        vmr_sq = matrix_multiply(c_vmr, c_vmr)
+        vmr_sq = matrix_multiply(c_vmr, c_vmr, btr=True)
         vmr_sq = vmr_sq.squeeze()
         print("OVERALL vmr_sq:", vmr_sq.shape, vmr_sq)
         # %%% shape: (1, 1) -> (1,) after squeeze
@@ -1195,6 +1199,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # UPTO
         print(
             "INDEX IS", orig_iret, "sx_lnvmr", sx_lnvmr.shape)
+        # SLB HERE
         sx_vmr = sx_lnvmr[:, :, orig_iret] * vmr_sq
         print("OVERALL sx_vmr:", sx_vmr.shape)
         # %%% shape: (101, 10)
@@ -1204,7 +1209,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
 
         sx_sc[:, :, orig_iret] = matrix_multiply(
             matrix_multiply(sx_vmr, msc, atr=True).transpose(),
-            msc.transpose(),
+            msc.transpose(), btr=True,
         )
         print("OVERALL sx_sc:", sn_sc.shape)
         # %%% shape: (3, 3, 5040)
@@ -1213,7 +1218,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # input of sx_vmr when it is liekly to have meant to have been sn_vmr
         sn_sc[:, :, orig_iret] = matrix_multiply(
             matrix_multiply(sn_vmr, msc, atr=True).transpose(),
-            msc.transpose(),
+            msc.transpose(), btr=True,
         )
         print("OVERALL sn_sc:", sn_sc.shape)
         # %%% shape: (3, 3, 5040)
