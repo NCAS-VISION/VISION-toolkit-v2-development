@@ -67,7 +67,7 @@ DEFAULT_FILEPATH = (
     # From orig IDL, used: "ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-"
     # "20110718141155z_20110718155058z_000_049-v1000.nc"
 )
-APPROX_INTEGRATION_MATRIX = True
+APPROX_INTEGRATION_MATRIX = True  # False
 RET_CUTOFF_DEBUG = 20  # retrievals after which to stop, for dev purposes
 
 
@@ -226,7 +226,7 @@ def setup_linear(
     ;	DDDX	Return derivative of spline parameter
 
     """
-    n1 = len(x1)  # list so len() is appropriately
+    n1 = len(x1)  # list so len() is appropriate
     if spline:
         if extra.size == 0:
             extra = 1
@@ -594,6 +594,7 @@ def iasimhs_vsx2cov(vsx, diag):
     n = int(n[1] + 0.1)  # IDL: long(n(1) + 0.1)
     sx = np.zeros((n, n, npi))
     print("sx", sx.shape)
+    # TODO far too much looping in here, takes forever! Why?
     for ipi in range(npi):  # Do for more than one pixel
         j = 0
         vsx1 = vsx[ipi,]
@@ -831,21 +832,35 @@ def irc_ak_exp(
     i0, i1, w0, w1 = setup_linear(pfs, pf, vl=True)
     print("ak", ak, type(ak))
     akt = ak.transpose()
-    ak_101 = np.zeros((nev, nz))  # IDL: dblarr(nz, nev) Python reverse order
 
+    ak_101 = np.zeros((nev, nz))
+
+    print(
+        "SHAPES ARE++++++++++++++++++++++++++++",
+        nev, ak_101.shape, akt.shape, i0.shape, i1.shape, w0.shape, w1.shape
+    )
+    ak_101 = np.zeros((nz, nev))  # IDL: dblarr(nz, nev) Python reverse order
+
+    print("DEETS", ak_101.shape, nev)
     for iev in range(nev):  # Interpolate to full grid
-        # IDL: ak_101(0, iev) = akt(i0, iev) * w0 + akt(i1, iev) * w1
-        # print(
-        #     "ak_101", ak_101.shape,
-        #     "akt", akt.shape,
-        #     "akt[iev, i0]", akt[iev, i0].shape
-        # )
-        ak_101[iev, :] = akt[iev, i0] * w0 + akt[iev, i1] * w1
+        print("FIRST A", (akt[i0, iev] * w0 + akt[i1, iev] * w1).shape)
+        print("SECOND A", ak_101[:, iev].shape)
+        print("i0", i0.shape)
+        ak_101[0, iev] = (
+            np.dot(w0, akt[i0, iev]) + np.dot(w1, akt[i1, iev])
+        )  #.squeeze()
 
-    ###print("evecs", evecs.shape, "ak_101", ak_101.shape)
+    """
+    for iev in range(nev):  # Interpolate to full grid
+        print("FIRST A", (akt[i0, iev] * w0 + akt[i1, iev] * w1).shape)
+        print("SECOND A", ak_101[:, iev].shape)
+        print("i0", i0.shape)
+        ak_101[iev, :] = (akt[iev, i0] * w0 + akt[iev, i1] * w1)  #.squeeze()
+    """
+
     # NOTE THESE ARGS, opposite to IDL but tranpose necessitates, give
     # (101, 101) required shape
-    ak_101 = matrix_multiply(evecs, ak_101, atr=True)
+    ak_101 = matrix_multiply(evecs, ak_101, atr=True, btr=True)
 
     # Make sure AK is zero below surface pressure
     ws = np.where(pf > sp)[0]
@@ -939,6 +954,10 @@ def main(fi=None, lun=None, nret=None, approx=False):
     print("scs:", scs, np.isfortran(scs))
 
     # Read necessary info from the file
+    #
+    # SLB TODO may eventually need to apply offsets from the module code here,
+    # else results might not be correct.
+    #
     # ncdf_get will apply scale_factor and add offset (/undo keyword)
     # /ova makes it just return the values without any attributes
     pf = ncdf_get(fi, "p", lun=lun, noclo=True, undo=True, ova=True)
@@ -956,7 +975,8 @@ def main(fi=None, lun=None, nret=None, approx=False):
     evecs = ncdf_get(fi, "evecs_c", lun=lun, noclo=True, undo=True, ova=True)
     c_lnvmr = ncdf_get(fi, "c", lun=lun, noclo=True, undo=True, ova=True)
     sp = ncdf_get(fi, "sp", lun=lun, noclo=True, undo=True, ova=True)
-    ak_lnvmr = ncdf_get(fi, "ak_c", lun=lun, noclo=True, undo=True, ova=True)
+    ak_lnvmr = ncdf_get(
+        fi, "ak_c", lun=lun, noclo=True, undo=True, ova=True) ###.transpose()
     dsx_ev = ncdf_get(fi, "dsx_c", lun=lun, noclo=True, undo=True, ova=True)
     csx_ev = ncdf_get(fi, "csx_c", lun=lun, noclo=True, undo=True, ova=True)
     do_ret = ncdf_get(fi, "do_retrieval", lun=lun, noclo=True)
@@ -1097,7 +1117,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
     # Loop individual retrievals
     print("STARTING ITERATION")
     # Rename iret to avoid confusion with iret variable above (no longer req'd)
-    for orig_iret in np.arange(0, nret):
+    for orig_iret in range(nret):
         ###orig_iret = np.arange(0, nret)
         print("+++++++++++++++++++++++ ONTO", orig_iret)
         # Get vmr from lnvmr
@@ -1132,10 +1152,10 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # %%% shape: (101, 3)
 
         # Calculate the sub columns
-        print("c_sc", c_sc.shape, )
+        print("c_sc", c_sc.shape)
+        # SLB UPTO
         c_sc[:, orig_iret] = matrix_multiply(
             msc, c_vmr, atr=True, btr=True).squeeze()   ###.squeeze()
-        print("OVERALL c_sc:", c_sc.shape)  #, c_sc)
         # %%% shape: (3, 5040)
 
         # Get corresponding prior profile and subcolumns
@@ -1157,7 +1177,7 @@ def main(fi=None, lun=None, nret=None, approx=False):
         # now corrected to
         # ak_vmr_sq=ak_lnvmr_sq*matrix_multiply(c_vmr,1d0/c_vmr)
         ak_lnvmr_sq = irc_ak_exp(
-            ak_lnvmr[orig_iret, :, :], evecs, pf, sp[orig_iret], nz, nev
+            ak_lnvmr[:, :, orig_iret], evecs, pf, sp[orig_iret], nz, nev
         )
         print("OVERALL ak_lnvmr_sq:", ak_lnvmr_sq.shape)
         # %%% shape: (101, 101)
