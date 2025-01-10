@@ -5,7 +5,7 @@
     "preprocess-mode-obs":"satellite",
     "chosen-obs-fields":false,
     "chosen-model-fields":-2,
-    "outputs-dir":"cf-script-outputs/um-satellite-6",
+    "outputs-dir":"toolkit-outputs/um-satellite-6",
     "output-file-name":"um_satellite_6_vision_result.nc",
     "skip-all-plotting":false,
     "cfp-mapset-config":{

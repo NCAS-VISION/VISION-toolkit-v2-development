@@ -4,7 +4,7 @@
     "model-data-path":"../data/main-workwith-test-ISO-simulator/Model_Input",
     "chosen-obs-fields":0,
     "chosen-model-fields":-2,
-    "outputs-dir":"cf-script-outputs/um-faam-stanco-2",
+    "outputs-dir":"toolkit-outputs/um-faam-stanco-2",
     "output-file-name":"um_faam_stanco_2_vision_result.nc",
     "show-plot-of-input-obs": false,
     "plot-of-input-obs-track-only": 0,

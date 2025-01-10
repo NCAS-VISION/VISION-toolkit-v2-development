@@ -4,7 +4,7 @@
     "model-data-path": "../wrf-vert-coords/e2e-ready-wrf-update1.nc",
     "chosen-obs-fields": 0,
     "chosen-model-fields": 0,
-    "outputs-dir": "cf-script-outputs/wrf-faam-stanco-1",
+    "outputs-dir": "toolkit-outputs/wrf-faam-stanco-1",
     "output-file-name": "wrf_faam_stanco_1_vision_result.nc",
     "vertical-colocation-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
     "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},

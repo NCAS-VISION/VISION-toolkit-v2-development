@@ -5,7 +5,7 @@
     "preprocess-mode-obs":"satellite",
     "chosen-obs-fields":false,
     "chosen-model-fields":-2,
-    "outputs-dir":"cf-script-outputs/um-satellite-9",
+    "outputs-dir":"toolkit-outputs/um-satellite-9",
     "output-file-name":"um_satellite_9_vision_result.nc",
     "skip-all-plotting":false,
     "show-plot-of-input-obs": false,
