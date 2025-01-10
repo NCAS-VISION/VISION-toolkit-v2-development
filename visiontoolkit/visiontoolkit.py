@@ -100,7 +100,8 @@ def get_files_to_individually_colocate(path):
 
     logger.info(
         "Globbed list of files to attempt to read with cf is: "
-        f"{pformat(files)}")
+        f"{pformat(files)}"
+    )
 
     return files
 
@@ -405,21 +406,9 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     model_times_units = model_times.get_property("units", None)
     logger.info(f"Units on model time coordinate are: {model_times_units}")
 
-    # Ensure the units of the obs and model datetimes are consistent - conform
-    # them if they differ.
-    if obs_times_units and model_times_units:
-        same = obs_times.Units.equals(model_times.Units)
-        if not same:
-            # Change the units on the model (not obs) times since there are
-            # fewer data points on those, meaning less converting work.
-            # Will raise its own error here if units are not equivalent.
-            model_times.Units = obs_times.Units
-            logger.info(f"Unit-conformed model time coord. is: {model_times}")
-
-        logger.debug(
-            f"Units on observational and model time coords. are the same: "
-            f"{same}\n"
-        )
+    # Overall note: need to sotr calendars first, before looking at unit
+    # consistency, else unit setting to get consistent can fail
+    # on inconsistent calendars.
 
     # Ensure calendars are consistent, if not convert to equivalent.
     #
@@ -440,6 +429,7 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     # If both have calendars defined, we need to check for consistency
     # between these, else the datetimes aren't comparable
     if obs_calendar and model_calendar:
+        print("CALENDAR ISSUES HERE")
         # Some custom calendar consistency logic, necessary for e.g. WRF data
         before_pg_cutoff = cf.gt(cf.dt(1582, 10, 15))
         if (
@@ -465,6 +455,22 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
             f"{obs_times.calendar == model_times.calendar}\n"
         )
 
+    # Ensure the units of the obs and model datetimes are consistent - conform
+    # them if they differ.
+    if obs_times_units and model_times_units:
+        same = obs_times.Units.equals(model_times.Units)
+        if not same:
+            # Change the units on the model (not obs) times since there are
+            # fewer data points on those, meaning less converting work.
+            # Will raise its own error here if units are not equivalent.
+            model_times.Units = obs_times.Units
+            logger.info(f"Unit-conformed model time coord. is: {model_times}")
+
+        logger.debug(
+            f"Units on observational and model time coords. are the same: "
+            f"{same}\n"
+        )
+
 
 @timeit
 def persist_all_metadata(field):
@@ -475,7 +481,7 @@ def persist_all_metadata(field):
     )
     for construct_name, construct_obj in field.constructs.filter_by_data(
             todict=True).items():
-        logger.debug("Construct is", construct_name)
+        logger.debug(f"Construct is {construct_name}")
         construct_obj.persist(inplace=True)
 
 
