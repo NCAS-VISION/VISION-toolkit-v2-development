@@ -1,29 +1,29 @@
 {
     "start-time-override": "2023-07-10 12:00:00",
-    "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
+    "obs-data-path": "../data/2025-laurents-twopoint-flight/field.nc",
     "model-data-path": "../pre-processing/wrf-model-data-preprocessing/wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc",
     "chosen-obs-fields": 0,
     "chosen-model-fields": 0,
-    "outputs-dir": "toolkit-outputs/wrf-faam-stanco-1",
-    "output-file-name": "wrf_faam_stanco_1_vision_result.nc",
+    "outputs-dir": "toolkit-outputs/wrf-faam-stanco-5",
+    "output-file-name": "wrf_faam_stanco_5_vision_result.nc",
     "vertical-colocation-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
     "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
-    "plot-of-input-obs-track-only": 2,
+    "plot-of-input-obs-track-only": false,
+    "cfp-output-levs-config":{
+        "min":0,
+        "max":60,
+        "step":5
+    },
+    "cfp-input-levs-config":{
+        "min":-11,
+        "max":-1,
+        "step":1
+    },
     "cfp-mapset-config": {
         "lonmin": -2,
         "lonmax": 2,
         "latmin": 50,
         "latmax": 54,
         "resolution": "10m"
-    },
-    "cfp-input-levs-config":{
-        "min":0,
-        "max":60,
-        "step":5
-    },
-    "cfp-output-levs-config":{
-        "min":-11,
-        "max":-1,
-        "step":1
     }
 }

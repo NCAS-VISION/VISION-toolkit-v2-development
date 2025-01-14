@@ -1,7 +1,7 @@
 {
     "start-time-override": "2023-07-13 00:00:00",
     "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-    "model-data-path": "../wrf-vert-coords/e2e-ready-wrf-update1.nc",
+    "model-data-path": "../pre-processing/wrf-model-data-preprocessing/wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc",
     "chosen-obs-fields": 0,
     "chosen-model-fields": 0,
     "outputs-dir": "toolkit-outputs/wrf-faam-stanco-3",
@@ -15,5 +15,15 @@
         "latmin": 50,
         "latmax": 54,
         "resolution": "10m"
+    },
+    "cfp-input-levs-config":{
+        "min":0,
+        "max":60,
+        "step":5
+    },
+    "cfp-output-levs-config":{
+        "min":-11,
+        "max":-1,
+        "step":1
     }
 }
