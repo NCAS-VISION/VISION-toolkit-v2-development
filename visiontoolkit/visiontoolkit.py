@@ -357,21 +357,23 @@ def get_time_coords(obs_field, model_field, return_identifiers=True):
 
     TODO: DETAILED DOCS
     """
-    # Observational time axis processing
-    if obs_field.coordinate("T", default=False):
+    # Observational time axis processing: observational data is a DSG so
+    # should always have T as an aux. coord., hence we only check these
+    if obs_field.auxiliary_coordinate("T", default=False):
         obs_t_identifier = "T"
-    elif obs_field.coordinate("time", default=False):
+    elif obs_field.auxiliary_coordinate("time", default=False):
         obs_t_identifier = "time"
     else:
         raise CFComplianceIssue(
-            "An identifiable and unique time coordinate is needed but "
-            "was not found for the observational input. Got for "
-            f"obs_field.constructs('T'):\n {obs_field.coordinates('T')}\n"
+            "An identifiable and unique time auxiliary coordinate is needed "
+            "but was not found for the observational input. Got for "
+            "obs_field.auxiliary_coordinates(): "
+            f"{obs_field.auxiliary_coordinates()}"
         )
-    # Observational data is a DSG so should always have T as an aux. coord.
     obs_times = obs_field.auxiliary_coordinate(obs_t_identifier)
 
-    # Model time axis processing
+    # Model time axis processing: for now assume the time can be either
+    # a dimension or an auxiliary coordinate.
     if model_field.coordinate("T", default=False):
         model_t_identifier = "T"
     elif model_field.coordinate("time", default=False):
@@ -380,10 +382,9 @@ def get_time_coords(obs_field, model_field, return_identifiers=True):
         raise CFComplianceIssue(
             "An identifiable and unique time coordinate is needed but "
             "was not found for the model input. Got for "
-            f"model_field.constructs('T'):\n {model_field.coordinates('T')}\n"
+            f"model_field.coordinates():\n {model_field.coordinates()}\n"
         )
-
-    model_times = model_field.dimension_coordinate(model_t_identifier)
+    model_times = model_field.coordinate(model_t_identifier)
 
     if return_identifiers:
         return (obs_times, model_times), (obs_t_identifier, model_t_identifier)

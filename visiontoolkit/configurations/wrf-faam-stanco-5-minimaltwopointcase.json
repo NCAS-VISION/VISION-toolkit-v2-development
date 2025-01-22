@@ -9,6 +9,7 @@
     "vertical-colocation-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
     "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
     "plot-of-input-obs-track-only": false,
+    "skip-all-plotting":true,
     "cfp-output-levs-config":{
         "min":0,
         "max":60,
