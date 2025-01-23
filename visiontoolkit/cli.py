@@ -167,6 +167,15 @@ def process_cli_arguments(parser):
         ),
     )
     parser.add_argument(
+        "--halo-size",
+        action="store",
+        help=(
+            "size of the halo to apply for subspacing, see the section 'Halos' "
+            "under 'https://ncas-cms.github.io/cf-python/method/"
+            "cf.Domain.subspace.html?highlight=halo' for details."
+        ),
+    )
+    parser.add_argument(
         "-i",
         "--spatial-colocation-method",
         action="store",
