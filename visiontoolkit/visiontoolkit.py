@@ -488,13 +488,25 @@ def persist_all_metadata(field):
 
 def bounding_box_query(
         model_field, model_id, coord_tight_bounds, model_coord):
-    """TODO."""
+    """Apply a custom query to get the bounding box.
+
+    This method is required, on top of the simple subspace query case, to
+    handle cases whereby the query value endpoints both sit between one
+    model field value and another so that the basic subspace fails, and we
+    can't solve this with a halo because the subspace
+    doesn't know what point to 'halo' around.
+
+    """
+    # Note: the coordinate may be descending, but this logic assumes
+    # asceding when using argmin for the lower index. To deal with
+    # descending coordinates e.g. vertical ones, TODO
+    
     logger.info(
         f"Starting a bounding box query for {coord_tight_bounds} on "
         f"{model_coord} of {model_field} "
     )
 
-    obs_time_min, obs_time_max = coord_tight_bounds
+    obs_min, obs_max = coord_tight_bounds
 
     # Get an array with truth values representing whether the obs values
     # are inside or outside the region of relevance for the model field
@@ -502,8 +514,12 @@ def bounding_box_query(
     # TODO could combine into one 'wo' to simplify, probably?
     # Note we can't do 'wo' since for these cases there wouldn't be
     # want zeros.
-    min_query_result = cf.lt(obs_time_min) == model_coord
-    max_query_result = cf.gt(obs_time_max) == model_coord
+    min_query_result = cf.lt(obs_min) == model_coord
+    max_query_result = cf.gt(obs_max) == model_coord
+
+    print(
+        "ARE", min_query_result.data.array, max_query_result.data.array,
+    )
 
     # Get indices of last case of index being outside of the range of the
     # obs times fr below, and the first of it being outside from above in terms
@@ -520,6 +536,7 @@ def bounding_box_query(
 
     lower_index = np.argmin(min_query_result)
     upper_index = np.argmax(max_query_result)
+    print("GETTING", upper_index, lower_index)
 
     # Remove 1 *only* if the index is not the first one already, else we
     # get an index of 0-1=-1 which is the last value and will mess things up!
@@ -761,12 +778,28 @@ def subspace_to_spatiotemporal_bounding_box(
             # parametric vertical dimension coordinates to handle.
             # TODO cater for case where are > 1 coord refs (ValueError for now)
             coord_ref = model_field.coordinate_reference(default=None)
+
             if not coord_ref:  # no parametric coords, simple case
-                model_field_bb = model_field.subspace(
-                    "envelope",
-                    halo_size,
-                    Z=cf.wi(*z_coord_tight_bounds),
-                )
+                vertical_kwargs = {"Z": cf.wi(*z_coord_tight_bounds)}
+                try:
+                    model_field_bb = model_field.subspace(
+                        "envelope",
+                        halo_size,
+                        **vertical_kwargs
+                    )
+                except ValueError:
+                    # (Same case/note as other try/except to bounding_box_query)
+                    # Both values may sit inside between one model value and
+                    # another and the time subspace may fail then, and we
+                    # can't solve this with a halo because the subspace
+                    # doesn't know what point to 'halo' around. So we need to
+                    # be more clever.
+                    # TODO we decided to write this into this module then
+                    # move it out as a new query to cf eventun which caseally.
+                    model_field_bb = bounding_box_query(
+                        model_field, "Z", z_coord_tight_bounds,
+                        model_field.coordinate("Z")
+                    )
                 vertical_sn = False
             else:
                 logger.info(
