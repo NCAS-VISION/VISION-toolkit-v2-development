@@ -8,6 +8,7 @@
     "output-file-name":"um_faam_stanco_2_vision_result.nc",
     "show-plot-of-input-obs": false,
     "plot-of-input-obs-track-only": 0,
+    "cfp-cscale": "WhiteBlueGreenYellowRed",
     "cfp-mapset-config":{
         "lonmin":-2,
         "lonmax":2,
