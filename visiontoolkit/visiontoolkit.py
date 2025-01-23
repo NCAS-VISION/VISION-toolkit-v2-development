@@ -430,7 +430,6 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     # If both have calendars defined, we need to check for consistency
     # between these, else the datetimes aren't comparable
     if obs_calendar and model_calendar:
-        print("CALENDAR ISSUES HERE")
         # Some custom calendar consistency logic, necessary for e.g. WRF data
         before_pg_cutoff = cf.gt(cf.dt(1582, 10, 15))
         if (
@@ -487,7 +486,8 @@ def persist_all_metadata(field):
 
 
 def bounding_box_query(
-        model_field, model_id, coord_tight_bounds, model_coord):
+        model_field, model_id, coord_tight_bounds, model_coord, ascending=True
+):
     """Apply a custom query to get the bounding box.
 
     This method is required, on top of the simple subspace query case, to
@@ -497,10 +497,6 @@ def bounding_box_query(
     doesn't know what point to 'halo' around.
 
     """
-    # Note: the coordinate may be descending, but this logic assumes
-    # asceding when using argmin for the lower index. To deal with
-    # descending coordinates e.g. vertical ones, TODO
-    
     logger.info(
         f"Starting a bounding box query for {coord_tight_bounds} on "
         f"{model_coord} of {model_field} "
@@ -517,10 +513,6 @@ def bounding_box_query(
     min_query_result = cf.lt(obs_min) == model_coord
     max_query_result = cf.gt(obs_max) == model_coord
 
-    print(
-        "ARE", min_query_result.data.array, max_query_result.data.array,
-    )
-
     # Get indices of last case of index being outside of the range of the
     # obs times fr below, and the first of it being outside from above in terms
     # of position. +/1 will ensure we take the values immediately around.
@@ -534,9 +526,22 @@ def bounding_box_query(
     # Note: originally tried np.where(a)[0][-1] and np.where(b)[0][0][5]
     # instead of argmin/max but that will be less efficient(?)
 
-    lower_index = np.argmin(min_query_result)
-    upper_index = np.argmax(max_query_result)
-    print("GETTING", upper_index, lower_index)
+    # Note: the coordinate may be descending, but this logic assumes
+    # asceding when using argmin for the lower index. So, without
+    # adaptation it will always give 0, 0 indices for a desc.
+    # coordinate and therefore the wrong result there. So, to deal with
+    # descending coordinates e.g. vertical ones, set ascending=False and the
+    # argmin/max calls get swapped to produce the right result.
+    if ascending:
+        # Have array forms with min_query_result as [T ... -> ... F] and
+        # max_query-result [F ... -> ... T], hence:
+        lower_index = np.argmin(min_query_result)
+        upper_index = np.argmax(max_query_result)
+    else:
+        # Have array forms opposite to the above, i.e. with min_query_result
+        # as [F ... -> ... T] and max_query-result [T ... -> ... F], hence:
+        lower_index = np.argmax(min_query_result)
+        upper_index = np.argmin(max_query_result)
 
     # Remove 1 *only* if the index is not the first one already, else we
     # get an index of 0-1=-1 which is the last value and will mess things up!
@@ -798,7 +803,10 @@ def subspace_to_spatiotemporal_bounding_box(
                     # move it out as a new query to cf eventun which caseally.
                     model_field_bb = bounding_box_query(
                         model_field, "Z", z_coord_tight_bounds,
-                        model_field.coordinate("Z")
+                        model_field.coordinate("Z"),
+                        # Assume we have pressure he, hence descending! TODO
+                        # generalise this
+                        ascending=False,
                     )
                 vertical_sn = False
             else:
