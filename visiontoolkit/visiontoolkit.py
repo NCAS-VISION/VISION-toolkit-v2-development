@@ -1194,6 +1194,7 @@ def time_interpolation(
         "*** Begin iteration over pairwise 'segments'. ***\n"
         f"Segments to loop over are, pairwise: {model_times.datetime_array}"
     )
+
     # Note the length of (pairwise(model_times.datetime_array) is equal to
     # model_times_len - 1 by its nature, e.g. A, B, C -> (A, B), (B, C)).
     for index, (t1, t2) in enumerate(pairwise(model_times.datetime_array)):
@@ -1210,8 +1211,7 @@ def time_interpolation(
         # second item in the tuple uses length of pairwise iterator being
         # equal to model_times_len - 1, so is:
         # (model_times_len - 1) - 1 - (halo_size - 1), and -1+1-1 = -1 overall.
-        # HACK
-        if True:  ####index in (halo_size - 1, model_times_len - 1 - halo_size):
+        if index in (halo_size - 1, model_times_len - 1 - halo_size):
             permit_null_subspace = True
             logger.debug(
                 "Allowing potential null-return subspace for segment emerging "
@@ -1273,13 +1273,14 @@ def time_interpolation(
             f"{len(concatenated_weighted_values)}\n"
         )
     else:
-        # HACK, getting all 19 air pressure values for now, take first one as
+        # TEMPORARY SOLUTION until satellite averging kernel work is done.
+        # Getting all 19 air pressure values for now, take first one as
         # case whilst get working generally
         concatenated_weighted_values = v_w[0]
-        # Note that 0th index here gives all 0 values - maybe they are all masked
-        # for that and some other indices?
-        concatenated_weighted_values = concatenated_weighted_values[
-            10, :].squeeze()
+        # Note that 0th index here gives all 0 values - all masked at ground?
+        if preprocess_obs == "satellite":
+            concatenated_weighted_values = concatenated_weighted_values[
+                10, :].squeeze()
 
     # Report on number of masked and unmasked data points for info/debugging
     masked_value_count = (
