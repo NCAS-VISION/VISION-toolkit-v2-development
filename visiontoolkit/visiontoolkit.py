@@ -104,7 +104,7 @@ def get_files_to_individually_colocate(path):
     """TODO."""
 
     logger.info(
-        "Reading in all files. Note if there are a lot of file to read "
+        "Reading in all files. Note if there are a lot of files to read "
         "this may take a little time."
     )
     # Basically copying logic here from cf-python read globbing,
@@ -180,6 +180,46 @@ def get_input_fields_of_interest(fl, chosen_fields):
         fl = fl[chosen_fields]
 
     return fl
+
+
+@timeit
+def vertical_parametric_computation(model_field, orog_field):
+    """TODO
+
+    TODO: DETAILED DOCS
+    """
+    ahhc_standard_name = "standard_name:atmosphere_hybrid_height_coordinate"
+    try:
+        cr = a.coordinate_reference(ahhc_standard_name)
+    except:
+        raise CFComplianceIssue(
+            "Atmosphere hybrid height coordinate not encoded in a CF "
+            "Compliant way: should be defined as a coordinate reference "
+            "construct with the standard name "
+            f"'{ahhc_standard_name}' on the model field {model_field}."
+        )
+
+    # Stick the orography field into the ukca field as a
+    # domain ancillary construct that is contained by the appropriate
+    # coordinate reference construct
+    orog_axes = [
+        orog_field.constructs.domain_axis_identity(axis)
+        for axis in orog_field.get_data_axes()
+    ]
+    orog_da = cf.DomainAncillary(source=orog_field)
+    orog_key = model_field.set_construct(orog_da, axes=orog_axes)
+
+    cr = a.construct(ahhc_standard_name)
+    cr.coordinate_conversion.set_domain_ancillary("orog", orog_key)
+
+    # Calculate the altitudes
+    model_field_with_altitude = model_field.compute_vertical_coordinates()
+
+    # Vertical SN becomes "altitude" or "height_above_geopotential_datum", see:
+    # https://cfconventions.org/Data/cf-conventions/cf-conventions-1.12/
+    # cf-conventions.html#atmosphere-hybrid-height-coordinate
+    # TODO we will assume 'altitude' for now, generalise this though
+    return model_field_with_altitude, "altitude"
 
 
 @timeit
@@ -1626,6 +1666,7 @@ def main():
     skip_all_plotting = args.skip_all_plotting
     preprocess_obs = args.preprocess_mode_obs
     preprocess_model = args.preprocess_mode_model
+    orog = args.orography
     # TODO: eventually remove the deprecated alternatives, but for now
     # accept both (see cli.py end of process_cli_arguments for the listing
     # of any deprecated options)
@@ -1643,6 +1684,14 @@ def main():
         model_data, args.chosen_model_fields)
     if preprocess_model:
             model_field = ensure_cf_compliance(model_field, preprocess_model)
+
+    # If necessary to handle orography external file, read it in early to
+    # fail early if it isn't readable
+    # SLB TODO
+    coord_ref = model_field.coordinate_reference(default=None)
+    print("coord ref", coord_ref)
+    ###if coord_ref is  and not orog:
+    ###    pass
 
     # Persist model field outside of loop
     persist_all_metadata(model_field)
@@ -1684,7 +1733,8 @@ def main():
 
     # 3. Post-processing of co-located results and prepare outputs
     if not output_fields:
-        raise InternalsIssue("Empty resulting FieldList: something went wrong!")
+        raise InternalsIssue(
+            "Empty resulting FieldList: something went wrong!")
 
     compound_output = len(output_fields) > 1
     if compound_output:
