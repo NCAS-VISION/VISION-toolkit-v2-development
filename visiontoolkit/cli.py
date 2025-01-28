@@ -87,6 +87,16 @@ def process_cli_arguments(parser):
         ),
     )
     parser.add_argument(
+        "--orography",
+        action="store",
+        help=(
+            "if the model data input is PP and has vertical coordinates in "
+            "terms of atmosphere hybrid height then specify the path to "
+            "the external orography applicable to the model data requred "
+            "for calculation of the vertical coordinates"
+        ),
+    )
+    parser.add_argument(
         "-s",
         "--start-time-override",
         action="store",

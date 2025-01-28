@@ -32,6 +32,8 @@ CONFIG_DEFAULTS = {
     # Pre-processing modes
     "preprocess-mode-obs": None,
     "preprocess-mode-model": None,
+    # Orography inputs where model data is PP
+    "orography": None,
     # *** Output choices ***
     # A given directory must exist already, if specified.
     "outputs-dir": ".",
