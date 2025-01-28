@@ -1,5 +1,5 @@
 {
-    "obs-data-path":"../data/compliant-data/core_faam_20170703_c016_STANCO_CF-two-point.nc",
+    "obs-data-path":"../data/compliant-data/core_faam_20170703_c016_STANCO_CF-two-point-1.nc",
     "model-data-path":"../data/main-workwith-test-ISO-simulator/Model_Input",
     "chosen-obs-fields":0,
     "chosen-model-fields":-2,
