@@ -58,8 +58,34 @@ class CFComplianceIssue(Exception):
     pass
 
 
+class IncompatibleDataInputsIssue(Exception):
+    """Raised for cases of incompatibility between the Model and Obs inputs."""
+
+    pass
+
+
+class DataReadingIssue(Exception):
+    """Raised for cases of failure to read appropriate data input file(s)."""
+
+    pass
+
+
+class ConfigurationIssue(Exception):
+    """Raised for cases of configuration values being invalid or unsuitable."""
+
+    pass
+
+
+class InternalsIssue(Exception):
+    """Raised for cases of the toolkit behaviour emerging wrong.
+
+    TODO these should all be removed by release time."""
+
+    pass
+
+
 # ----------------------------------------------------------------------------
-# Main functions
+# Core functions
 # ----------------------------------------------------------------------------
 
 def get_env_and_diagnostics_report():
@@ -291,7 +317,7 @@ def set_start_datetime(obs_times, obs_t_identifier, new_obs_starttime):
     try:
         new_dt_start = cf.dt(new_obs_starttime)
     except (ValueError, TypeError):
-        raise ValueError(
+        raise ConfigurationIssue(
             "Value for 'start-time-override' must be a valid datetime "
             f"accepted by cf.dt(), but got: {new_obs_starttime}. See "
             "https://ncas-cms.github.io/cf-python/function/cf.dt.html "
@@ -341,12 +367,12 @@ def check_time_coverage(obs_times, model_times):
     # Note need to do a '.data' comparison, else will get a
     # '<CF Data(1): [False]>' like object which won't evaluate as want
     if model_min.data > obs_min.data:
-        raise ValueError(
+        raise IncompatibleDataInputsIssue(
             f"{msg_start} minima of {model_min.data} for the model > "
             f"{obs_min.data} for the observations."
         )
     if model_max.data < obs_max.data:
-        raise ValueError(
+        raise IncompatibleDataInputsIssue(
             f"{msg_start} maxima of {model_max.data} for the model < "
             f"{obs_max.data} for the observations."
         )
@@ -821,7 +847,12 @@ def subspace_to_spatiotemporal_bounding_box(
                 # https://github.com/NCAS-CMS/cf-python/issues/802
                 added_vertical = not model_field_w_vertical.equals(model_field)
                 if not added_vertical:
-                    raise ValueError("Couldn't calculate vertical coordinates.")
+                    raise CFComplianceIssue(
+                        "Couldn't calculate vertical coordinates for field "
+                        f"{model_field}. Ensure the model input data is "
+                        "suitably CF-compliant with respect to the vertical "
+                        "coordinates."
+                    )
 
                 # If a vertical dim coord was added, we need to use that for our
                 # z coordinate from now onwards
@@ -1262,7 +1293,7 @@ def time_interpolation(
     logger.info(pformat(v_w))
 
     if not v_w:
-        raise ValueError("Empty weights array, something went wrong!")
+        raise InternalsIssue("Empty weights array, something went wrong!")
     # Concatenate the data values found above from each segment, to finally
     # get the full set of model-to-obs co-located data.
     if len(v_w) > 1:  # TODO is this just a hack?
@@ -1567,6 +1598,10 @@ def colocate_single_file(
     return final_result_field, obs_t_identifier  # TODO remove obs_t from ret
 
 
+# ----------------------------------------------------------------------------
+# Main procedure
+# ----------------------------------------------------------------------------
+
 @timeit
 def main():
     """Perform end-to-end model-to-observational co-location."""
@@ -1621,7 +1656,7 @@ def main():
     length_read_file_list = len(read_file_list)
     logger.info(f"Read file list has length: {length_read_file_list}")
     if not read_file_list:
-        raise ValueError(
+        raise DataReadingIssue(
             f"Bad path, nothing readable by cf: {args.obs_data_path}")
 
     logger.info(
@@ -1649,7 +1684,7 @@ def main():
 
     # 3. Post-processing of co-located results and prepare outputs
     if not output_fields:
-        raise ValueError("Empty resulting FieldList: something went wrong!")
+        raise InternalsIssue("Empty resulting FieldList: something went wrong!")
 
     compound_output = len(output_fields) > 1
     if compound_output:
