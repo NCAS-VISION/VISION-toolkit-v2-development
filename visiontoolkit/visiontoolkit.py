@@ -215,6 +215,12 @@ def vertical_parametric_computation(model_field, orog_field):
     # Calculate the altitudes
     model_field_with_altitude = model_field.compute_vertical_coordinates()
 
+    logger.info(
+        "Parametric vertical coordinates successfully calculated."
+        "Model field is now (with orography attached):\n"
+        f"{model_field_with_altitude}"
+    )
+
     # Vertical SN becomes "altitude" or "height_above_geopotential_datum", see:
     # https://cfconventions.org/Data/cf-conventions/cf-conventions-1.12/
     # cf-conventions.html#atmosphere-hybrid-height-coordinate
@@ -1529,6 +1535,7 @@ def colocate_single_file(
     halo_size,  # TODO use args instead of names since pass args in
     interpolation_method,
     colocation_z_coord,
+    orog_field=None,
 ):
     """Perform model-to-observational colocation using a single file source."""
     logger.info(
@@ -1602,6 +1609,15 @@ def colocate_single_file(
         obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
     )
 
+    # Deal with parametric vertical coordinates
+    # TODO pull out WRF parametric calcs to here, else have all as preproc
+    if orog_field:
+        # Calculate the vertical coordinates at this stage
+        model_field, vertical_sn = vertical_parametric_computation(
+            model_field, orog_field)
+        # Do another persist to cover the orography attachment
+        persist_all_metadata(model_field)
+
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
         obs_field,
@@ -1616,7 +1632,7 @@ def colocate_single_file(
 
     # For such cases as satellite swaths, the times can straddle model points
     # so we need to chop these up into ones on each side of a model time
-    # segmentm as per our approach below.
+    # segment as per our approach below.
     split_segments = False
     if preprocess_obs == "satellite":
         split_segments = True
@@ -1666,7 +1682,7 @@ def main():
     skip_all_plotting = args.skip_all_plotting
     preprocess_obs = args.preprocess_mode_obs
     preprocess_model = args.preprocess_mode_model
-    orog = args.orography
+    orog_data_path = args.orography
     # TODO: eventually remove the deprecated alternatives, but for now
     # accept both (see cli.py end of process_cli_arguments for the listing
     # of any deprecated options)
@@ -1686,18 +1702,34 @@ def main():
             model_field = ensure_cf_compliance(model_field, preprocess_model)
 
     # If necessary to handle orography external file, read it in early to
-    # fail early if it isn't readable
-    # SLB TODO
-    coord_ref = model_field.coordinate_reference(default=None)
-    print("coord ref", coord_ref)
-    ###if coord_ref is  and not orog:
-    ###    pass
+    # fail early if it isn't readable or valid.
+    orog_field = None
+    if model_field.coordinate_reference(
+            "standard_name:atmosphere_hybrid_height_coordinate",
+            default=False
+    ):
+        logger.info(
+            "Detected parametric vertical coordinate requiring orography "
+            "('atmosphere_hybrid_height_coordinate'). Checking that the "
+            "orography is attached..."
+        )
+        if orog_data_path:
+            logger.info(
+                "External orography file specified. Attempting read of it "
+                f"from given path '{orog_data_path}'"
+            )
+            orog_field = cf.read(orog_data_path)
+            logger.info(
+                "Orography file read successfully. Corresponding field "
+                f"list is:\n{orog_field}"
+            )
+            # TODO also check suitability of orog field - might be bad
+        else:
+            pass  # TODO in this case is netCDF with attached orog, handle this
 
-    # Persist model field outside of loop
+
+    # Persist model fields outside of loop
     persist_all_metadata(model_field)
-
-    # Initiate to store colocated fields
-    output_fields = cf.FieldList()
 
     # Start colocating the indivdual files to read (which may just be one
     # file in many cases)
@@ -1712,6 +1744,8 @@ def main():
         "\n_____ Starting colocation iteration to cover a total of "
         f"{length_read_file_list} files."
     )
+    # Initiate to store colocated fields
+    output_fields = cf.FieldList()
     for index, file_to_colocate in enumerate(read_file_list):
         file_fl_result, obs_t_identifier = colocate_single_file(
             file_to_colocate,
@@ -1726,6 +1760,7 @@ def main():
             halo_size,  # TODO use args instead of names since pass args in
             interpolation_method,
             colocation_z_coord,
+            orog_field,
         )
         if file_fl_result is None:
             continue
