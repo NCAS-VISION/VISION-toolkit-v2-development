@@ -224,7 +224,7 @@ def vertical_parametric_computation_ahhc(model_field, orog_field):
     orog_da = cf.DomainAncillary(source=orog_field)
     orog_key = model_field.set_construct(orog_da, axes=orog_axes)
 
-    cr = a.construct(ahhc_standard_name)
+    cr = model_field.construct(ahhc_standard_name)
     cr.coordinate_conversion.set_domain_ancillary("orog", orog_key)
 
     # Calculate the altitudes
@@ -285,24 +285,6 @@ def vertical_parametric_computation_ahspc(model_field):
             "CF Compliant way: should be defined as a coordinate reference "
             "construct with the standard name "
             f"'{ahspc_standard_name}' on the model field {model_field}."
-        )
-
-    logger.info(
-        "Need to calculate parametric vertical coordinates. "
-        "Attempting..."
-    )
-    model_field_w_vertical = model_field.compute_vertical_coordinates()
-
-    # TODO: see Issue 802, after closure will have better way to know
-    # the vertical coordinate added by the calc, if it added it at all:
-    # https://github.com/NCAS-CMS/cf-python/issues/802
-    added_vertical = not model_field_w_vertical.equals(model_field)
-    if not added_vertical:
-        raise CFComplianceIssue(
-            "Couldn't calculate vertical coordinates for field "
-            f"{model_field}. Ensure the model input data is "
-            "suitably CF-compliant with respect to the vertical "
-            "coordinates."
         )
 
     # Calculate the pressures
@@ -741,6 +723,7 @@ def bounding_box_query(
 @timeit
 def subspace_to_spatiotemporal_bounding_box(
         obs_field, model_field, halo_size, verbose, no_vertical=False,
+        vertical_sn="Z",
 ):
     """Extract only relevant data in the model field via a 4D subspace.
 
@@ -770,7 +753,7 @@ def subspace_to_spatiotemporal_bounding_box(
     obs_X = obs_field.auxiliary_coordinate("X")
     obs_Y = obs_field.auxiliary_coordinate("Y")
     if not no_vertical:
-        obs_Z = obs_field.auxiliary_coordinate("Z")
+        obs_Z = obs_field.auxiliary_coordinate(vertical_sn)
 
     # Prep. towards the temporal BB component.
     # TODO: are we assuming the model and obs data are strictly increasing, as
@@ -807,7 +790,7 @@ def subspace_to_spatiotemporal_bounding_box(
         model_t_id: cf.wi(*t_coord_tight_bounds),
     }
     if not no_vertical:
-        bb_kwargs["Z"] = cf.wi(*z_coord_tight_bounds)
+        bb_kwargs[vertical_sn] = cf.wi(*z_coord_tight_bounds)
 
     # Attempt to do a full bounding box subspace immediately (if indices call
     # works, the subspace call will work) - if it works, great! But probably it
@@ -949,12 +932,10 @@ def subspace_to_spatiotemporal_bounding_box(
         # last separate subspace.
         if no_vertical:
             model_field_bb = model_field
-            vertical_sn = False
         else:
             logger.info("3. Vertical subspace step")
-            vertical_sn = False
 
-            vertical_kwargs = {"Z": cf.wi(*z_coord_tight_bounds)}
+            vertical_kwargs = {vertical_sn: cf.wi(*z_coord_tight_bounds)}
             try:
                 model_field_bb = model_field.subspace(
                     "envelope",
@@ -971,13 +952,12 @@ def subspace_to_spatiotemporal_bounding_box(
                 # TODO we decided to write this into this module then
                 # move it out as a new query to cf eventun which caseally.
                 model_field_bb = bounding_box_query(
-                    model_field, "Z", z_coord_tight_bounds,
-                    model_field.coordinate("Z"),
+                    model_field, vertical_sn, z_coord_tight_bounds,
+                    model_field.coordinate(vertical_sn),
                     # Assume we have pressure here, hence descending! TODO
                     # generalise this
                     ascending=False,
                 )
-            ###vertical_sn = False
 
             logger.info(
                 "Vertical ('Z') bounding box calculated. It is: "
@@ -1003,8 +983,8 @@ def spatial_interpolation(
     interpolation_z_coord,
     source_axes,
     model_t_identifier,
-    vertical_sn,
     no_vertical,
+    vertical_sn,
 ):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
 
@@ -1450,7 +1430,7 @@ def time_interpolation(
     # TODO reinstate this later, some bug intermittently emerges from 'stats'
     # apparently due to using 'persist' earlier (at least showing up after
     # that code was added)
-    ##logger.info("The final result field has data statistics of:\n")
+    ###logger.info("The final result field has data statistics of:\n")
     ###logger.info(pformat(final_result_field.data.stats()))
 
     # TODO: consider whether or not to persist the regridded / time interp.
@@ -1644,7 +1624,7 @@ def colocate_single_file(
         no_vertical = True
 
     # Where this is False, is taken as the SN of the "Z" coordinate by default
-    vertical_sn = False
+    vertical_sn = "Z"  # TODO rename, Z is not a SN
 
     # Handle parametric vertical coordinates:
     coord_refs = model_field.coordinate_references(default=False)
@@ -1673,10 +1653,12 @@ def colocate_single_file(
         # vertical coords
         persist_all_metadata(model_field)
 
+    # SLB UPTO TODO
     # Subspacing to remove irrelavant information, pre-colocation
     # TODO tidy passing through of computed vertical coord identifier
     model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
         obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
+        vertical_sn=vertical_sn,
     )
 
     # Perform spatial and then temporal interpolation to colocate
@@ -1687,8 +1669,8 @@ def colocate_single_file(
         colocation_z_coord,
         args.source_axes,
         model_t_identifier,
-        vertical_sn,
         no_vertical,
+        vertical_sn=vertical_sn,
     )
 
     # For such cases as satellite swaths, the times can straddle model points
@@ -1779,11 +1761,23 @@ def main():
                 "External orography file specified. Attempting read of it "
                 f"from given path '{orog_data_path}'"
             )
-            orog_field = cf.read(orog_data_path)
+            orog_fl = cf.read(orog_data_path)
             logger.info(
                 "Orography file read successfully. Corresponding field "
-                f"list is:\n{orog_field}"
+                f"list is:\n{orog_fl}"
             )
+            if len(orog_fl) > 1:
+                logger.warning(
+                    "Orography data read-in has more than one field. Taking "
+                    "the first field in the corrsponding FieldList. If "
+                    "another field is required, ensure it is the only field "
+                    f"read-in for the dataset at path '{orog_data_path}'."
+                )
+            orog_field = orog_fl[0]
+            logger.info(
+                f"Orography field set to use is:\n{orog_field}"
+            )
+
             # TODO also check suitability of orog field - might be bad
         else:
             pass  # TODO in this case is netCDF with attached orog, handle this
