@@ -19,6 +19,11 @@ from .constants import toolkit_banner
 from .plugins.satellite_compliance_converter import satellite_compliance_plugin
 
 
+SUPPORTED_PARAMETRIC_CONVERSIONS = (
+    "atmosphere_hybrid_height_coordinate",
+    "atmosphere_hybrid_sigma_pressure_coordinate",
+)
+
 # ----------------------------------------------------------------------------
 # Set up timing and logging
 # ----------------------------------------------------------------------------
@@ -183,14 +188,24 @@ def get_input_fields_of_interest(fl, chosen_fields):
 
 
 @timeit
-def vertical_parametric_computation(model_field, orog_field):
-    """TODO
+def vertical_parametric_computation_ahhc(model_field, orog_field):
+    """Return a model field with computed vertical coordinate of altitude.
+
+    Applies computation to create a domain ancillary for a 'atmosphere
+    hybrid height coordinate', as for example  common on UM data, returning
+    the field with this new domain ancillary and the name of the vertical
+    coordinate generated.
+
+    See:
+        https://cfconventions.org/Data/cf-conventions/cf-conventions-1.12/
+        cf-conventions.html#atmosphere-hybrid-height-coordinate
+    for the details of the context and computation.
 
     TODO: DETAILED DOCS
     """
     ahhc_standard_name = "standard_name:atmosphere_hybrid_height_coordinate"
     try:
-        cr = a.coordinate_reference(ahhc_standard_name)
+        cr = model_field.coordinate_reference(ahhc_standard_name)
     except:
         raise CFComplianceIssue(
             "Atmosphere hybrid height coordinate not encoded in a CF "
@@ -199,7 +214,7 @@ def vertical_parametric_computation(model_field, orog_field):
             f"'{ahhc_standard_name}' on the model field {model_field}."
         )
 
-    # Stick the orography field into the ukca field as a
+    # Attach the orography field into the model field as a
     # domain ancillary construct that is contained by the appropriate
     # coordinate reference construct
     orog_axes = [
@@ -214,18 +229,104 @@ def vertical_parametric_computation(model_field, orog_field):
 
     # Calculate the altitudes
     model_field_with_altitude = model_field.compute_vertical_coordinates()
-
-    logger.info(
-        "Parametric vertical coordinates successfully calculated."
-        "Model field is now (with orography attached):\n"
-        f"{model_field_with_altitude}"
-    )
+    # TODO: see Issue 802, after closure will have better way to know
+    # the vertical coordinate added by the calc, if it added it at all:
+    # https://github.com/NCAS-CMS/cf-python/issues/802
+    added_vertical = not model_field_with_altitude.equals(model_field)
+    if not added_vertical:
+        raise CFComplianceIssue(
+            "Couldn't calculate vertical coordinates for field "
+            f"{model_field}. Ensure the model input data is "
+            "suitably CF-compliant with respect to the vertical "
+            "coordinates."
+        )
+    else:
+        logger.info(
+            "Parametric vertical coordinates successfully calculated."
+            "Model field is now (with orography attached):\n"
+            f"{model_field_with_altitude}"
+        )
 
     # Vertical SN becomes "altitude" or "height_above_geopotential_datum", see:
     # https://cfconventions.org/Data/cf-conventions/cf-conventions-1.12/
     # cf-conventions.html#atmosphere-hybrid-height-coordinate
     # TODO we will assume 'altitude' for now, generalise this though
     return model_field_with_altitude, "altitude"
+
+
+@timeit
+def vertical_parametric_computation_ahspc(model_field):
+    """Return a model field with computed 'air_pressure' vertical coordinate.
+
+    Applies computation to create a domain ancillary for a 'atmosphere hybrid
+    sigma pressure coordinate', as for example usual on WRF data, returning
+    the field with this new domain ancillary and the name of the vertical
+    coordinate generated.
+
+    See:
+        https://cfconventions.org/Data/cf-conventions/cf-conventions-1.12/
+        cf-conventions.html#_atmosphere_hybrid_sigma_pressure_coordinate
+    for the details of the context and computation.
+
+    TODO: DETAILED DOCS
+
+    """
+    # TODO cater for case where are > 1 coord refs (ValueError for now)
+    coord_ref = model_field.coordinate_reference(default=None)
+
+    ahspc_standard_name = (
+        "standard_name:atmosphere_hybrid_sigma_pressure_coordinate"
+    )
+    try:
+        cr = model_field.coordinate_reference(ahspc_standard_name)
+    except:
+        raise CFComplianceIssue(
+            "Atmosphere hybrid sigma pressure coordinate not encoded in a "
+            "CF Compliant way: should be defined as a coordinate reference "
+            "construct with the standard name "
+            f"'{ahspc_standard_name}' on the model field {model_field}."
+        )
+
+    logger.info(
+        "Need to calculate parametric vertical coordinates. "
+        "Attempting..."
+    )
+    model_field_w_vertical = model_field.compute_vertical_coordinates()
+
+    # TODO: see Issue 802, after closure will have better way to know
+    # the vertical coordinate added by the calc, if it added it at all:
+    # https://github.com/NCAS-CMS/cf-python/issues/802
+    added_vertical = not model_field_w_vertical.equals(model_field)
+    if not added_vertical:
+        raise CFComplianceIssue(
+            "Couldn't calculate vertical coordinates for field "
+            f"{model_field}. Ensure the model input data is "
+            "suitably CF-compliant with respect to the vertical "
+            "coordinates."
+        )
+
+    # Calculate the pressures
+    model_field_with_pressure = model_field.compute_vertical_coordinates()
+    # TODO: see Issue 802, after closure will have better way to know
+    # the vertical coordinate added by the calc, if it added it at all:
+    # https://github.com/NCAS-CMS/cf-python/issues/802
+    added_vertical = not model_field_with_pressure.equals(model_field)
+    if not added_vertical:
+        raise CFComplianceIssue(
+            "Couldn't calculate vertical coordinates for field "
+            f"{model_field}. Ensure the model input data is "
+            "suitably CF-compliant with respect to the vertical "
+            "coordinates."
+        )
+    else:
+        logger.info(
+            "Parametric vertical coordinates successfully calculated."
+            f"Model field is now:\n{model_field_with_pressure}"
+        )
+
+    # Vertical SN becomes "air_pressure", see CF Conventions appendix section
+    # linked above.
+    return model_field_with_pressure, "air_pressure"
 
 
 @timeit
@@ -851,99 +952,38 @@ def subspace_to_spatiotemporal_bounding_box(
             vertical_sn = False
         else:
             logger.info("3. Vertical subspace step")
-            # First, need to calculate the vertical coordinates if there are
-            # parametric vertical dimension coordinates to handle.
-            # TODO cater for case where are > 1 coord refs (ValueError for now)
-            coord_ref = model_field.coordinate_reference(default=None)
+            vertical_sn = False
 
-            if not coord_ref:  # no parametric coords, simple case
-                vertical_kwargs = {"Z": cf.wi(*z_coord_tight_bounds)}
-                try:
-                    model_field_bb = model_field.subspace(
-                        "envelope",
-                        halo_size,
-                        **vertical_kwargs
-                    )
-                except ValueError:
-                    # (Same case/note as other try/except to bounding_box_query)
-                    # Both values may sit inside between one model value and
-                    # another and the time subspace may fail then, and we
-                    # can't solve this with a halo because the subspace
-                    # doesn't know what point to 'halo' around. So we need to
-                    # be more clever.
-                    # TODO we decided to write this into this module then
-                    # move it out as a new query to cf eventun which caseally.
-                    model_field_bb = bounding_box_query(
-                        model_field, "Z", z_coord_tight_bounds,
-                        model_field.coordinate("Z"),
-                        # Assume we have pressure he, hence descending! TODO
-                        # generalise this
-                        ascending=False,
-                    )
-                vertical_sn = False
-            else:
-                logger.info(
-                    "Need to calculate parametric vertical coordinates. "
-                    "Attempting..."
-                )
-                model_field_w_vertical = model_field.compute_vertical_coordinates()
-
-                # TODO: see Issue 802, after closure will have better way to know
-                # the vertical coordinate added by the calc, if it added it at all:
-                # https://github.com/NCAS-CMS/cf-python/issues/802
-                added_vertical = not model_field_w_vertical.equals(model_field)
-                if not added_vertical:
-                    raise CFComplianceIssue(
-                        "Couldn't calculate vertical coordinates for field "
-                        f"{model_field}. Ensure the model input data is "
-                        "suitably CF-compliant with respect to the vertical "
-                        "coordinates."
-                    )
-
-                # If a vertical dim coord was added, we need to use that for our
-                # z coordinate from now onwards
-                # TODO move vertical calc. out of this method more generally for
-                # better processing going forward
-                # TODO handle lack of, will currently give ValueError
-                vertical_sn = model_field_w_vertical.coordinate_reference().coordinate_conversion.get_parameter(
-                    "computed_standard_name"
-                )
-                new_z_coord = model_field_w_vertical.coordinate(vertical_sn)
-                logger.info(
-                    "Added vertical coordinates from parameters: "
-                    f"{new_z_coord.dump(display=False)}."
-                )
-
-                # Reset model_field to one with vertical coord now
-                # TODO use in-place before so no need to create new one?
-                model_field = model_field_w_vertical
-                logger.info(
-                    "Model field with vertical coords is: "
-                    f"{model_field.dump(display=False)}"
-                )
-
-                # Unit conforming: convert units on new cal'd Z to obs Z units
-                # TODO can deal with further unit conformance using query units
-                # for the queries we subspace on!
-                new_z_coord.Units = obs_Z.Units
-                logger.info(
-                    "Units conformed for computed vertical coordinates:"
-                    f"{new_z_coord} with same units as {obs_Z}"
-                )
-
-                vert_kwargs = {vertical_sn: cf.wi(*z_coord_tight_bounds)}
-                # TODO: partial case commented below is breaking things here! WHY!?
-                # ## model_field = model_field_bb_subspace(**vert_kwargs)
+            vertical_kwargs = {"Z": cf.wi(*z_coord_tight_bounds)}
+            try:
                 model_field_bb = model_field.subspace(
                     "envelope",
                     halo_size,
-                    **vert_kwargs,
+                    **vertical_kwargs
                 )
+            except ValueError:
+                # (Same case/note as other try/except to bounding_box_query)
+                # Both values may sit inside between one model value and
+                # another and the time subspace may fail then, and we
+                # can't solve this with a halo because the subspace
+                # doesn't know what point to 'halo' around. So we need to
+                # be more clever.
+                # TODO we decided to write this into this module then
+                # move it out as a new query to cf eventun which caseally.
+                model_field_bb = bounding_box_query(
+                    model_field, "Z", z_coord_tight_bounds,
+                    model_field.coordinate("Z"),
+                    # Assume we have pressure here, hence descending! TODO
+                    # generalise this
+                    ascending=False,
+                )
+            ###vertical_sn = False
 
             logger.info(
-                f"Vertical ('Z') bounding box calculated. It is: {model_field_bb}"
+                "Vertical ('Z') bounding box calculated. It is: "
+                f"{model_field_bb}"
             )
-            # Note: no need to persist at end like with stages 1-2 of BB for
+            # No need to persist at end like with stages 1-2 of BB for
             # time and horizontal since there is a persist after this method
             # is called.
 
@@ -1603,20 +1643,41 @@ def colocate_single_file(
     if preprocess_obs == "satellite":
         no_vertical = True
 
+    # Where this is False, is taken as the SN of the "Z" coordinate by default
+    vertical_sn = False
+
+    # Handle parametric vertical coordinates:
+    coord_refs = model_field.coordinate_references(default=False)
+    if coord_refs:
+        # Keep SUPPORTED_PARAMETRIC_CONVERSIONS list updated with cases use
+        # so can ensure support wat needed from CF Conventions Appendix D
+        if model_field.coordinate_reference(
+                "standard_name:atmosphere_hybrid_sigma_pressure_coordinate",
+                default=False
+        ):
+            model_field, vertical_sn = vertical_parametric_computation_ahspc(
+                model_field)
+        if model_field.coordinate_reference(
+                "standard_name:atmosphere_hybrid_height_coordinate",
+                default=False
+        ):
+            if orog_field:
+                model_field, vertical_sn = vertical_parametric_computation_ahhc(
+                    model_field, orog_field)
+            else:
+                # TODO handle netCDF attached orography case, should just need
+                # a validation check if anything
+                pass
+
+        # Do another persist to cover the inclusion of the computed
+        # vertical coords
+        persist_all_metadata(model_field)
+
     # Subspacing to remove irrelavant information, pre-colocation
     # TODO tidy passing through of computed vertical coord identifier
     model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
         obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
     )
-
-    # Deal with parametric vertical coordinates
-    # TODO pull out WRF parametric calcs to here, else have all as preproc
-    if orog_field:
-        # Calculate the vertical coordinates at this stage
-        model_field, vertical_sn = vertical_parametric_computation(
-            model_field, orog_field)
-        # Do another persist to cover the orography attachment
-        persist_all_metadata(model_field)
 
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
