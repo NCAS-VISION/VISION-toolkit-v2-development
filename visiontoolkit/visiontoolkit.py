@@ -188,6 +188,63 @@ def get_input_fields_of_interest(fl, chosen_fields):
 
 
 @timeit
+def vertical_parametric_computation(
+        model_field, parametric_standard_name, cr_only=False):
+    """Return a model field with arbitrary computed vertical coordinates.
+
+    Helper function for specific vertical coordinate computations, which are
+    each assigned there own method, particularly to cater for ones
+    requiring external inputs e.g. orography data.
+
+    TODO: DETAILED DOCS
+    """
+    sn = f"standard_name:{parametric_standard_name}"
+
+    try:
+        cr = model_field.coordinate_reference(sn)
+    except:
+        raise CFComplianceIssue(
+            "Parametric vertical coordinate not encoded in a "
+            "CF Compliant way: should be defined as a coordinate reference "
+            "construct with the standard name "
+            f"'{sn}' on the model field {model_field}."
+        )
+    if cr_only:
+        return cr
+
+    # Calculate the vertical coordinate of relevance
+    model_field_with_computed = model_field.compute_vertical_coordinates()
+    # TODO: see Issue 802, after closure will have better way to know
+    # the vertical coordinate added by the calc, if it added it at all:
+    # https://github.com/NCAS-CMS/cf-python/issues/802
+    added_vertical = not model_field_with_computed.equals(model_field)
+    if not added_vertical:
+        raise CFComplianceIssue(
+            "Couldn't calculate vertical coordinates for field "
+            f"{model_field}. Ensure the model input data is "
+            "suitably CF-compliant with respect to the parametric vertical "
+            "coordinates."
+        )
+    else:
+        logger.info(
+            "Parametric vertical coordinate successfully calculated."
+            f"Model field is now:\n{model_field_with_computed}"
+        )
+
+    # To find the vertical computed coord. key - workaround for now
+    # until Issue 802 sorted:
+    aux_before = set(model_field.auxiliary_coordinates().keys())
+    aux_after = set(model_field_with_computed.auxiliary_coordinates().keys())
+    # Unpack to 1-tuple to get the lone item in the set, confirming it is lone
+    (computed_aux_key,) = aux_after.difference(aux_before)
+    logger.info(
+        f"Parametric vertical coordinate key is '{computed_aux_key}'."
+    )
+
+    return model_field_with_computed, computed_aux_key
+
+
+@timeit
 def vertical_parametric_computation_ahhc(model_field, orog_field):
     """Return a model field with computed vertical coordinate of altitude.
 
@@ -203,16 +260,9 @@ def vertical_parametric_computation_ahhc(model_field, orog_field):
 
     TODO: DETAILED DOCS
     """
-    ahhc_standard_name = "standard_name:atmosphere_hybrid_height_coordinate"
-    try:
-        cr = model_field.coordinate_reference(ahhc_standard_name)
-    except:
-        raise CFComplianceIssue(
-            "Atmosphere hybrid height coordinate not encoded in a CF "
-            "Compliant way: should be defined as a coordinate reference "
-            "construct with the standard name "
-            f"'{ahhc_standard_name}' on the model field {model_field}."
-        )
+    # Pre=processing to get the orography attached
+    #cr = vertical_parametric_computation(
+    #    model_field, "atmosphere_hybrid_height_coordinate", cr_only=True)
 
     # Attach the orography field into the model field as a
     # domain ancillary construct that is contained by the appropriate
@@ -224,34 +274,18 @@ def vertical_parametric_computation_ahhc(model_field, orog_field):
     orog_da = cf.DomainAncillary(source=orog_field)
     orog_key = model_field.set_construct(orog_da, axes=orog_axes)
 
-    cr = model_field.construct(ahhc_standard_name)
+    cr = vertical_parametric_computation(
+        model_field, "atmosphere_hybrid_height_coordinate", cr_only=True)
     cr.coordinate_conversion.set_domain_ancillary("orog", orog_key)
 
-    # Calculate the altitudes
-    model_field_with_altitude = model_field.compute_vertical_coordinates()
-    # TODO: see Issue 802, after closure will have better way to know
-    # the vertical coordinate added by the calc, if it added it at all:
-    # https://github.com/NCAS-CMS/cf-python/issues/802
-    added_vertical = not model_field_with_altitude.equals(model_field)
-    if not added_vertical:
-        raise CFComplianceIssue(
-            "Couldn't calculate vertical coordinates for field "
-            f"{model_field}. Ensure the model input data is "
-            "suitably CF-compliant with respect to the vertical "
-            "coordinates."
-        )
-    else:
-        logger.info(
-            "Parametric vertical coordinates successfully calculated."
-            "Model field is now (with orography attached):\n"
-            f"{model_field_with_altitude}"
-        )
-
-    # Vertical SN becomes "altitude" or "height_above_geopotential_datum", see:
-    # https://cfconventions.org/Data/cf-conventions/cf-conventions-1.12/
-    # cf-conventions.html#atmosphere-hybrid-height-coordinate
-    # TODO we will assume 'altitude' for now, generalise this though
-    return model_field_with_altitude, "altitude"
+    # Now can do the actual computation
+    #
+    # Note, the vertical computed SN should become "altitude" (else
+    # "height_above_geopotential_datum") in this case, see CF Conventions
+    # Appendix D section linked above. But it is
+    # safest to take the computed name instead of assuming it.
+    return vertical_parametric_computation(
+        model_field, "atmosphere_hybrid_height_coordinate")
 
 
 @timeit
@@ -271,44 +305,11 @@ def vertical_parametric_computation_ahspc(model_field):
     TODO: DETAILED DOCS
 
     """
-    # TODO cater for case where are > 1 coord refs (ValueError for now)
-    coord_ref = model_field.coordinate_reference(default=None)
-
-    ahspc_standard_name = (
-        "standard_name:atmosphere_hybrid_sigma_pressure_coordinate"
-    )
-    try:
-        cr = model_field.coordinate_reference(ahspc_standard_name)
-    except:
-        raise CFComplianceIssue(
-            "Atmosphere hybrid sigma pressure coordinate not encoded in a "
-            "CF Compliant way: should be defined as a coordinate reference "
-            "construct with the standard name "
-            f"'{ahspc_standard_name}' on the model field {model_field}."
-        )
-
-    # Calculate the pressures
-    model_field_with_pressure = model_field.compute_vertical_coordinates()
-    # TODO: see Issue 802, after closure will have better way to know
-    # the vertical coordinate added by the calc, if it added it at all:
-    # https://github.com/NCAS-CMS/cf-python/issues/802
-    added_vertical = not model_field_with_pressure.equals(model_field)
-    if not added_vertical:
-        raise CFComplianceIssue(
-            "Couldn't calculate vertical coordinates for field "
-            f"{model_field}. Ensure the model input data is "
-            "suitably CF-compliant with respect to the vertical "
-            "coordinates."
-        )
-    else:
-        logger.info(
-            "Parametric vertical coordinates successfully calculated."
-            f"Model field is now:\n{model_field_with_pressure}"
-        )
-
-    # Vertical SN becomes "air_pressure", see CF Conventions appendix section
-    # linked above.
-    return model_field_with_pressure, "air_pressure"
+    # Note, the vertical computed SN should become "air_pressure" in this
+    # case, see CF Conventions Appendix D section linked above. But it is
+    # safest to take the computed name instead of assuming it.
+    return vertical_parametric_computation(
+        model_field, "atmosphere_hybrid_sigma_pressure_coordinate")
 
 
 @timeit
