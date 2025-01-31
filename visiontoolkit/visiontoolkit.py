@@ -84,7 +84,9 @@ class ConfigurationIssue(Exception):
 class InternalsIssue(Exception):
     """Raised for cases of the toolkit behaviour emerging wrong.
 
-    TODO these should all be removed by release time."""
+    This shouldn't ever get raised, and eventually could be replaced
+    by asssertions or ValueError - or ideally all removed by release time.
+    """
 
     pass
 
@@ -435,6 +437,78 @@ def ensure_cf_compliance(field, plugin, satellite_plugin_config=None):
 
     else:
         return field
+
+
+def wrf_extra_compliance_fixes(
+        model_field_bb, z_coord, z_axes_spec, vertical_sn,
+        model_t_identifier
+):
+    """Extra CF compliance fixes for WRF data. TODO move this out of toolkit!
+
+    TODO: DETAILED DOCS
+    """
+    # TODO possible bug in WRF pre-proc or in cf whereby aux coord axes
+    # are not in compatible order with the data axes, so do a HACKY SWAP:
+    # WRF pre-proc
+    new_z_coord = z_coord.swapaxes(1, 0)  # TODO NOT WORKING?
+    model_field_bb.del_construct(vertical_sn)
+    txyz_axes = [model_t_identifier,] + z_axes_spec
+    # TODO rename vertical_sn to z_id or z_key or similar
+    new_vertical_id = model_field_bb.set_construct(
+        new_z_coord,
+        axes=txyz_axes,
+    )
+    z_coord = model_field_bb.coordinate(new_vertical_id)
+    z_coord.set_property("standard_name", value=vertical_sn)
+
+    return z_coord
+
+
+def wrf_further_compliance_fixes(
+        model_field_z_per_time, vertical_sn, time_da_index, z_axes_spec):
+    """More CF compliance fixes for WRF data. TODO move this out of toolkit!
+
+    TODO: DETAILED DOCS
+    """
+    z_coord_per_time = model_field_z_per_time.coordinate(vertical_sn)
+
+    # Need to squeeze out the time coordinate, but ONLY from the
+    # vertical_sn (computer vertical coords) z coordinate, not the
+    # data axes overall.
+    model_field_z_per_time.del_construct(vertical_sn)
+    fin_z_coord = z_coord_per_time.squeeze(time_da_index)
+    model_field_z_per_time.set_construct(
+        fin_z_coord,
+        axes=z_axes_spec,
+    )
+
+    logger.info(
+        f"Squeezed Z coordinate: {z_coord_per_time},"
+        f"{z_coord_per_time.data}"
+    )
+    logger.info(
+        f"Model field per time data is: {model_field_z_per_time}"
+    )
+
+    # Also need to squeeze x and y aux coords! for those 2D aux
+    # lat and lons! Then everything is all set up for the 3D Z regrids
+    # HACK FIRST USE DIRECT NAMES TO GET WORKIN: ncvar%XLAT, ncvar%XLONG
+    for a_name in ("ncvar%XLAT", "ncvar%XLONG") and source_axes:
+        # These keys are safe to get, since raised error if they
+        # werne't present above.
+        x_y_axes_spec = [source_axes["Y"], source_axes["X"]]
+
+        a_coord = model_field_z_per_time.coordinate(a_name)
+        model_field_z_per_time.del_construct(a_name)
+        fin_a_coord = (
+            a_coord.squeeze()
+        )  # safe - can other dim be size 1?
+        model_field_z_per_time.set_construct(
+            fin_a_coord,
+            axes=x_y_axes_spec,
+        )
+
+    ### return model_field_z_per_time
 
 
 @timeit
@@ -978,14 +1052,15 @@ def subspace_to_spatiotemporal_bounding_box(
 
 @timeit
 def spatial_interpolation(
-    obs_field,
-    model_field_bb,
-    interpolation_method,
-    interpolation_z_coord,
-    source_axes,
-    model_t_identifier,
-    no_vertical,
-    vertical_sn,
+        obs_field,
+        model_field_bb,
+        interpolation_method,
+        interpolation_z_coord,
+        source_axes,
+        model_t_identifier,
+        no_vertical,
+        vertical_sn,
+        apply_wrf_preproc_to_move=False,
 ):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
 
@@ -1057,56 +1132,33 @@ def spatial_interpolation(
         time_da = model_field_bb.domain_axis(model_t_identifier, key=True)
         time_da_index = data_axes.index(time_da)
 
-        # TODO possible bug in WRF pre-proc or in cf whereby aux coord axes
-        # are not in compatible order with the data axes, so do a HACKY SWAP:
-        new_z_coord = z_coord.swapaxes(1, 0)  # TODO NOT WORKING?
-        model_field_bb.del_construct(vertical_sn)
-        # TODO rename vertical_sn to z_id or z_key or similar
-        new_vertical_id = model_field_bb.set_construct(
-            new_z_coord,
-            axes=[model_t_identifier, "Z", source_axes["Y"], source_axes["X"]],
-        )
-        z_coord = model_field_bb.coordinate(new_vertical_id)
-        z_coord.set_property("standard_name", value=vertical_sn)
+        # First get relevant axes, checking source_axes is valid
+        z_axes_spec = ["Z",]
+        if source_axes:
+            if (source_axes.get("X", False) and source_axes.get("Y", False)):
+                z_axes_spec.extend([source_axes["Y"], source_axes["X"]])
+            else:
+                raise ConfigurationIssue(
+                    "Invalid 'source_axes' input, should have 'X' and 'Y' "
+                    f"keys but didn't get those for input: {source_axes}"
+                )
 
+        # TODO WRF fixes to pull out:
+        if apply_wrf_preproc_to_move:
+            z_coord = wrf_extra_compliance_fixes(
+                model_field_bb, z_coord, z_axes_spec, vertical_sn,
+                model_t_identifier
+            )
+            
         spatially_colocated_fields = cf.FieldList()
-
         for mtime in model_bb_t:
-            kwargs = {model_t_identifier: mtime}
-            # TODO what subspace args might we want here?
-            model_field_z_per_time = model_field_bb.subspace(**kwargs)
-            z_coord_per_time = model_field_z_per_time.coordinate(vertical_sn)
+            model_field_z_per_time = model_field_bb.subspace(
+                **{model_t_identifier: mtime})
 
-            # Need to squeeze out the time coordinate, but ONLY from the
-            # vertical_sn (computer vertical coords) z coordinate, not the
-            # data axes overall.
-            model_field_z_per_time.del_construct(vertical_sn)
-            fin_z_coord = z_coord_per_time.squeeze(time_da_index)
-            model_field_z_per_time.set_construct(
-                fin_z_coord,
-                axes=["Z", source_axes["Y"], source_axes["X"]],
-            )
-
-            logger.info(
-                f"Squeezed Z coordinate: {z_coord_per_time},"
-                f"{z_coord_per_time.data}"
-            )
-            logger.info(
-                f"Model field per time data is: {model_field_z_per_time}"
-            )
-
-            # ALSO NEED TO SQUEEZE X AND Y AUX COORDS! for those 2d aux
-            # lat and lons! Then everything is all set up for the 3D Z regrids
-            # HACK FIRST USE DIRECT NAMES TO GET WORKIN: ncvar%XLAT, ncvar%XLONG
-            for a_name in ("ncvar%XLAT", "ncvar%XLONG"):
-                a_coord = model_field_z_per_time.coordinate(a_name)
-                model_field_z_per_time.del_construct(a_name)
-                fin_a_coord = (
-                    a_coord.squeeze()
-                )  # safe - can other dim be size 1?
-                model_field_z_per_time.set_construct(
-                    fin_a_coord,
-                    axes=[source_axes["Y"], source_axes["X"]],
+            if apply_wrf_preproc_to_move:
+                wrf_further_compliance_fixes(
+                    model_field_z_per_time, vertical_sn, time_da_index,
+                    z_axes_spec
                 )
 
             # Do the regrids weighting operation for the 3D Z in each case
