@@ -8,8 +8,10 @@ from itertools import pairwise  # requires Python 3.10+
 from pprint import pformat
 from time import time
 
-# NOTE: keep this order (cfp then cf imported) to avoid Seg Fault issues
-import cfplot as cfp
+# Import cfplot here even though not explicitly used to avoid
+# plotting module seg faults - cfplot needs overall to be imported first.
+# Will need to bypass 'isort' movement of this.
+import cfplot as cfp  # noqa: F401
 import cf
 
 import numpy as np
@@ -1249,6 +1251,7 @@ def time_interpolation(
         "*** Begin iteration over pairwise 'segments'. ***\n"
         f"Segments to loop over are, pairwise: {model_times.datetime_array}"
     )
+    ###print("THIS IS", list(pairwise(model_times.datetime_array)))
 
     # Note the length of (pairwise(model_times.datetime_array) is equal to
     # model_times_len - 1 by its nature, e.g. A, B, C -> (A, B), (B, C)).
@@ -1352,11 +1355,6 @@ def time_interpolation(
     # reflect the new context so that the field with data set is contextually
     # correct.
     final_result_field = obs_field.copy()
-
-    logger.info(
-        f"Concatenated weighted values are: {concatenated_weighted_values}"
-    )
-
     try:
         final_result_field.set_data(
             concatenated_weighted_values, inplace=True)
