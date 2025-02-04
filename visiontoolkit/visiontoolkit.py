@@ -193,6 +193,11 @@ def get_input_fields_of_interest(fl, chosen_fields):
 
     TODO: DETAILED DOCS
     """
+    # TODO convert from int indexing to selection string only
+
+    # The FieldList needs to be narrowed down to one of interest,
+    # which can be via indexing, select keywords, etc.
+
     if chosen_fields is not False:  # distinguish from 0 etc.
         # Take only relevant fields from the list of fields read in
         fl = fl[chosen_fields]
@@ -794,6 +799,8 @@ def subspace_to_spatiotemporal_bounding_box(
             f"Immediate full subspace attempt FAILED, with '{exc}',"
             "so we will now do it in a more careful way..."
         )
+        # Cases where simple case fails will include 4D coordinates
+        # because can't do a 4D interpolation.
 
     # Since we always use the same arguments for subspace mode and halo size
     # TODO can't use partial for now, DH has explained subspace is actually a
@@ -830,7 +837,7 @@ def subspace_to_spatiotemporal_bounding_box(
 
         # TODO partial also not working here - clues, clues.
         try:
-            # For the time subspace (only), we don't need a halo
+            # For the time subspace (only), we do need a halo too!
             model_field = model_field.subspace(
                 "envelope", halo_size, **time_kwargs
             )
@@ -1551,6 +1558,9 @@ def colocate_single_file(
     vertical_sn = "Z"  # TODO rename, Z is not a SN
 
     # Handle parametric vertical coordinates:
+    # TODO, replace this check on coord refs with a check on the requested
+    # "vertical-colocation-coord", if doesn't have one try computing from a
+    # coord ref, if not fail with elegant message.
     coord_refs = model_field.coordinate_references(default=False)
     if coord_refs:
         # Keep SUPPORTED_PARAMETRIC_CONVERSIONS list updated with cases use
@@ -1577,7 +1587,6 @@ def colocate_single_file(
         # vertical coords
         persist_all_metadata(model_field)
 
-    # SLB UPTO TODO
     # Subspacing to remove irrelavant information, pre-colocation
     # TODO tidy passing through of computed vertical coord identifier
     model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
