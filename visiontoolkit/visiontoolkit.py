@@ -623,7 +623,8 @@ def persist_all_metadata(field):
 
 
 def bounding_box_query(
-        model_field, model_id, coord_tight_bounds, model_coord, ascending=True
+        model_field, model_id, coord_tight_bounds, model_coord, halo_size,
+        ascending=True,
 ):
     """Apply a custom query to get the bounding box.
 
@@ -695,7 +696,7 @@ def bounding_box_query(
         f"Bounding box indices are min {lower_index} and max {upper_index}")
     # Now can do a subspace using these indices
     model_field_after_bb = model_field.subspace(
-        "envelope", **{model_id: slice(*tuple(slice_on))})
+        "envelope", halo_size, **{model_id: slice(*tuple(slice_on))})
 
     logger.info(f"Results from bounding box query is: {model_field_after_bb}")
 
@@ -831,7 +832,7 @@ def subspace_to_spatiotemporal_bounding_box(
         try:
             # For the time subspace (only), we don't need a halo
             model_field = model_field.subspace(
-                "envelope", **time_kwargs
+                "envelope", halo_size, **time_kwargs
             )
         except ValueError:
             # Both times may sit inside between one model time and another
@@ -841,7 +842,9 @@ def subspace_to_spatiotemporal_bounding_box(
             # TODO we decided to write this into this module then move it out
             # as a new query to cf eventually.
             model_field = bounding_box_query(
-                model_field, model_t_id, t_coord_tight_bounds, model_times)
+                model_field, model_t_id, t_coord_tight_bounds, model_times,
+                halo_size
+            )
 
         logger.info(
             f"Time ('{model_t_id}') bounding box calculated. It is: "
@@ -891,7 +894,7 @@ def subspace_to_spatiotemporal_bounding_box(
             # how halo effects might influence
             if wo_count_x < 3:  # extend by 1 each side to acount for halo effect
                 model_field = bounding_box_query(
-                    model_field, "X", x_coord_tight_bounds, X
+                    model_field, "X", x_coord_tight_bounds, X, halo_size
                 )
             # Else it is the latter/bug case so we are good to continue without
             # the x axis subspace.
@@ -904,7 +907,7 @@ def subspace_to_spatiotemporal_bounding_box(
             # how halo effects might influence
             if wo_count_y < 3:  # extend by 1 each side to acount for halo effect
                 model_field = bounding_box_query(
-                    model_field, "Y", y_coord_tight_bounds, X
+                    model_field, "Y", y_coord_tight_bounds, X, halo_size
                 )
             # Else it is the latter/bug case so we are good to continue without
             # the x axis subspace.
@@ -938,6 +941,7 @@ def subspace_to_spatiotemporal_bounding_box(
                     model_field.coordinate(vertical_sn),
                     # Assume we have pressure here, hence descending! TODO
                     # generalise this
+                    halo_size,
                     ascending=False,
                 )
 
@@ -1251,7 +1255,7 @@ def time_interpolation(
         "*** Begin iteration over pairwise 'segments'. ***\n"
         f"Segments to loop over are, pairwise: {model_times.datetime_array}"
     )
-    ###print("THIS IS", list(pairwise(model_times.datetime_array)))
+    print("THIS IS", list(pairwise(model_times.datetime_array)))
 
     # Note the length of (pairwise(model_times.datetime_array) is equal to
     # model_times_len - 1 by its nature, e.g. A, B, C -> (A, B), (B, C)).
