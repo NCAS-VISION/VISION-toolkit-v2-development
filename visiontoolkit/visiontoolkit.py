@@ -188,21 +188,35 @@ def read_model_input_data(model_data_path):
 
 
 @timeit
-def get_input_fields_of_interest(fl, chosen_fields):
+def get_input_fields_of_interest(fl, chosen_field):
     """Return the field(s) of interest from the input dataset.
 
     TODO: DETAILED DOCS
     """
-    # TODO convert from int indexing to selection string only
 
-    # The FieldList needs to be narrowed down to one of interest,
-    # which can be via indexing, select keywords, etc.
+    # User has not supplied a chosen field via the config., which is only OK
+    # if there is only one field in the FieldList so it is clear that is the
+    # one to take.
+    if not chosen_field:
+        if len(fl) == 1:
+            f = fl[0]
+        else:
+            raise ConfigurationIssue(
+                "No 'chosen-*-field' input supplied but the read-in FieldList "
+                "has more than one field in it. Please provide a 'chosen-*-field' "
+                f"value to select a unique field from the list of fields:\n{fl}"
+            )
+    elif not isinstance(chosen_field, str):
+        raise ConfigurationIssue(
+            "'chosen-*-field' input must be a string valid for use "
+            "as the argument to FieldList.select_by_identity(), but "
+            f"got type {type(chosen_field).__name__}: {chosen_field}"
+        )
 
-    if chosen_fields is not False:  # distinguish from 0 etc.
-        # Take only relevant fields from the list of fields read in
-        fl = fl[chosen_fields]
+    # Take only relevant fields from the list of fields read in
+    f = fl.select_field(chosen_field)
 
-    return fl
+    return f
 
 
 @timeit
@@ -382,7 +396,7 @@ def satellite_plugin(fieldlist, config=None):
 
 @timeit
 def ensure_cf_compliance(field, plugin, satellite_plugin_config=None):
-    """Ensure the chosen fields are CF compliant with the correct format.
+    """Ensure the chosen field is CF compliant with the correct format.
 
     TODO: DETAILED DOCS
     """
@@ -1500,7 +1514,7 @@ def colocate_single_file(
         return
 
     obs_field = get_input_fields_of_interest(
-        obs_data, args.chosen_obs_fields)
+        obs_data, args.chosen_obs_field)
     # Apply any specified pre-processing: use returned fields since the
     # input may be a FieldList which gets reduced to less fields or to one
     if preprocess_obs:
@@ -1673,7 +1687,7 @@ def main():
     # Read in model outside of a loop
     model_data = read_model_input_data(args.model_data_path)
     model_field = get_input_fields_of_interest(
-        model_data, args.chosen_model_fields)
+        model_data, args.chosen_model_field)
     if preprocess_model:
             model_field = ensure_cf_compliance(model_field, preprocess_model)
 
@@ -1682,7 +1696,7 @@ def main():
     orog_field = None
     if model_field.coordinate_reference(
             "standard_name:atmosphere_hybrid_height_coordinate",
-            default=False
+            default=False,
     ):
         logger.info(
             "Detected parametric vertical coordinate requiring orography "

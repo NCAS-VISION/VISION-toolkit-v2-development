@@ -27,8 +27,8 @@ CONFIG_DEFAULTS = {
     # Otherwise should be set to a valid index or slice, to be taken on the
     # FieldList.
     # TODO allow this to be a filter keyword, too! If is a string assume this?
-    "chosen-obs-fields": False,
-    "chosen-model-fields": False,
+    "chosen-obs-field": False,
+    "chosen-model-field": False,
     # Pre-processing modes
     "preprocess-mode-obs": None,
     "preprocess-mode-model": None,
