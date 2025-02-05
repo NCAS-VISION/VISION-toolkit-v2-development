@@ -127,25 +127,25 @@ def process_cli_arguments(parser):
             "https://ncas-cms.github.io/cf-python/function/cf.read.html"
         )
     )
-    # Need an index or slice for these next 2, hence integer or slice object,
-    # but given argparse isn't degined to handle this, accept as string
-    # and validate later.
+    # SLB
     parser.add_argument(
-        "--chosen-obs-fields",
+        "--chosen-obs-field",
         action="store",
         help=(
-            "index or slice to select fields from the FieldList "
-            "corresponding to the read-in observational data, else "
-            "the entire FieldList is used"
+            "string corresponding to a valid 'select_field' argument to "
+            "select a unique field from the FieldList of the read-in "
+            "observational data, else if not specified the FieldList is "
+            "assumed to be of size one and the single field is extracted."
         ),
     )
     parser.add_argument(
-        "--chosen-model-fields",
+        "--chosen-model-field",
         action="store",
         help=(
-            "index or slice to select fields from the FieldList "
-            "corresponding to the read-in model data, else "
-            "the entire FieldList is used"
+            "string corresponding to a valid 'select_field' argument to "
+            "select a unique field from the FieldList of the read-in "
+            "model data, else if not specified the FieldList is "
+            "assumed to be of size one and the single field is extracted."
         ),
     )
     parser.add_argument(
@@ -350,6 +350,26 @@ def process_cli_arguments(parser):
             "regridding interpolation method to apply, see 'method' "
             "parameter to 'cf.regrids' method for options: "
             "https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html"
+        ),
+    )
+    parser.add_argument(
+        "--chosen-obs-fields",
+        action="store",
+        help=(
+            "NOW DEPRECATED: use '--chosen-obs-field' (non-plural) instead. "
+            "Note that we no longer accept an integer corresponding to a "
+            "FieldList index to take a field from like this keyword "
+            "permitted, now we require a valid 'select_field' string argument."
+        ),
+    )
+    parser.add_argument(
+        "--chosen-model-fields",
+        action="store",
+        help=(
+            "NOW DEPRECATED: use '--chosen-model-field' (non-plural) instead. "
+            "Note that we no longer accept an integer corresponding to a "
+            "FieldList index to take a field from like this keyword "
+            "permitted, now we require a valid 'select_field' string argument."
         ),
     )
 
