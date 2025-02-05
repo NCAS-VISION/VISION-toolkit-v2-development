@@ -127,7 +127,6 @@ def process_cli_arguments(parser):
             "https://ncas-cms.github.io/cf-python/function/cf.read.html"
         )
     )
-    # SLB
     parser.add_argument(
         "--chosen-obs-field",
         action="store",

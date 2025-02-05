@@ -188,35 +188,39 @@ def read_model_input_data(model_data_path):
 
 
 @timeit
-def get_input_fields_of_interest(fl, chosen_field):
+def get_input_fields_of_interest(fl, chosen_field, is_model=True):
     """Return the field(s) of interest from the input dataset.
 
     TODO: DETAILED DOCS
     """
+    # Context flag for a more targeted reponse in the error messages
+    if is_model:
+        msg_context = "model"
+    else:
+        msg_context = "obs"
 
     # User has not supplied a chosen field via the config., which is only OK
     # if there is only one field in the FieldList so it is clear that is the
     # one to take.
     if not chosen_field:
         if len(fl) == 1:
-            f = fl[0]
+            return fl[0]
         else:
             raise ConfigurationIssue(
-                "No 'chosen-*-field' input supplied but the read-in FieldList "
-                "has more than one field in it. Please provide a 'chosen-*-field' "
-                f"value to select a unique field from the list of fields:\n{fl}"
+                f"No 'chosen-{msg_context}-field' input supplied but the "
+                f"read-in {msg_context} FieldList has more than one field "
+                f"in it. Please provide a 'chosen-{msg_context}-field' "
+                f"value to select a unique field from the list of:\n{fl}"
             )
     elif not isinstance(chosen_field, str):
         raise ConfigurationIssue(
-            "'chosen-*-field' input must be a string valid for use "
-            "as the argument to FieldList.select_by_identity(), but "
+            f"'chosen-{msg_context}-field' input must be a string valid "
+            "for use as the argument to FieldList.select_by_identity(), but "
             f"got type {type(chosen_field).__name__}: {chosen_field}"
         )
 
     # Take only relevant fields from the list of fields read in
-    f = fl.select_field(chosen_field)
-
-    return f
+    return fl.select_field(chosen_field)
 
 
 @timeit
@@ -1514,7 +1518,7 @@ def colocate_single_file(
         return
 
     obs_field = get_input_fields_of_interest(
-        obs_data, args.chosen_obs_field)
+        obs_data, args.chosen_obs_field, is_model=False)
     # Apply any specified pre-processing: use returned fields since the
     # input may be a FieldList which gets reduced to less fields or to one
     if preprocess_obs:
