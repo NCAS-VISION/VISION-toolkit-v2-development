@@ -14,10 +14,5 @@
         "latmin":50,
         "latmax":54,
         "resolution":"10m"
-    },
-    "cfp-output-levs-config":{
-        "min":5.0e-12,
-        "max":15.0e-12,
-        "step":1.0e-12
     }
 }

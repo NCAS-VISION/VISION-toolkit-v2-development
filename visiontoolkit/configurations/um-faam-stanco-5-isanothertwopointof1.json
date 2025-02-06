@@ -1,8 +1,8 @@
 {
     "obs-data-path":"../data/compliant-data/core_faam_20170703_c016_STANCO_CF-two-point-2.nc",
     "model-data-path":"../data/main-workwith-test-ISO-simulator/Model_Input",
-    "chosen-obs-fields":0,
-    "chosen-model-fields":-2,
+    "chosen-obs-field":"mole_fraction_of_ozone_in_air",
+    "chosen-model-field":"id%UM_m01s51i010_vn1105",
     "outputs-dir":"toolkit-outputs/um-faam-stanco-5",
     "output-file-name":"um_faam_stanco_5_vision_result.nc",
     "halo-size": 0, 
