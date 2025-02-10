@@ -1427,11 +1427,11 @@ def time_interpolation(
 
 
 @timeit
-def create_cra_outputs():
+def create_contiguous_ragged_array_output():
     """Create a compressed contiguous ragged array DSG output.
 
-    Concatenates and aggregates the colocated flight path results across all
-    of the relevant days sepcified, creating a discrete sampling
+    Concatenate and aggregates the colocated flight path results across all
+    of the relevant days specified, creating a discrete sampling
     geometry (DSG), specifically a contiguous ragged array, to encompass all
     of these. This is compressed and returned.
 
@@ -1801,11 +1801,13 @@ def main():
     )
 
     # Create and process outputs
-    create_cra_outputs()  # TODO currently does nothing
 
     # TODO improve path handling with PathLib library
     output_path_name = f"{outputs_dir}/{args.output_file_name}"
     write_output_data(output, output_path_name)
+
+    # CRA outputs
+    cra_outputs = create_contiguous_ragged_array_output(output)
 
     if not skip_all_plotting:
         # Plot the output
