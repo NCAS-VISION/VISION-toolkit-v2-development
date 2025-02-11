@@ -729,7 +729,7 @@ def bounding_box_query(
 @timeit
 def subspace_to_spatiotemporal_bounding_box(
         obs_field, model_field, halo_size, verbose, no_vertical=False,
-        vertical_sn="Z",
+        vertical_key="Z",
 ):
     """Extract only relevant data in the model field via a 4D subspace.
 
@@ -759,7 +759,7 @@ def subspace_to_spatiotemporal_bounding_box(
     obs_X = obs_field.auxiliary_coordinate("X")
     obs_Y = obs_field.auxiliary_coordinate("Y")
     if not no_vertical:
-        obs_Z = obs_field.auxiliary_coordinate(vertical_sn)
+        obs_Z = obs_field.auxiliary_coordinate(vertical_key)
 
     # Prep. towards the temporal BB component.
     # TODO: are we assuming the model and obs data are strictly increasing, as
@@ -796,7 +796,7 @@ def subspace_to_spatiotemporal_bounding_box(
         model_t_id: cf.wi(*t_coord_tight_bounds),
     }
     if not no_vertical:
-        bb_kwargs[vertical_sn] = cf.wi(*z_coord_tight_bounds)
+        bb_kwargs[vertical_key] = cf.wi(*z_coord_tight_bounds)
 
     # Attempt to do a full bounding box subspace immediately (if indices call
     # works, the subspace call will work) - if it works, great! But probably it
@@ -840,7 +840,7 @@ def subspace_to_spatiotemporal_bounding_box(
             f"tight boundaries of (4D: X, Y, Z, T):\n{pformat(bb_kwargs)}\n"
         )
 
-        vertical_sn = None
+        vertical_key = None
         # Note: can do the spatial and the temporal subspacing separately, and if
         # want to do this make the call twice for each coordinate arg. Reasons we
         # may want to do this include having separate halo sizes for each
@@ -945,7 +945,7 @@ def subspace_to_spatiotemporal_bounding_box(
         else:
             logger.info("3. Vertical subspace step")
 
-            vertical_kwargs = {vertical_sn: cf.wi(*z_coord_tight_bounds)}
+            vertical_kwargs = {vertical_key: cf.wi(*z_coord_tight_bounds)}
             try:
                 model_field_bb = model_field.subspace(
                     "envelope",
@@ -962,8 +962,8 @@ def subspace_to_spatiotemporal_bounding_box(
                 # TODO we decided to write this into this module then
                 # move it out as a new query to cf eventun which caseally.
                 model_field_bb = bounding_box_query(
-                    model_field, vertical_sn, z_coord_tight_bounds,
-                    model_field.coordinate(vertical_sn),
+                    model_field, vertical_key, z_coord_tight_bounds,
+                    model_field.coordinate(vertical_key),
                     # Assume we have pressure here, hence descending! TODO
                     # generalise this
                     halo_size,
@@ -983,7 +983,7 @@ def subspace_to_spatiotemporal_bounding_box(
         f"{model_field_bb}"
     )
 
-    return model_field_bb, vertical_sn
+    return model_field_bb, vertical_key
 
 
 @timeit
@@ -995,7 +995,7 @@ def spatial_interpolation(
         source_axes,
         model_t_identifier,
         no_vertical,
-        vertical_sn,
+        vertical_key,
         apply_wrf_preproc_to_move=False,
 ):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
@@ -1063,7 +1063,7 @@ def spatial_interpolation(
         )
 
         # Get the axes positions first before we iterate
-        z_coord = model_field_bb.coordinate(vertical_sn)
+        z_coord = model_field_bb.coordinate(vertical_key)
         data_axes = model_field_bb.get_data_axes()
         time_da = model_field_bb.domain_axis(model_t_identifier, key=True)
         time_da_index = data_axes.index(time_da)
@@ -1082,7 +1082,7 @@ def spatial_interpolation(
         # TODO WRF fixes to pull out:
         if apply_wrf_preproc_to_move:
             z_coord = wrf_extra_compliance_fixes(
-                model_field_bb, z_coord, z_axes_spec, vertical_sn,
+                model_field_bb, z_coord, z_axes_spec, vertical_key,
                 model_t_identifier
             )
             
@@ -1093,7 +1093,7 @@ def spatial_interpolation(
 
             if apply_wrf_preproc_to_move:
                 wrf_further_compliance_fixes(
-                    model_field_z_per_time, vertical_sn, time_da_index,
+                    model_field_z_per_time, vertical_key, time_da_index,
                     z_axes_spec
                 )
 
@@ -1101,7 +1101,7 @@ def spatial_interpolation(
             spatially_colocated_field_comp = model_field_z_per_time.regrids(
                 obs_field,
                 method=interpolation_method,
-                z=vertical_sn,
+                z=vertical_key,
                 ln_z=True,  # TODO should we use a log here in this case?
                 src_axes=source_axes,
             )
@@ -1437,25 +1437,31 @@ def create_contiguous_ragged_array_output(unproc_output, output_path_name):
 
     TODO: DETAILED DOCS
     """
+    logger.info("Starting creation of contiguous ragged array DSG output.")
 
-    # Pad out each output track e.g. flight so that they all have the same size
-    max_size = max([f.size for f in unproc_output])
-    for f in fl:
-        f.pad_missing(1, to_size=max_size, inplace=True)
+    if len(unproc_output) > 1:
+        # Pad out each output track e.g. flight so that they all have the same size
+        max_size = max([f.size for f in unproc_output])
+        for f in unproc_output:
+            f.pad_missing("T", to_size=max_size, inplace=True)
 
-    # Aggregate the output tracks e.g. flights into a single field
-    f = cf.aggregate(fl, relaxed_identities=True)
-    if len(f) == 1:
-        f = f[0]
+        # Aggregate the output tracks e.g. flights into a single field
+        f = cf.aggregate(unproc_output, relaxed_identities=True)
+        if len(f) == 1:
+            f = f[0]
+        else:
+            # Rerun aggregation in verbose mode and then fail
+            cf.aggregate(fl, relaxed_identities=True, verbose=-1)
+            raise ValueError(
+                "Towards creation of the contiguous ragged array DSG output, "
+                "aggregation failed. See verbose report above.")
+
+        # Sort by track e.g. flight start time
+        f = f[np.argsort(f.coord("T")[:, 0].squeeze())]
     else:
-        # Rerun aggregation in verbose mode and then fail
-        cf.aggregate(fl, relaxed_identities=True, verbose=-1)
-        raise ValueError(
-            "Towards creation of the contiguous ragged array DSG output, "
-            "aggregation failed. See verbose report above.")
+        f = unproc_output[0]
 
-    # Sort by track e.g. flight start time
-    f = f[np.argsort(f.coord("T")[:, 0].squeeze())]
+    logger.info("CRA DSG output complete. Now compressing and writing.")
 
     # Compress
     c = f.compress("contiguous")
@@ -1595,7 +1601,7 @@ def colocate_single_file(
         no_vertical = True
 
     # Where this is False, is taken as the SN of the "Z" coordinate by default
-    vertical_sn = "Z"  # TODO rename, Z is not a SN
+    vertical_key = "Z"  # TODO rename, Z is not a SN
 
     # Handle parametric vertical coordinates:
     # TODO, replace this check on coord refs with a check on the requested
@@ -1609,14 +1615,14 @@ def colocate_single_file(
                 "standard_name:atmosphere_hybrid_sigma_pressure_coordinate",
                 default=False
         ):
-            model_field, vertical_sn = vertical_parametric_computation_ahspc(
+            model_field, vertical_key = vertical_parametric_computation_ahspc(
                 model_field)
         if model_field.coordinate_reference(
                 "standard_name:atmosphere_hybrid_height_coordinate",
                 default=False
         ):
             if orog_field:
-                model_field, vertical_sn = vertical_parametric_computation_ahhc(
+                model_field, vertical_key = vertical_parametric_computation_ahhc(
                     model_field, orog_field)
             else:
                 # TODO handle netCDF attached orography case, should just need
@@ -1629,9 +1635,9 @@ def colocate_single_file(
 
     # Subspacing to remove irrelavant information, pre-colocation
     # TODO tidy passing through of computed vertical coord identifier
-    model_field_bb, vertical_sn = subspace_to_spatiotemporal_bounding_box(
+    model_field_bb, vertical_key = subspace_to_spatiotemporal_bounding_box(
         obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
-        vertical_sn=vertical_sn,
+        vertical_key=vertical_key,
     )
 
     # Perform spatial and then temporal interpolation to colocate
@@ -1643,7 +1649,7 @@ def colocate_single_file(
         args.source_axes,
         model_t_identifier,
         no_vertical,
-        vertical_sn=vertical_sn,
+        vertical_key=vertical_key,
     )
 
     # For such cases as satellite swaths, the times can straddle model points
@@ -1799,7 +1805,15 @@ def main():
         raise InternalsIssue(
             "Empty resulting FieldList: something went wrong!")
 
+    # Create and process outputs
     compound_output = len(output_fields) > 1
+
+    # Create and write CRA outputs
+    cra_output_path_name = f"{outputs_dir}/cra_{args.output_file_name}"
+    ### create_contiguous_ragged_array_output(
+    ###    output_fields, cra_output_path_name)
+
+    # Write unprocessed final result field out
     if compound_output:
         # Concatenate the fields now since they should all constitute one
         # DSG feature.
@@ -1821,10 +1835,6 @@ def main():
         "Final Field(List) from colocation of all inputs from specified "
         f"observational data path is: {output}"
     )
-
-    # Create and process outputs
-
-    # Write unprocessed final result field out
     output_path_name = f"{outputs_dir}/{args.output_file_name}"
     write_output_data(output, output_path_name)
 
@@ -1841,10 +1851,6 @@ def main():
             verbose,
             preprocess_model,
         )
-
-    # Create and write CRA outputs
-    cra_output_path_name = f"{outputs_dir}/cra_{args.output_file_name}"
-    create_contiguous_ragged_array_output(output, cra_output_path_name)
 
 
 if __name__ == "__main__":
