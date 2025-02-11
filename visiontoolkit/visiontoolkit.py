@@ -1427,19 +1427,41 @@ def time_interpolation(
 
 
 @timeit
-def create_contiguous_ragged_array_output():
+def create_contiguous_ragged_array_output(unproc_output, output_path_name):
     """Create a compressed contiguous ragged array DSG output.
 
-    Concatenate and aggregates the colocated flight path results across all
+    Aggregates the colocated flight path results across all
     of the relevant days specified, creating a discrete sampling
-    geometry (DSG), specifically a contiguous ragged array, to encompass all
+    geometry (DSG) of a contiguous ragged array, to encompass all
     of these. This is compressed and returned.
 
-    TODO: ARGS
     TODO: DETAILED DOCS
     """
-    # TODO IGNORE FOR NOW
-    pass
+
+    # Pad out each output track e.g. flight so that they all have the same size
+    max_size = max([f.size for f in unproc_output])
+    for f in fl:
+        f.pad_missing(1, to_size=max_size, inplace=True)
+
+    # Aggregate the output tracks e.g. flights into a single field
+    f = cf.aggregate(fl, relaxed_identities=True)
+    if len(f) == 1:
+        f = f[0]
+    else:
+        # Rerun aggregation in verbose mode and then fail
+        cf.aggregate(fl, relaxed_identities=True, verbose=-1)
+        raise ValueError(
+            "Towards creation of the contiguous ragged array DSG output, "
+            "aggregation failed. See verbose report above.")
+
+    # Sort by track e.g. flight start time
+    f = f[np.argsort(f.coord("T")[:, 0].squeeze())]
+
+    # Compress
+    c = f.compress("contiguous")
+
+    # Write to disk in contiguous ragged array DSG format
+    cf.write(c, output_path_name)
 
 
 @timeit
@@ -1802,12 +1824,9 @@ def main():
 
     # Create and process outputs
 
-    # TODO improve path handling with PathLib library
+    # Write unprocessed final result field out
     output_path_name = f"{outputs_dir}/{args.output_file_name}"
     write_output_data(output, output_path_name)
-
-    # CRA outputs
-    cra_outputs = create_contiguous_ragged_array_output(output)
 
     if not skip_all_plotting:
         # Plot the output
@@ -1822,6 +1841,10 @@ def main():
             verbose,
             preprocess_model,
         )
+
+    # Create and write CRA outputs
+    cra_output_path_name = f"{outputs_dir}/cra_{args.output_file_name}"
+    create_contiguous_ragged_array_output(output, cra_output_path_name)
 
 
 if __name__ == "__main__":
