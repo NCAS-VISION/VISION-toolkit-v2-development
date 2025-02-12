@@ -6,9 +6,21 @@
 VISION Toolkit documentation
 ============================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+The **V**\ irtual **I**\ ntegration of **S**\ atellite and **In**\ -Situ
+**O**\ bservation **N**\ etworks (**VISION**) Toolkit is a set of command-line
+tools and plugins to enable better integration of models and observations
+to enhance our confidence in future climate projections.
+
+The VISION toolkit is developed and maintained by a team from the National
+Centre for Atmospheric Science. It is funded by the Natural Environment
+Research Council (NERC), in partnership with the Met Office, as part of
+the Twinning Capability for the Natural Environment (TWINE) programme
+(NE/Z503393/1).
+
+For the technical and scientific background to the VISION toolkit
+(specifically Version 1), see Russo at al. 2025
+(https://doi.org/10.5194/gmd-18-181-2025) This is the documentation for
+Version 2 (currently alpha stage) of the toolkit.
 
 
 .. toctree::
