@@ -10,9 +10,12 @@
 .. _nerc-home: https://www.ukri.org/councils/nerc/
 
 
-
+============================
 VISION Toolkit documentation
 ============================
+
+**Version:** |release|
+
 
 The **V**\ irtual **I**\ ntegration of **S**\ atellite and **In**\ -Situ
 **O**\ bservation **N**\ etworks (**VISION**) Toolkit is a set of command-line
@@ -32,8 +35,18 @@ For the technical and scientific background to the VISION toolkit
 This is the documentation for Version 2 (currently *alpha* stage) of the
 toolkit.
 
+~~~~~
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+   introduction
+   installation
+   quickstart
+   examples
+   gallery
+   cli_reference
+   api_reference
+   contributing
 
