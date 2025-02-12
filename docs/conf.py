@@ -6,23 +6,28 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'VISION Toolkit'
-copyright = '2025, National Centre for Atmospheric Science (NCAS)'
-author = 'National Centre for Atmospheric Science (NCAS)'
-release = '1.0.0-alpha'
+project = "VISION Toolkit"
+copyright = "2025, National Centre for Atmospheric Science (NCAS)"
+author = "National Centre for Atmospheric Science (NCAS)"
+release = "1.0.0-alpha"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = []
 
-templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-
+templates_path = ["_templates"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
-html_static_path = ['_static']
+# Requires install of custom theme (e.g. 'pip install shibuya')
+html_theme = "shibuya"
+html_static_path = ["_static"]
+
+# Theme HTML options
+html_theme_options = {
+    "accent_color": "jade",
+}
