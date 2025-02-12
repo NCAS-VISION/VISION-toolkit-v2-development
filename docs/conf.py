@@ -9,7 +9,7 @@
 project = "VISION Toolkit"
 copyright = "2025, National Centre for Atmospheric Science (NCAS)"
 author = "National Centre for Atmospheric Science (NCAS)"
-release = "1.0.0-alpha"
+release = "2.0.0-alpha"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
