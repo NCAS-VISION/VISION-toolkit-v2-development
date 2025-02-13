@@ -10,6 +10,13 @@
 Introduction
 ============
 
+.. warning::
+
+   This documentation is under construction until the
+   end of March 2025, so significant parts may be missing
+   until that time.
+
+
 What is the VISION Toolkit?
 ---------------------------
 
@@ -27,9 +34,11 @@ The toolkit can be used through the command line via a dedicated
 module via the
 :ref:`Python API <Application Programming Interface (API) Reference>`.
 
-Guidance is available in this documentation
-for :ref:`installing <Installation>` and
-:ref:`running <Quickstart>` the toolkit.
+.. seealso::
+
+   Guidance is available in this documentation
+   for :ref:`installing <Installation>` and
+   :ref:`running <Quickstart>` the toolkit.
 
 
 Background

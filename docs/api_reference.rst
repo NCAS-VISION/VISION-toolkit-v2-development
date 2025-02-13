@@ -7,8 +7,8 @@ Application Programming Interface (API) Reference
 .. default-role:: obj
 
 
-Full program as executed from CLI:
-----------------------------------
+Full program as executed from CLI
+---------------------------------
 
 .. autosummary::
    :toctree: generated
@@ -16,11 +16,11 @@ Full program as executed from CLI:
    main
 
 
-Core functions:
----------------
+Core functions
+--------------
 
-Data input and compliance:
-++++++++++++++++++++++++++
+Data input and compliance
++++++++++++++++++++++++++
 
 .. autosummary::
    :toctree: generated
@@ -39,8 +39,8 @@ Data input and compliance:
    get_time_coords
 
 
-Co-location and bounding:
-+++++++++++++++++++++++++
+Co-location and bounding
+++++++++++++++++++++++++
 
 .. autosummary::
    :toctree: generated
@@ -53,8 +53,8 @@ Co-location and bounding:
    time_interpolation
 
 
-Data output:
-++++++++++++
+Data output
++++++++++++
 
 .. autosummary::
    :toctree: generated
@@ -63,8 +63,8 @@ Data output:
    write_output_data
 
 
-Helper:
-+++++++
+Helper
+++++++
 
 .. autosummary::
    :toctree: generated
@@ -74,8 +74,8 @@ Helper:
    get_env_and_diagnostics_report
 
 
-Performance:
-++++++++++++
+Performance
++++++++++++
 
 .. autosummary::
    :toctree: generated
@@ -83,8 +83,8 @@ Performance:
    persist_all_metadata
 
 
-Custom exceptions:
-------------------
+Custom exceptions
+-----------------
 
 .. autosummary::
    :toctree: generated
@@ -96,8 +96,8 @@ Custom exceptions:
    InternalsIssue
 
 
-Plotting:
----------
+Plotting
+--------
 
 .. autosummary::
    :toctree: generated
@@ -108,8 +108,8 @@ Plotting:
    make_output_plots
 
 
-Command-line parsing:
----------------------
+Command-line parsing
+--------------------
 
 .. autosummary::
    :toctree: generated
@@ -121,8 +121,8 @@ Command-line parsing:
    cli.process_config_file
 
 
-Default values:
----------------
+Default values
+--------------
 
 .. autosummary::
    :toctree: generated
@@ -130,11 +130,11 @@ Default values:
    constants.CONFIG_DEFAULTS
 
 
-Plugins:
---------
+Plugins
+-------
 
-For Satellite observational data:
-+++++++++++++++++++++++++++++++++
+For Satellite observational data
+++++++++++++++++++++++++++++++++
 
 .. autosummary::
    :toctree: generated
@@ -143,8 +143,8 @@ For Satellite observational data:
    plugins.satellite_compliance_converter.satellite_compliance_plugin
 
 
-For WRF Data:
-+++++++++++++
+For WRF Data
+++++++++++++
 
 .. autosummary::
    :toctree: generated
