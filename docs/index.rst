@@ -32,8 +32,9 @@ programme (*NE/Z503393/1*).
 
 For the technical and scientific background to the VISION toolkit
 (specifically Version 1), see `Russo at al. 2025 <russo-vision-paper_>`_.
-This is the documentation for Version 2 (currently *alpha* stage) of the
+This is the documentation covering Version 2 (in this case |release|) of the
 toolkit.
+
 
 ~~~~~
 
@@ -49,4 +50,3 @@ toolkit.
    cli_reference
    api_reference
    contributing
-
