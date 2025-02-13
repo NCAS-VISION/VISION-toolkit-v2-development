@@ -22,6 +22,19 @@ The **V**\ irtual **I**\ ntegration of **S**\ atellite and **In**\ -Situ
 tools and plugins to enable better integration of models and observations
 to enhance our confidence in future climate projections.
 
+.. grid:: 1 2 2 2
+
+    .. grid-item-card:: Flight path example
+       :img-bottom: ../visiontoolkit/toolkit-outputs/gallery_for_posters_etc/vision_toolkit_final_colocated_field_fromconfigumfaam3.png
+
+       See example TODO (include link)
+
+    .. grid-item-card:: Satellite swath example
+       :img-bottom: ../visiontoolkit/toolkit-outputs/gallery_for_posters_etc/vision_toolkit_final_colocated_field_fromconfigumsat8.png
+
+       See example TODO (include link)
+
+
 The VISION toolkit is developed and maintained by a team from the
 `National Centre for Atmospheric Science (NCAS) <ncas-home_>`_. It is
 funded by the `Natural Environment Research Council (NERC) <nerc-home_>`_,
