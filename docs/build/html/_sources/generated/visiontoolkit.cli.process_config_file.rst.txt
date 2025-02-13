@@ -1,0 +1,6 @@
+﻿visiontoolkit.cli.process\_config\_file
+=======================================
+
+.. currentmodule:: visiontoolkit.cli
+
+.. autofunction:: process_config_file

@@ -1,0 +1,6 @@
+﻿visiontoolkit.bounding\_box\_query
+==================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: bounding_box_query

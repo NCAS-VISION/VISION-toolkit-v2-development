@@ -1,0 +1,6 @@
+﻿visiontoolkit.ConfigurationIssue
+================================
+
+.. currentmodule:: visiontoolkit
+
+.. autoexception:: ConfigurationIssue

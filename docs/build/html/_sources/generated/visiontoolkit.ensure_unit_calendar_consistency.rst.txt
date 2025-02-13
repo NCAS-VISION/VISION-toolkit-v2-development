@@ -1,0 +1,6 @@
+﻿visiontoolkit.ensure\_unit\_calendar\_consistency
+=================================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: ensure_unit_calendar_consistency

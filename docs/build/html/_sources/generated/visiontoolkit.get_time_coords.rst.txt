@@ -1,0 +1,6 @@
+﻿visiontoolkit.get\_time\_coords
+===============================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: get_time_coords

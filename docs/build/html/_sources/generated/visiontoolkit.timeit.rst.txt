@@ -1,0 +1,6 @@
+﻿visiontoolkit.timeit
+====================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: timeit

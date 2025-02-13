@@ -1,0 +1,6 @@
+﻿visiontoolkit.satellite\_plugin
+===============================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: satellite_plugin

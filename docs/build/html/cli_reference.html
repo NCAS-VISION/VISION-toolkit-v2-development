@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="jade" data-content_root="./">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Command-line Interface (CLI) Reference - VISION Toolkit 2.0.0-alpha documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Application Programming Interface (API) Reference" href="api_reference.html" /><link rel="prev" title="Gallery" href="gallery.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=397bb51e" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=5d6d21aa" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="Command-line Interface (CLI) Reference"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="index.html">
+      
+      
+      <strong>VISION Toolkit</strong>
+    </a>
+    <div class="sy-head-nav" id="HeadNav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="HeadNav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2 -translate-x-2"></span>
+          <span class="hamburger_3 -translate-x-1"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="1"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 _expand"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Command-line Interface (CLI) Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#visiontoolkit-cli_parser-named-arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="api_reference.html">Application Programming Interface (API) Reference</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#visiontoolkit-cli_parser-named-arguments">Named Arguments</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6"><div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">VISION Toolkit</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Command-line Interface (CLI) Reference</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="command-line-interface-cli-reference">
+<h1>Command-line Interface (CLI) Reference<a class="headerlink" href="#command-line-interface-cli-reference" title="Link to this heading">¶</a></h1>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">The VISION Toolkit program header</span><a class="headerlink" href="#id1" title="Link to this code">¶</a></div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="go">.______________________________________________.</span>
+</span><span data-line="2"><span class="go">|   _     _  _   ______  _  _______  _______   |</span>
+</span><span data-line="3"><span class="go">|  (_)   (_)| | / _____)| |(_______)(_______)  |</span>
+</span><span data-line="4"><span class="go">|   _     _ | |( (____  | | _     _  _     _   |</span>
+</span><span data-line="5"><span class="go">|  | |   | || | \____ \ | || |   | || |   | |  |</span>
+</span><span data-line="6"><span class="go">|   \ \ / / | | _____) )| || |___| || |   | |  |</span>
+</span><span data-line="7"><span class="go">|    \___/  |_|(______/ |_| \_____/ |_|   |_|  |</span>
+</span><span data-line="8"><span class="go">|   _______             _   _      _           |</span>
+</span><span data-line="9"><span class="go">|  (_______)           | | | |    (_)   _      |</span>
+</span><span data-line="10"><span class="go">|      _   ___    ___  | | | |  _  _  _| |_    |</span>
+</span><span data-line="11"><span class="go">|     | | / _ \  / _ \ | | | |_/ )| |(_   _)   |</span>
+</span><span data-line="12"><span class="go">|     | || |_| || |_| || | |  _ ( | |  | |_    |</span>
+</span><span data-line="13"><span class="go">|     |_| \___/  \___/  \_)|_| \_)|_|   \__)   |</span>
+</span><span data-line="14"><span class="go">.______________________________________________.</span>
+</span></pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Default values for configuration items are only processed in once
+the CLI and configuration file are both processed, therefore default
+values are not attached via the Python argument parser, so not listed
+automatically here. For default values, consult the dictionary of
+defaults used as the canonical source of these, namely:
+<a class="reference internal" href="generated/visiontoolkit.constants.CONFIG_DEFAULTS.html#visiontoolkit.constants.CONFIG_DEFAULTS" title="visiontoolkit.constants.CONFIG_DEFAULTS"><code class="xref py py-mod docutils literal notranslate"><span class="pre">visiontoolkit.constants.CONFIG_DEFAULTS</span></code></a>.</p>
+</div>
+<p><p>Virtual Integration of Satellite and In-Situ Observation Networks (VISION) toolkit flight simulator</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">usage</span><span class="p">:</span> <span class="n">visiontoolkit</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">CONFIG_FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">PREPROCESS_MODE_OBS</span><span class="p">]</span>
+</span><span data-line="2">                     <span class="p">[</span><span class="o">--</span><span class="n">preprocess</span><span class="o">-</span><span class="n">mode</span><span class="o">-</span><span class="n">model</span> <span class="n">PREPROCESS_MODE_MODEL</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">orography</span> <span class="n">OROGRAPHY</span><span class="p">]</span>
+</span><span data-line="3">                     <span class="p">[</span><span class="o">-</span><span class="n">s</span> <span class="n">START_TIME_OVERRIDE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OBS_DATA_PATH</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">MODEL_DATA_PATH</span><span class="p">]</span>
+</span><span data-line="4">                     <span class="p">[</span><span class="o">--</span><span class="n">chosen</span><span class="o">-</span><span class="n">obs</span><span class="o">-</span><span class="n">field</span> <span class="n">CHOSEN_OBS_FIELD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">chosen</span><span class="o">-</span><span class="n">model</span><span class="o">-</span><span class="n">field</span> <span class="n">CHOSEN_MODEL_FIELD</span><span class="p">]</span>
+</span><span data-line="5">                     <span class="p">[</span><span class="o">--</span><span class="n">skip</span><span class="o">-</span><span class="nb">all</span><span class="o">-</span><span class="n">plotting</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span> <span class="n">OUTPUTS_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span> <span class="n">OUTPUT_FILE_NAME</span><span class="p">]</span>
+</span><span data-line="6">                     <span class="p">[</span><span class="o">--</span><span class="n">history</span><span class="o">-</span><span class="n">message</span> <span class="n">HISTORY_MESSAGE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">halo</span><span class="o">-</span><span class="n">size</span> <span class="n">HALO_SIZE</span><span class="p">]</span>
+</span><span data-line="7">                     <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="n">SPATIAL_COLOCATION_METHOD</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">z</span> <span class="n">VERTICAL_COLOCATION_COORD</span><span class="p">]</span>
+</span><span data-line="8">                     <span class="p">[</span><span class="o">--</span><span class="n">source</span><span class="o">-</span><span class="n">axes</span> <span class="n">SOURCE_AXES</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">plotname</span><span class="o">-</span><span class="n">start</span> <span class="n">PLOTNAME_START</span><span class="p">]</span>
+</span><span data-line="9">                     <span class="p">[</span><span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">plot</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">obs</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">t</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="n">cscale</span> <span class="n">CFP_CSCALE</span><span class="p">]</span>
+</span><span data-line="10">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="n">mapset</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_MAPSET_CONFIG</span><span class="p">]</span>
+</span><span data-line="11">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">levs</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_INPUT_LEVS_CONFIG</span><span class="p">]</span>
+</span><span data-line="12">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">general</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_INPUT_GENERAL_CONFIG</span><span class="p">]</span>
+</span><span data-line="13">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">track</span><span class="o">-</span><span class="n">only</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_INPUT_TRACK_ONLY_CONFIG</span><span class="p">]</span>
+</span><span data-line="14">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="n">output</span><span class="o">-</span><span class="n">levs</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_OUTPUT_LEVS_CONFIG</span><span class="p">]</span>
+</span><span data-line="15">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="n">output</span><span class="o">-</span><span class="n">general</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_OUTPUT_GENERAL_CONFIG</span><span class="p">]</span>
+</span><span data-line="16">                     <span class="p">[</span><span class="o">--</span><span class="n">satellite</span><span class="o">-</span><span class="n">plugin</span><span class="o">-</span><span class="n">config</span> <span class="n">SATELLITE_PLUGIN_CONFIG</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">regrid</span><span class="o">-</span><span class="n">z</span><span class="o">-</span><span class="n">coord</span> <span class="n">REGRID_Z_COORD</span><span class="p">]</span>
+</span><span data-line="17">                     <span class="p">[</span><span class="o">-</span><span class="n">r</span> <span class="n">REGRID_METHOD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">chosen</span><span class="o">-</span><span class="n">obs</span><span class="o">-</span><span class="n">fields</span> <span class="n">CHOSEN_OBS_FIELDS</span><span class="p">]</span>
+</span><span data-line="18">                     <span class="p">[</span><span class="o">--</span><span class="n">chosen</span><span class="o">-</span><span class="n">model</span><span class="o">-</span><span class="n">fields</span> <span class="n">CHOSEN_MODEL_FIELDS</span><span class="p">]</span>
+</span></pre></div>
+</div>
+<section id="visiontoolkit-cli_parser-named-arguments">
+<h2>Named Arguments<a class="headerlink" href="#visiontoolkit-cli_parser-named-arguments" title="Link to this heading">¶</a></h2>
+<dl class="option-list">
+<dt><kbd>-v, --verbose</kbd></dt>
+<dd><p>provide more detailed output, where multiple calls will increase the verbosity yet further to a maximum at -vvv correpsonding to logging level DEBUG, where no usage gives a default of logging level WARNING</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+<dt><kbd>-c, --config-file</kbd></dt>
+<dd><p>configuration file in JSON format to supply configuration, which overrides any configuration provided by other command-line options, if duplication of input occurs</p>
+</dd>
+<dt><kbd>-p, --preprocess-mode-obs</kbd></dt>
+<dd><p>specify a pre-processing mode so a set plugin is applied to pre-process the observational data in an apprpriate way, current options being ‘flight’ and ‘satellite’ where by default we apply no pre-processing</p>
+</dd>
+<dt><kbd>--preprocess-mode-model</kbd></dt>
+<dd><p>specify a pre-processing mode so a set plugin is applied to pre-process the model data in an apprpriate way, current options being ‘UM’ and ‘WRF’ where by default we apply no pre-processing</p>
+</dd>
+<dt><kbd>--orography</kbd></dt>
+<dd><p>if the model data input is PP and has vertical coordinates in terms of atmosphere hybrid height then specify the path to the external orography applicable to the model data requred for calculation of the vertical coordinates</p>
+</dd>
+<dt><kbd>-s, --start-time-override</kbd></dt>
+<dd><p>if given, a datetime in UTC timezone with which to override the observational datetimes so that the colocation is conducted with the spatial components of the observational path but assuming the given start time and not the actual one</p>
+</dd>
+<dt><kbd>-o, --obs-data-path</kbd></dt>
+<dd><p>path location of the observational data, which can be provided in any form accepted by the ‘cf.read’ files argument, see: <a class="reference external" href="https://ncas-cms.github.io/cf-python/function/cf.read.html">https://ncas-cms.github.io/cf-python/function/cf.read.html</a></p>
+</dd>
+<dt><kbd>-m, --model-data-path</kbd></dt>
+<dd><p>path location of the model data, which can be provided in any form accepted by the ‘cf.read’ files argument, see: <a class="reference external" href="https://ncas-cms.github.io/cf-python/function/cf.read.html">https://ncas-cms.github.io/cf-python/function/cf.read.html</a></p>
+</dd>
+<dt><kbd>--chosen-obs-field</kbd></dt>
+<dd><p>string corresponding to a valid ‘select_field’ argument to select a unique field from the FieldList of the read-in observational data, else if not specified the FieldList is assumed to be of size one and the single field is extracted.</p>
+</dd>
+<dt><kbd>--chosen-model-field</kbd></dt>
+<dd><p>string corresponding to a valid ‘select_field’ argument to select a unique field from the FieldList of the read-in model data, else if not specified the FieldList is assumed to be of size one and the single field is extracted.</p>
+</dd>
+<dt><kbd>--skip-all-plotting</kbd></dt>
+<dd><p>Do not generate plots to preview the input or show the output fields</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+<dt><kbd>-d, --outputs-dir</kbd></dt>
+<dd><p>path location of the top-level directory to create outputs in</p>
+</dd>
+<dt><kbd>-f, --output-file-name</kbd></dt>
+<dd><p>name including extension to give the result output file</p>
+</dd>
+<dt><kbd>--history-message</kbd></dt>
+<dd><p>message that gets added to the ‘history’ property on the output file</p>
+</dd>
+<dt><kbd>--halo-size</kbd></dt>
+<dd><p>size of the halo to apply for subspacing, see the section ‘Halos’ under ‘<a class="reference external" href="https://ncas-cms.github.io/cf-python/method/cf.Domain.subspace.html?highlight=halo">https://ncas-cms.github.io/cf-python/method/cf.Domain.subspace.html?highlight=halo</a>’ for details.</p>
+</dd>
+<dt><kbd>-i, --spatial-colocation-method</kbd></dt>
+<dd><p>interpolation method to apply for the spatial colocation, see ‘method’ parameter to ‘cf.regrids’ method used under-the-hood to do this for options: <a class="reference external" href="https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html">https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html</a></p>
+</dd>
+<dt><kbd>-z, --vertical-colocation-coord</kbd></dt>
+<dd><p>vertical (z) coordinate to use as the vertical component in the spatial interpolation step of colocation, where either a pressure or an altitude CF standard name is expected</p>
+</dd>
+<dt><kbd>--source-axes</kbd></dt>
+<dd><p>identifies the source grid’s X and Y dimensions if they cannot be inferred from the existence of 1D dimension coordinates</p>
+</dd>
+<dt><kbd>--plotname-start</kbd></dt>
+<dd><p>initial text to use in the names of all plots generated</p>
+</dd>
+<dt><kbd>--show-plot-of-input-obs</kbd></dt>
+<dd><p>flag to indicate whether to show plots of the input observational data before the colocation logic begins, as a preview</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+<dt><kbd>-t, --plot-of-input-obs-track-only</kbd></dt>
+<dd><p>flag to indicate whether only the track/trajectory of the observational data is shown, as opposed to the data on the track, for the input observational data preview plots</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+<dt><kbd>--cfp-cscale</kbd></dt>
+<dd><p>cf-plot plotting configuration as a string to set the colour scale for the (input preview and) output plots, ee: <a class="reference external" href="https://ncas-cms.github.io/cf-plot/build/cscale.html#cscale">https://ncas-cms.github.io/cf-plot/build/cscale.html#cscale</a></p>
+</dd>
+<dt><kbd>--cfp-mapset-config</kbd></dt>
+<dd><p>cf-plot plotting configuration as a dictionary to set the mapping parameters for the (input preview and) output plots, see: <a class="reference external" href="https://ncas-cms.github.io/cf-plot/build/mapset.html#mapset">https://ncas-cms.github.io/cf-plot/build/mapset.html#mapset</a></p>
+</dd>
+<dt><kbd>--cfp-input-levs-config</kbd></dt>
+<dd><p>cf-plot plotting configuration as a dictionary to set the contour levels for the input preview plots, see: <a class="reference external" href="https://ncas-cms.github.io/cf-plot/build/levs.html#levs">https://ncas-cms.github.io/cf-plot/build/levs.html#levs</a></p>
+</dd>
+<dt><kbd>--cfp-input-general-config</kbd></dt>
+<dd><p>cf-plot plotting configuration as a dictionary to set the general plotting variables for the input preview full plot, see:https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars[TODO CLARIFY/SEPARATE SETVARS AND PLOT CALL CONFIG.]</p>
+</dd>
+<dt><kbd>--cfp-input-track-only-config</kbd></dt>
+<dd><p>cf-plot plotting configuration as a dictionary to set the general plotting variables for track-only input preview plot, see:https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars</p>
+</dd>
+<dt><kbd>--cfp-output-levs-config</kbd></dt>
+<dd><p>cf-plot plotting configuration as a dictionary to set the contour levels for the output plots, see: <a class="reference external" href="https://ncas-cms.github.io/cf-plot/build/levs.html#levs">https://ncas-cms.github.io/cf-plot/build/levs.html#levs</a></p>
+</dd>
+<dt><kbd>--cfp-output-general-config</kbd></dt>
+<dd><p>cf-plot plotting configuration as a dictionary to set the general plotting variables for the output plots, see:https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars[TODO CLARIFY/SEPARATE SETVARS AND PLOT CALL CONFIG.]</p>
+</dd>
+<dt><kbd>--satellite-plugin-config</kbd></dt>
+<dd><p>dictionary to set the configuration values for the satellite plugin, where valid keys to set are ‘latitude’, ‘longitude’, ‘sensingtime’, ‘do_retrieval’, ‘sensingtime_msec’, ‘sensingtime_day’, ‘npres’ and ‘npi’.</p>
+</dd>
+<dt><kbd>--regrid-z-coord</kbd></dt>
+<dd><p>NOW DEPRECATED: use ‘–vertical-colocation-coord’ instead. [vertical (z) coordinate to use as the vertical component in the spatial interpolation step]</p>
+</dd>
+<dt><kbd>-r, --regrid-method</kbd></dt>
+<dd><p>NOW DEPRECATED: use ‘–spatial-colocation-method’ instead. regridding interpolation method to apply, see ‘method’ parameter to ‘cf.regrids’ method for options: <a class="reference external" href="https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html">https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html</a></p>
+</dd>
+<dt><kbd>--chosen-obs-fields</kbd></dt>
+<dd><p>NOW DEPRECATED: use ‘–chosen-obs-field’ (non-plural) instead. Note that we no longer accept an integer corresponding to a FieldList index to take a field from like this keyword permitted, now we require a valid ‘select_field’ string argument.</p>
+</dd>
+<dt><kbd>--chosen-model-fields</kbd></dt>
+<dd><p>NOW DEPRECATED: use ‘–chosen-model-field’ (non-plural) instead. Note that we no longer accept an integer corresponding to a FieldList index to take a field from like this keyword permitted, now we require a valid ‘select_field’ string argument.</p>
+</dd>
+</dl>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="gallery.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Gallery</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="api_reference.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Application Programming Interface (API) Reference</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, National Centre for Atmospheric Science (NCAS)</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=d690e255"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/design-tabs.js?v=f930bc37"></script>
+      <script src="_static/shibuya.js?v=55e26b35"></script></body>
+</html>

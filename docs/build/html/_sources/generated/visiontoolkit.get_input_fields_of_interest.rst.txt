@@ -1,0 +1,6 @@
+﻿visiontoolkit.get\_input\_fields\_of\_interest
+==============================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: get_input_fields_of_interest

@@ -1,0 +1,6 @@
+﻿visiontoolkit.create\_contiguous\_ragged\_array\_output
+=======================================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: create_contiguous_ragged_array_output

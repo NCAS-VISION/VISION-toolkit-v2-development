@@ -1,0 +1,6 @@
+﻿visiontoolkit.read\_obs\_input\_data
+====================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: read_obs_input_data

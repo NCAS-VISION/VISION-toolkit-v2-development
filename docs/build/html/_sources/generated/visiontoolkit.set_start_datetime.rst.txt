@@ -1,0 +1,6 @@
+﻿visiontoolkit.set\_start\_datetime
+==================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: set_start_datetime

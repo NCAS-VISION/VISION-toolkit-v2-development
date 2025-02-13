@@ -1,0 +1,6 @@
+﻿visiontoolkit.IncompatibleDataInputsIssue
+=========================================
+
+.. currentmodule:: visiontoolkit
+
+.. autoexception:: IncompatibleDataInputsIssue

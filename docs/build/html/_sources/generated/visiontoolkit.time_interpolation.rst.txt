@@ -1,0 +1,6 @@
+﻿visiontoolkit.time\_interpolation
+=================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: time_interpolation

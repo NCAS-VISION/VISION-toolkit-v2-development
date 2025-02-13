@@ -1,0 +1,6 @@
+﻿visiontoolkit.plotting.preview\_plots
+=====================================
+
+.. currentmodule:: visiontoolkit.plotting
+
+.. autofunction:: preview_plots

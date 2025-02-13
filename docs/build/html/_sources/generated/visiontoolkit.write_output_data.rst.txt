@@ -1,0 +1,6 @@
+﻿visiontoolkit.write\_output\_data
+=================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: write_output_data

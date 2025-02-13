@@ -1,0 +1,6 @@
+﻿visiontoolkit.colocate\_single\_file
+====================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: colocate_single_file

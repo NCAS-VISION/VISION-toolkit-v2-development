@@ -1,0 +1,6 @@
+﻿visiontoolkit.make\_output\_plots
+=================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: make_output_plots

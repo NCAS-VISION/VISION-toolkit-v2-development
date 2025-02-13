@@ -1,0 +1,6 @@
+﻿visiontoolkit.vertical\_parametric\_computation\_ahspc
+======================================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: vertical_parametric_computation_ahspc
