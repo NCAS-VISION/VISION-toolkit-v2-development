@@ -19,6 +19,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinxarg.ext",
+    "sphinx_design"
 ]
 
 templates_path = ["_templates"]
@@ -36,3 +37,6 @@ html_static_path = ["_static"]
 html_theme_options = {
     "accent_color": "jade",
 }
+
+# -- Extensions config. -------------------------------------------------
+### TODO
