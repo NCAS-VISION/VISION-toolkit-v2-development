@@ -1,0 +1,6 @@
+﻿visiontoolkit.vertical\_parametric\_computation
+===============================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: vertical_parametric_computation

@@ -1,0 +1,6 @@
+﻿visiontoolkit.plugins.satellite\_compliance\_converter.satellite\_compliance\_plugin
+====================================================================================
+
+.. currentmodule:: visiontoolkit.plugins.satellite_compliance_converter
+
+.. autofunction:: satellite_compliance_plugin

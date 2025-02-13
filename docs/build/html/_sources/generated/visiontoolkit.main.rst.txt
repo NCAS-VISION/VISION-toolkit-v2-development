@@ -1,0 +1,6 @@
+﻿visiontoolkit.main
+==================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: main

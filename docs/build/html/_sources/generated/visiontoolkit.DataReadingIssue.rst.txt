@@ -1,0 +1,6 @@
+﻿visiontoolkit.DataReadingIssue
+==============================
+
+.. currentmodule:: visiontoolkit
+
+.. autoexception:: DataReadingIssue

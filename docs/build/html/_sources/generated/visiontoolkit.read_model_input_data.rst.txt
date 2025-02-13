@@ -1,0 +1,6 @@
+﻿visiontoolkit.read\_model\_input\_data
+======================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: read_model_input_data

@@ -1,0 +1,6 @@
+﻿visiontoolkit.constants.CONFIG\_DEFAULTS
+========================================
+
+.. currentmodule:: visiontoolkit.constants
+
+.. autodata:: CONFIG_DEFAULTS

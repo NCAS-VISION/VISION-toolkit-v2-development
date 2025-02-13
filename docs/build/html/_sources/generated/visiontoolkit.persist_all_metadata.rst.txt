@@ -1,0 +1,6 @@
+﻿visiontoolkit.persist\_all\_metadata
+====================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: persist_all_metadata

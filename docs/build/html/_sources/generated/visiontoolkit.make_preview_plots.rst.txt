@@ -1,0 +1,6 @@
+﻿visiontoolkit.make\_preview\_plots
+==================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: make_preview_plots

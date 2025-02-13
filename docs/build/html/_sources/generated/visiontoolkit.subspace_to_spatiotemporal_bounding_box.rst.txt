@@ -1,0 +1,6 @@
+﻿visiontoolkit.subspace\_to\_spatiotemporal\_bounding\_box
+=========================================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: subspace_to_spatiotemporal_bounding_box

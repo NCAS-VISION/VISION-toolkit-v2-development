@@ -1,0 +1,6 @@
+﻿visiontoolkit.CFComplianceIssue
+===============================
+
+.. currentmodule:: visiontoolkit
+
+.. autoexception:: CFComplianceIssue

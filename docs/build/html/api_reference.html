@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="jade" data-content_root="./">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Application Programming Interface (API) Reference - VISION Toolkit 2.0.0-alpha documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="visiontoolkit.main" href="generated/visiontoolkit.main.html" /><link rel="prev" title="Command-line Interface (CLI) Reference" href="cli_reference.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=397bb51e" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=5d6d21aa" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="Application Programming Interface (API) Reference"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="index.html">
+      
+      
+      <strong>VISION Toolkit</strong>
+    </a>
+    <div class="sy-head-nav" id="HeadNav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="HeadNav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2 -translate-x-2"></span>
+          <span class="hamburger_3 -translate-x-1"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="1"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 _expand"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="cli_reference.html">Command-line Interface (CLI) Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Application Programming Interface (API) Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#full-program-as-executed-from-cli">Full program as executed from CLI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.main.html">visiontoolkit.main</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#core-functions">Core functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#data-input-and-compliance">Data input and compliance</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.get_files_to_individually_colocate.html">visiontoolkit.get_files_to_individually_colocate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.read_obs_input_data.html">visiontoolkit.read_obs_input_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.read_model_input_data.html">visiontoolkit.read_model_input_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.get_input_fields_of_interest.html">visiontoolkit.get_input_fields_of_interest</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.vertical_parametric_computation.html">visiontoolkit.vertical_parametric_computation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.vertical_parametric_computation_ahhc.html">visiontoolkit.vertical_parametric_computation_ahhc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.vertical_parametric_computation_ahspc.html">visiontoolkit.vertical_parametric_computation_ahspc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.ensure_cf_compliance.html">visiontoolkit.ensure_cf_compliance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.check_time_coverage.html">visiontoolkit.check_time_coverage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.ensure_unit_calendar_consistency.html">visiontoolkit.ensure_unit_calendar_consistency</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.set_start_datetime.html">visiontoolkit.set_start_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.get_time_coords.html">visiontoolkit.get_time_coords</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#co-location-and-bounding">Co-location and bounding</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.colocate_single_file.html">visiontoolkit.colocate_single_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.bounding_box_query.html">visiontoolkit.bounding_box_query</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.subspace_to_spatiotemporal_bounding_box.html">visiontoolkit.subspace_to_spatiotemporal_bounding_box</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.spatial_interpolation.html">visiontoolkit.spatial_interpolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.time_subspace_per_segment.html">visiontoolkit.time_subspace_per_segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.time_interpolation.html">visiontoolkit.time_interpolation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#data-output">Data output</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.create_contiguous_ragged_array_output.html">visiontoolkit.create_contiguous_ragged_array_output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.write_output_data.html">visiontoolkit.write_output_data</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#helper">Helper</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.logger.html">visiontoolkit.logger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.timeit.html">visiontoolkit.timeit</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.get_env_and_diagnostics_report.html">visiontoolkit.get_env_and_diagnostics_report</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#performance">Performance</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.persist_all_metadata.html">visiontoolkit.persist_all_metadata</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-exceptions">Custom exceptions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.CFComplianceIssue.html">visiontoolkit.CFComplianceIssue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.IncompatibleDataInputsIssue.html">visiontoolkit.IncompatibleDataInputsIssue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.DataReadingIssue.html">visiontoolkit.DataReadingIssue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.ConfigurationIssue.html">visiontoolkit.ConfigurationIssue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.InternalsIssue.html">visiontoolkit.InternalsIssue</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#plotting">Plotting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.plotting.preview_plots.html">visiontoolkit.plotting.preview_plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.plotting.output_plots.html">visiontoolkit.plotting.output_plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.make_preview_plots.html">visiontoolkit.make_preview_plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.make_output_plots.html">visiontoolkit.make_output_plots</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#command-line-parsing">Command-line parsing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.cli.setup_logging.html">visiontoolkit.cli.setup_logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.cli.process_cli_arguments.html">visiontoolkit.cli.process_cli_arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.cli.process_config.html">visiontoolkit.cli.process_config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.cli.validate_config.html">visiontoolkit.cli.validate_config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.cli.process_config_file.html">visiontoolkit.cli.process_config_file</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#default-values">Default values</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/visiontoolkit.constants.CONFIG_DEFAULTS.html">visiontoolkit.constants.CONFIG_DEFAULTS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#plugins">Plugins</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#for-satellite-observational-data">For Satellite observational data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.satellite_plugin.html">visiontoolkit.satellite_plugin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.plugins.satellite_compliance_converter.satellite_compliance_plugin.html">visiontoolkit.plugins.satellite_compliance_converter.satellite_compliance_plugin</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#for-wrf-data">For WRF Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.plugins.wrf_data_compliance_fixes.wrf_extra_compliance_fixes.html">visiontoolkit.plugins.wrf_data_compliance_fixes.wrf_extra_compliance_fixes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.plugins.wrf_data_compliance_fixes.wrf_further_compliance_fixes.html">visiontoolkit.plugins.wrf_data_compliance_fixes.wrf_further_compliance_fixes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#full-program-as-executed-from-cli">Full program as executed from CLI</a></li>
+<li><a class="reference internal" href="#core-functions">Core functions</a><ul>
+<li><a class="reference internal" href="#data-input-and-compliance">Data input and compliance</a></li>
+<li><a class="reference internal" href="#co-location-and-bounding">Co-location and bounding</a></li>
+<li><a class="reference internal" href="#data-output">Data output</a></li>
+<li><a class="reference internal" href="#helper">Helper</a></li>
+<li><a class="reference internal" href="#performance">Performance</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#custom-exceptions">Custom exceptions</a></li>
+<li><a class="reference internal" href="#plotting">Plotting</a></li>
+<li><a class="reference internal" href="#command-line-parsing">Command-line parsing</a></li>
+<li><a class="reference internal" href="#default-values">Default values</a></li>
+<li><a class="reference internal" href="#plugins">Plugins</a><ul>
+<li><a class="reference internal" href="#for-satellite-observational-data">For Satellite observational data</a></li>
+<li><a class="reference internal" href="#for-wrf-data">For WRF Data</a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6"><div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">VISION Toolkit</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Application Programming Interface (API) Reference</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="application-programming-interface-api-reference">
+<h1>Application Programming Interface (API) Reference<a class="headerlink" href="#application-programming-interface-api-reference" title="Link to this heading">¶</a></h1>
+<section id="full-program-as-executed-from-cli">
+<h2>Full program as executed from CLI<a class="headerlink" href="#full-program-as-executed-from-cli" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.main.html#visiontoolkit.main" title="visiontoolkit.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
+<td><p>Perform end-to-end model-to-observational co-location.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="core-functions">
+<h2>Core functions<a class="headerlink" href="#core-functions" title="Link to this heading">¶</a></h2>
+<section id="data-input-and-compliance">
+<h3>Data input and compliance<a class="headerlink" href="#data-input-and-compliance" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.get_files_to_individually_colocate.html#visiontoolkit.get_files_to_individually_colocate" title="visiontoolkit.get_files_to_individually_colocate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_files_to_individually_colocate</span></code></a>(path)</p></td>
+<td><p>TODO.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.read_obs_input_data.html#visiontoolkit.read_obs_input_data" title="visiontoolkit.read_obs_input_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_obs_input_data</span></code></a>(obs_data_path)</p></td>
+<td><p>Read in all observational input data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.read_model_input_data.html#visiontoolkit.read_model_input_data" title="visiontoolkit.read_model_input_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_model_input_data</span></code></a>(model_data_path)</p></td>
+<td><p>Read in all model input data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.get_input_fields_of_interest.html#visiontoolkit.get_input_fields_of_interest" title="visiontoolkit.get_input_fields_of_interest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_input_fields_of_interest</span></code></a>(fl, chosen_field)</p></td>
+<td><p>Return the field(s) of interest from the input dataset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.vertical_parametric_computation.html#visiontoolkit.vertical_parametric_computation" title="visiontoolkit.vertical_parametric_computation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vertical_parametric_computation</span></code></a>(model_field, ...)</p></td>
+<td><p>Return a model field with arbitrary computed vertical coordinates.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.vertical_parametric_computation_ahhc.html#visiontoolkit.vertical_parametric_computation_ahhc" title="visiontoolkit.vertical_parametric_computation_ahhc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vertical_parametric_computation_ahhc</span></code></a>(...)</p></td>
+<td><p>Return a model field with computed vertical coordinate of altitude.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.vertical_parametric_computation_ahspc.html#visiontoolkit.vertical_parametric_computation_ahspc" title="visiontoolkit.vertical_parametric_computation_ahspc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vertical_parametric_computation_ahspc</span></code></a>(...)</p></td>
+<td><p>Return a model field with computed 'air_pressure' vertical coordinate.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.ensure_cf_compliance.html#visiontoolkit.ensure_cf_compliance" title="visiontoolkit.ensure_cf_compliance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ensure_cf_compliance</span></code></a>(field, plugin[, ...])</p></td>
+<td><p>Ensure the chosen field is CF compliant with the correct format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.check_time_coverage.html#visiontoolkit.check_time_coverage" title="visiontoolkit.check_time_coverage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_time_coverage</span></code></a>(obs_times, model_times)</p></td>
+<td><p>TODO</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.ensure_unit_calendar_consistency.html#visiontoolkit.ensure_unit_calendar_consistency" title="visiontoolkit.ensure_unit_calendar_consistency"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ensure_unit_calendar_consistency</span></code></a>(obs_field, ...)</p></td>
+<td><p>Ensure the chosen fields have consistent units and calendars.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.set_start_datetime.html#visiontoolkit.set_start_datetime" title="visiontoolkit.set_start_datetime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_start_datetime</span></code></a>(obs_times, ...)</p></td>
+<td><p>Replace observational time data with those starting from a new value.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.get_time_coords.html#visiontoolkit.get_time_coords" title="visiontoolkit.get_time_coords"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_time_coords</span></code></a>(obs_field, model_field[, ...])</p></td>
+<td><p>Return the relevant time coordinates from the fields.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="co-location-and-bounding">
+<h3>Co-location and bounding<a class="headerlink" href="#co-location-and-bounding" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.colocate_single_file.html#visiontoolkit.colocate_single_file" title="visiontoolkit.colocate_single_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">colocate_single_file</span></code></a>(file_to_colocate, ...)</p></td>
+<td><p>Perform model-to-observational colocation using a single file source.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.bounding_box_query.html#visiontoolkit.bounding_box_query" title="visiontoolkit.bounding_box_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bounding_box_query</span></code></a>(model_field, model_id, ...)</p></td>
+<td><p>Apply a custom query to get the bounding box.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.subspace_to_spatiotemporal_bounding_box.html#visiontoolkit.subspace_to_spatiotemporal_bounding_box" title="visiontoolkit.subspace_to_spatiotemporal_bounding_box"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subspace_to_spatiotemporal_bounding_box</span></code></a>(...)</p></td>
+<td><p>Extract only relevant data in the model field via a 4D subspace.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.spatial_interpolation.html#visiontoolkit.spatial_interpolation" title="visiontoolkit.spatial_interpolation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spatial_interpolation</span></code></a>(obs_field, ...[, ...])</p></td>
+<td><p>Interpolate the flight path spatially (3D for X-Y and vertical Z).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.time_subspace_per_segment.html#visiontoolkit.time_subspace_per_segment" title="visiontoolkit.time_subspace_per_segment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">time_subspace_per_segment</span></code></a>(index, ...)</p></td>
+<td><p>TODO.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.time_interpolation.html#visiontoolkit.time_interpolation" title="visiontoolkit.time_interpolation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">time_interpolation</span></code></a>(obs_times, model_times, ...)</p></td>
+<td><p>Interpolate the flight path temporally (in time T).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="data-output">
+<h3>Data output<a class="headerlink" href="#data-output" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.create_contiguous_ragged_array_output.html#visiontoolkit.create_contiguous_ragged_array_output" title="visiontoolkit.create_contiguous_ragged_array_output"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_contiguous_ragged_array_output</span></code></a>(...)</p></td>
+<td><p>Create a compressed contiguous ragged array DSG output.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.write_output_data.html#visiontoolkit.write_output_data" title="visiontoolkit.write_output_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_output_data</span></code></a>(final_result_field, ...)</p></td>
+<td><p>Write out the 4D (XYZT) colocated result as output data.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="helper">
+<h3>Helper<a class="headerlink" href="#helper" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.logger.html#visiontoolkit.logger" title="visiontoolkit.logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger</span></code></a></p></td>
+<td><p>Instances of the Logger class represent a single logging channel.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.timeit.html#visiontoolkit.timeit" title="visiontoolkit.timeit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">timeit</span></code></a>(func)</p></td>
+<td><p>A decorator to measure and report function execution time.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.get_env_and_diagnostics_report.html#visiontoolkit.get_env_and_diagnostics_report" title="visiontoolkit.get_env_and_diagnostics_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_env_and_diagnostics_report</span></code></a>()</p></td>
+<td><p>Provide an optional report of environment and diagnostics.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="performance">
+<h3>Performance<a class="headerlink" href="#performance" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.persist_all_metadata.html#visiontoolkit.persist_all_metadata" title="visiontoolkit.persist_all_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">persist_all_metadata</span></code></a>(field)</p></td>
+<td><p>Persist all of the metadata for a field.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="custom-exceptions">
+<h2>Custom exceptions<a class="headerlink" href="#custom-exceptions" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.CFComplianceIssue.html#visiontoolkit.CFComplianceIssue" title="visiontoolkit.CFComplianceIssue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CFComplianceIssue</span></code></a></p></td>
+<td><p>Raised for cases of errors caused by lack of CF Compliance.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.IncompatibleDataInputsIssue.html#visiontoolkit.IncompatibleDataInputsIssue" title="visiontoolkit.IncompatibleDataInputsIssue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IncompatibleDataInputsIssue</span></code></a></p></td>
+<td><p>Raised for cases of incompatibility between the Model and Obs inputs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.DataReadingIssue.html#visiontoolkit.DataReadingIssue" title="visiontoolkit.DataReadingIssue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataReadingIssue</span></code></a></p></td>
+<td><p>Raised for cases of failure to read appropriate data input file(s).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.ConfigurationIssue.html#visiontoolkit.ConfigurationIssue" title="visiontoolkit.ConfigurationIssue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigurationIssue</span></code></a></p></td>
+<td><p>Raised for cases of configuration values being invalid or unsuitable.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.InternalsIssue.html#visiontoolkit.InternalsIssue" title="visiontoolkit.InternalsIssue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InternalsIssue</span></code></a></p></td>
+<td><p>Raised for cases of the toolkit behaviour emerging wrong.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="plotting">
+<h2>Plotting<a class="headerlink" href="#plotting" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.plotting.preview_plots.html#visiontoolkit.plotting.preview_plots" title="visiontoolkit.plotting.preview_plots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotting.preview_plots</span></code></a>(obs_field, ...[, index])</p></td>
+<td><p>Generate plots of the flight track for a pre-colocation preview.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.plotting.output_plots.html#visiontoolkit.plotting.output_plots" title="visiontoolkit.plotting.output_plots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotting.output_plots</span></code></a>(output, ...[, ...])</p></td>
+<td><p>Generate a post-colocation result plot of the track(s) or swath(s).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.make_preview_plots.html#visiontoolkit.make_preview_plots" title="visiontoolkit.make_preview_plots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_preview_plots</span></code></a>(obs_field, ...[, index])</p></td>
+<td><p>Generate plots of the flight track for a pre-colocation preview.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.make_output_plots.html#visiontoolkit.make_output_plots" title="visiontoolkit.make_output_plots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_output_plots</span></code></a>(output, obs_t_identifier, ...)</p></td>
+<td><p>Generate a post-colocation result plot of the track(s) or swath(s).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="command-line-parsing">
+<h2>Command-line parsing<a class="headerlink" href="#command-line-parsing" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.cli.setup_logging.html#visiontoolkit.cli.setup_logging" title="visiontoolkit.cli.setup_logging"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cli.setup_logging</span></code></a>(verbosity)</p></td>
+<td><p>Configure the package log level assuming CLI counted '-v' flag input.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.cli.process_cli_arguments.html#visiontoolkit.cli.process_cli_arguments" title="visiontoolkit.cli.process_cli_arguments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cli.process_cli_arguments</span></code></a>(parser)</p></td>
+<td><p>Parse and process all command-line arguments.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.cli.process_config.html#visiontoolkit.cli.process_config" title="visiontoolkit.cli.process_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cli.process_config</span></code></a>()</p></td>
+<td><p>Process all configuration, from CLI, file or a default if neither set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.cli.validate_config.html#visiontoolkit.cli.validate_config" title="visiontoolkit.cli.validate_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cli.validate_config</span></code></a>(final_config_namespace)</p></td>
+<td><p>TODO</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.cli.process_config_file.html#visiontoolkit.cli.process_config_file" title="visiontoolkit.cli.process_config_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cli.process_config_file</span></code></a>(config_file)</p></td>
+<td><p>Process a configuration file.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="default-values">
+<h2>Default values<a class="headerlink" href="#default-values" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.constants.CONFIG_DEFAULTS.html#visiontoolkit.constants.CONFIG_DEFAULTS" title="visiontoolkit.constants.CONFIG_DEFAULTS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">constants.CONFIG_DEFAULTS</span></code></a></p></td>
+<td><p>dict() -&gt; new empty dictionary dict(mapping) -&gt; new dictionary initialized from a mapping object's     (key, value) pairs dict(iterable) -&gt; new dictionary initialized as if via:     d = {}     for k, v in iterable:         d[k] = v dict(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs) -&gt; new dictionary initialized with the name=value pairs     in the keyword argument list. For example:  dict(one=1, two=2).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="plugins">
+<h2>Plugins<a class="headerlink" href="#plugins" title="Link to this heading">¶</a></h2>
+<section id="for-satellite-observational-data">
+<h3>For Satellite observational data<a class="headerlink" href="#for-satellite-observational-data" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.satellite_plugin.html#visiontoolkit.satellite_plugin" title="visiontoolkit.satellite_plugin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">satellite_plugin</span></code></a>(fieldlist[, config])</p></td>
+<td><p>Pre-processing of a field from a satellite swath.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.plugins.satellite_compliance_converter.satellite_compliance_plugin.html#visiontoolkit.plugins.satellite_compliance_converter.satellite_compliance_plugin" title="visiontoolkit.plugins.satellite_compliance_converter.satellite_compliance_plugin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plugins.satellite_compliance_converter.satellite_compliance_plugin</span></code></a>(...)</p></td>
+<td><p>The converter.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="for-wrf-data">
+<h3>For WRF Data<a class="headerlink" href="#for-wrf-data" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.plugins.wrf_data_compliance_fixes.wrf_extra_compliance_fixes.html#visiontoolkit.plugins.wrf_data_compliance_fixes.wrf_extra_compliance_fixes" title="visiontoolkit.plugins.wrf_data_compliance_fixes.wrf_extra_compliance_fixes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plugins.wrf_data_compliance_fixes.wrf_extra_compliance_fixes</span></code></a>(...)</p></td>
+<td><p>Extra CF compliance fixes for WRF data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.plugins.wrf_data_compliance_fixes.wrf_further_compliance_fixes.html#visiontoolkit.plugins.wrf_data_compliance_fixes.wrf_further_compliance_fixes" title="visiontoolkit.plugins.wrf_data_compliance_fixes.wrf_further_compliance_fixes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plugins.wrf_data_compliance_fixes.wrf_further_compliance_fixes</span></code></a>(...)</p></td>
+<td><p>More CF compliance fixes for WRF data.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="cli_reference.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Command-line Interface (CLI) Reference</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="generated/visiontoolkit.main.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">visiontoolkit.main</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, National Centre for Atmospheric Science (NCAS)</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=d690e255"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/design-tabs.js?v=f930bc37"></script>
+      <script src="_static/shibuya.js?v=55e26b35"></script></body>
+</html>

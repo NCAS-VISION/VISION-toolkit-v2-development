@@ -1,0 +1,6 @@
+﻿visiontoolkit.time\_subspace\_per\_segment
+==========================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: time_subspace_per_segment

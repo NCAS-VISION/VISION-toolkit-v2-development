@@ -1,0 +1,6 @@
+﻿visiontoolkit.get\_files\_to\_individually\_colocate
+====================================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: get_files_to_individually_colocate

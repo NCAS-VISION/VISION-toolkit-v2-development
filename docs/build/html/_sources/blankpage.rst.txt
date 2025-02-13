@@ -1,0 +1,8 @@
+.. Template for a blank page. Add named hyperlinks at the top before the title.
+
+
+Blank page title
+================
+
+TODO
+x

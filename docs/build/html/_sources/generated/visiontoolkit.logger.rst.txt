@@ -1,0 +1,6 @@
+﻿visiontoolkit.logger
+====================
+
+.. currentmodule:: visiontoolkit
+
+.. autodata:: logger

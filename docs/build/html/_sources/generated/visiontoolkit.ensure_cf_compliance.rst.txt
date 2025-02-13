@@ -1,0 +1,6 @@
+﻿visiontoolkit.ensure\_cf\_compliance
+====================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: ensure_cf_compliance

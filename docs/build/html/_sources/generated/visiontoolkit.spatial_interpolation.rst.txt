@@ -1,0 +1,6 @@
+﻿visiontoolkit.spatial\_interpolation
+====================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: spatial_interpolation

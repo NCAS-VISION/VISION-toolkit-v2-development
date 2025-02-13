@@ -1,0 +1,6 @@
+﻿visiontoolkit.check\_time\_coverage
+===================================
+
+.. currentmodule:: visiontoolkit
+
+.. autofunction:: check_time_coverage
