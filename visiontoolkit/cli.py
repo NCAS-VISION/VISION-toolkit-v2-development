@@ -373,6 +373,20 @@ def process_cli_arguments(parser):
     )
 
 
+def cli_parser():
+    """TODO DOCS."""   
+    parser = argparse.ArgumentParser(
+        prog="VISION TOOLKIT",
+        description=(
+            "Virtual Integration of Satellite and In-Situ Observation "
+            "Networks (VISION) toolkit flight simulator"
+        ),
+    )
+    process_cli_arguments(parser)
+
+    return parser  # note: need to return explicitly for CLI Ref. docs
+
+
 def process_config():
     """Process all configuration, from CLI, file or a default if neither set.
 
@@ -391,14 +405,7 @@ def process_config():
 
     """
     # 0. Set up parser and get args
-    parser = argparse.ArgumentParser(
-        prog="VISION TOOLKIT",
-        description=(
-            "Virtual Integration of Satellite and In-Situ Observation "
-            "Networks (VISION) toolkit flight simulator"
-        ),
-    )
-    process_cli_arguments(parser)
+    parser = cli_parser()
 
     # First parse: just to get the config file specification so we can
     # process that, we then re-parse later to apply the config. file
@@ -421,8 +428,6 @@ def process_config():
     logger.debug(
         f"Default configuration is:\n{pformat(CONFIG_DEFAULTS)}\n"
     )
-
-
 
     # 2.  Get configuration from file
     config_file = parsed_args.config_file
