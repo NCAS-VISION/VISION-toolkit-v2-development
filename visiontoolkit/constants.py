@@ -1,3 +1,4 @@
+"""TODO DOCUMENT FOR DOCS"""
 CONFIG_DEFAULTS = {
     # *** Script running options ***
     # Configure messaging to STDOUT, which is very verbose if INFO=True, else
