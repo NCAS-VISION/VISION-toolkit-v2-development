@@ -3,4 +3,8 @@
 Command-line Interface (CLI) Reference
 ======================================
 
-TODO
+..
+   .. argparse::
+      :module: visiontoolkit
+      :func: process_config
+      :prog: visiontoolkit

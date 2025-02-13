@@ -10,7 +10,7 @@ for the TWINE-funded (NCAS-)VISION project.
 # TODO: eventually only import useful functions below, not all
 from .visiontoolkit import *  # noqa: F401, F403
 
-__version__ = "2.0.0.dev1"
+__version__ = "2.0.0-alpha"
 
 # TODOS, SCRIPT-WIDE/GENERAL:
 # * document assumptions about data that we use that the input data need

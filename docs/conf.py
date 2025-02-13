@@ -18,6 +18,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinxarg.ext",
 ]
 
 templates_path = ["_templates"]
