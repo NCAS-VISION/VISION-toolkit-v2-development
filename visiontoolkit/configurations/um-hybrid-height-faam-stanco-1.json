@@ -1,7 +1,7 @@
 {
     "start-time-override": "1998-02-21 11:50:00",
     "obs-data-path":"../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-    "model-data-path":"../data/2025-maria-um-hybrid/*[!orography].pp",
+    "model-data-path":"../data/2025-maria-um-hybrid/*.pp",
     "orography":"../data/2025-maria-um-hybrid/orography.pp",
     "chosen-obs-field":false,
     "chosen-model-field":"air_temperature",

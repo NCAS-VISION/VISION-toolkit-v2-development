@@ -1229,6 +1229,7 @@ def time_interpolation(
     halo_size,
     spatially_colocated_field,
     history_message,
+    is_satellite_case=False,
     split_segments=False,
 ):
     """Interpolate the flight path temporally (in time T).
@@ -1365,7 +1366,8 @@ def time_interpolation(
         # case whilst get working generally
         concatenated_weighted_values = v_w[0]
         # Note that 0th index here gives all 0 values - all masked at ground?
-        if preprocess_obs == "satellite":
+        if is_satellite_case:
+            # Use 11th value (10) for now
             concatenated_weighted_values = concatenated_weighted_values[
                 10, :].squeeze()
 
@@ -1655,8 +1657,10 @@ def colocate_single_file(
     # For such cases as satellite swaths, the times can straddle model points
     # so we need to chop these up into ones on each side of a model time
     # segment as per our approach below.
+    is_satellite_case = False
     split_segments = False
     if preprocess_obs == "satellite":
+        is_satellite_case = True
         split_segments = True
 
     final_result_field = time_interpolation(
@@ -1669,6 +1673,7 @@ def colocate_single_file(
         halo_size,
         spatially_colocated_field,
         args.history_message,
+        is_satellite_case=is_satellite_case,
         split_segments=split_segments,
     )
 
