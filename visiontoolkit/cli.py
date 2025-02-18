@@ -61,8 +61,9 @@ def process_cli_arguments(parser):
         action="store",
         help=(
             "configuration file in JSON format to supply configuration, "
-            "which overrides any configuration provided by other "
-            "command-line options, if duplication of input occurs"
+            "where any configuration provided by other command-"
+            "-line options will take precendence over the config. file "
+            "input, if duplication occurs"
         ),
     )
     parser.add_argument(
