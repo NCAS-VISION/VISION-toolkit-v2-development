@@ -25,7 +25,7 @@ PLUGIN_CONFIG_DEFAULTS = {
 }
 
 
-def satellite_compliance_plugin(fieldlist, config=None):
+def satellite_compliance_plugin(fieldlist, chosen_field, config=None):
     """The converter.
 
     Configuration may be provided to override the defaults.
@@ -56,7 +56,7 @@ def satellite_compliance_plugin(fieldlist, config=None):
         f"Final configuration for satellite plugin is {pformat(plugin_config)}"
     )
 
-    s0 = fieldlist.select_by_identity("air_temperature")[0]
+    s0 = fieldlist.select_by_identity(chosen_field)[0]
 
     # Remove the vertical axis
     index = []

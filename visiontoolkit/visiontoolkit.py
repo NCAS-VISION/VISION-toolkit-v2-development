@@ -390,55 +390,43 @@ def make_preview_plots(
 
 
 @timeit
-def satellite_plugin(fieldlist, config=None):
+def satellite_plugin(fieldlist, chosen_field, config=None):
     """Pre-processing of a field from a satellite swath.
 
     Define this is own function so we can apply the timing decorator.
     """
-    return satellite_compliance_plugin(fieldlist, config=config)
+    return satellite_compliance_plugin(
+        fieldlist, chosen_field, config=config), True
 
 
 @timeit
-def ensure_cf_compliance(field, plugin, satellite_plugin_config=None):
+def ensure_cf_compliance(
+        fieldlist, plugin, chosen_field=None, satellite_plugin_config=None):
     """Ensure the chosen field is CF compliant with the correct format.
 
     TODO: DETAILED DOCS
     """
-    # SOME DATA PROCESSING AND VALIDATION, INCLUDING (ONLY?) ATTACHING
-    # THE OROGRAPHY -> MANIPULATING THE FIELDS A BIT.
-    #
     # INCLUDES FOR 'CORRECT FORMAT': E.G.:
     # * SEE LATER TODO OF: are we assuming the model and obs data are strictly
     # monotonically increasing, as we might be assuming for some of this ->
     # since trajectories should be inc'ing this way, by definition.
-    # * VERTICAL COOR STUFF TO MAKE SURE IT IS ENCODED CORRECTLY.
-
-    # TODO: check that the obs inputs are compliant in way we need
-    # TODO: we need to make model data compliant and padding etc.
-    # Notes for future when done:
-    # * Get orography data, separate input, as per Maria's dir.
-    #
-    # TODO: IGNORE FOR NOW, USING FILES ALREADY MADE COMPLIANT
     if plugin == "satellite":
         logger.info("Starting satellite pre-processing plugin.")
 
         # If no config is provided (None), the plugin will apply defaults
-        return satellite_plugin(field, config=satellite_plugin_config)
-
+        return satellite_plugin(
+            fieldlist, chosen_field, config=satellite_plugin_config)
     elif plugin == "flight":
         raise NotImplementedError(
             "Flight pre-processing plugin yet to be finalised.")
-
     elif plugin == "UM":
         raise NotImplementedError(
             "UM pre-processing plugin yet to be finalised.")
-
     elif plugin == "WRF":
         raise NotImplementedError(
             "WRF pre-processing plugin yet to be finalised.")
-
     else:
-        return field
+        return fieldlist, False  # second item indicates whether reduced
 
 
 @timeit
@@ -1427,9 +1415,17 @@ def time_interpolation(
 
     return final_result_field
 
+@timeit
+def create_cf_role(field):
+    """TODO."""
+    da = cf.DomainAxis(1)
+    da.set_property("cf_role", "timeseries_id")
+    cf_role_axis = field.set_construct(da)
+    return cf_role_axis
+
 
 @timeit
-def create_contiguous_ragged_array_output(unproc_output, output_path_name):
+def create_contiguous_ragged_array_output(unproc_output):
     """Create a compressed contiguous ragged array DSG output.
 
     Aggregates the colocated flight path results across all
@@ -1441,35 +1437,44 @@ def create_contiguous_ragged_array_output(unproc_output, output_path_name):
     """
     logger.info("Starting creation of contiguous ragged array DSG output.")
 
-    if len(unproc_output) > 1:
-        # Pad out each output track e.g. flight so that they all have the same size
-        max_size = max([f.size for f in unproc_output])
-        for f in unproc_output:
-            f.pad_missing("T", to_size=max_size, inplace=True)
+    # Pad out each output track e.g. flight so that they all have the same size
+    max_size = max([f.size for f in unproc_output])
+    for f in unproc_output:
+        f.pad_missing("T", to_size=max_size, inplace=True)
 
-        # Aggregate the output tracks e.g. flights into a single field
-        f = cf.aggregate(unproc_output, relaxed_identities=True)
-        if len(f) == 1:
-            f = f[0]
-        else:
-            # Rerun aggregation in verbose mode and then fail
-            cf.aggregate(fl, relaxed_identities=True, verbose=-1)
-            raise ValueError(
-                "Towards creation of the contiguous ragged array DSG output, "
-                "aggregation failed. See verbose report above.")
+    # Add size one axes in initial position, since we have 1D but need
+    # a 2D underlying array for the aggregation and compression. Note
+    # we need to pad all to same size first, so can't combine with 'for'
+    # loop above. (TODO list comp eventually is probably best.)
+    for f in unproc_output:
+        create_cf_role(f)
 
-        # Sort by track e.g. flight start time
-        f = f[np.argsort(f.coord("T")[:, 0].squeeze())]
+    print("NOW HAVE")
+    for f in unproc_output:
+        print("NEXT")
+        print(f)
+
+    # Aggregate the output tracks e.g. flights into a single field
+    f = cf.aggregate(unproc_output, relaxed_identities=True)
+    if len(f) == 1:
+        f = f[0]
     else:
-        f = unproc_output[0]
+        # Rerun aggregation in verbose mode and then fail
+        cf.aggregate(f, relaxed_identities=True, verbose=-1)
+        raise ValueError(
+            "Towards creation of the contiguous ragged array DSG output, "
+            "aggregation failed. See verbose report above.")
 
-    logger.info("CRA DSG output complete. Now compressing and writing.")
+    # Sort by track e.g. flight start time
+    f = f[np.argsort(f.coord("T")[:, 0].squeeze())]
+
+    logger.info("CRA DSG output complete. Now compressing.")
 
     # Compress
     c = f.compress("contiguous")
+    logger.debug(f"Final compressed CRA DSG field is: {c}")
 
-    # Write to disk in contiguous ragged array DSG format
-    cf.write(c, output_path_name)
+    return c
 
 
 @timeit
@@ -1547,13 +1552,19 @@ def colocate_single_file(
     if obs_data is None:
         return
 
-    obs_field = get_input_fields_of_interest(
-        obs_data, args.chosen_obs_field, is_model=False)
     # Apply any specified pre-processing: use returned fields since the
     # input may be a FieldList which gets reduced to less fields or to one
+    reduced = False  # whether pre-processing reduces to one field
     if preprocess_obs:
-        obs_field = ensure_cf_compliance(
-            obs_field, preprocess_obs, args.satellite_plugin_config)
+        # SLB
+        obs_field, reduced = ensure_cf_compliance(
+            obs_data, preprocess_obs, args.chosen_obs_field,
+            args.satellite_plugin_config,
+        )
+
+    if not reduced:
+        obs_field = get_input_fields_of_interest(
+            obs_data, args.chosen_obs_field, is_model=False)
 
     # Persist obs field - do this as early as possible, but after
     # the pre-processing
@@ -1726,7 +1737,8 @@ def main():
     model_field = get_input_fields_of_interest(
         model_data, args.chosen_model_field)
     if preprocess_model:
-            model_field = ensure_cf_compliance(model_field, preprocess_model)
+            model_field, _ = ensure_cf_compliance(
+                model_field, preprocess_model)
 
     # If necessary to handle orography external file, read it in early to
     # fail early if it isn't readable or valid.
@@ -1765,7 +1777,6 @@ def main():
             # TODO also check suitability of orog field - might be bad
         else:
             pass  # TODO in this case is netCDF with attached orog, handle this
-
 
     # Persist model fields outside of loop
     persist_all_metadata(model_field)
@@ -1810,38 +1821,30 @@ def main():
         raise InternalsIssue(
             "Empty resulting FieldList: something went wrong!")
 
-    # Create and process outputs
+    # Create and process outputs. What we do depends on whether or result
+    # is a lone Field or non-singular FieldList.
     compound_output = len(output_fields) > 1
+    output_path_name = f"{outputs_dir}/cra_{args.output_file_name}"
 
-    # Create and write CRA outputs
-    cra_output_path_name = f"{outputs_dir}/cra_{args.output_file_name}"
-    ### create_contiguous_ragged_array_output(
-    ###    output_fields, cra_output_path_name)
-
-    # Write unprocessed final result field out
     if compound_output:
-        # Concatenate the fields now since they should all constitute one
+        # Combine the fields now since they should all constitute one
         # DSG feature.
-        output = output_fields.concatenate()
+        ### output = output_fields.concatenate()
         logger.info(
             f"Have compound output, a FieldList of length {len(output_fields)}"
         )
+        # Create and write CRA outputs
+        cra_output = create_contiguous_ragged_array_output(
+            output_fields)
+        # Write field to disk in contiguous ragged array DSG format
+        write_output_data(cra_output, output_path_name)
     else:
-        output = output_fields[0]  # unpack to field in this case
+        output = output_fields[0]  # unpack lone field in this case
         logger.info(
-            "Have singular output i.e. just one result field."
+            f"Have singular output i.e. just one result field of: {output}"
         )
-        logger.info(
-        "Final pre-concatenated fieldlist from colocation of all inputs "
-        f"from specified observational data path is: {output_fields}"
-    )
-
-    logger.info(
-        "Final Field(List) from colocation of all inputs from specified "
-        f"observational data path is: {output}"
-    )
-    output_path_name = f"{outputs_dir}/{args.output_file_name}"
-    write_output_data(output, output_path_name)
+        # Write field to disk, but not as CRA in this case
+        write_output_data(output, output_path_name)
 
     if not skip_all_plotting:
         # Plot the output
