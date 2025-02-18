@@ -1416,12 +1416,36 @@ def time_interpolation(
     return final_result_field
 
 @timeit
-def create_cf_role(field):
-    """TODO."""
+def create_cf_role(field, trajectory_index):
+    """TODO.
+
+    TODO rename create to set for better API."""
+    # TODO this cf_role data name/tag needs to be pulled in from
+    # the obs data - or if there isn't one, put missing data in.
+    # So we don't set this ourselves.
+
+    # TODO check as to whether the role/feature already exists!
+    # And if does, can just use that, no need to recreate.
+
+    # domain_axis: ncdim%dim, size one
     da = cf.DomainAxis(1)
-    da.set_property("cf_role", "timeseries_id")
-    cf_role_axis = field.set_construct(da)
-    return cf_role_axis
+    da.nc_set_dimension("trajectory")
+    cf_role_axis = field.set_construct(da, copy=False)
+    print("cf_role_axis IS", cf_role_axis)
+
+    # auxiliary_coordinate: cf_role=trajectory_id
+    a = cf.AuxiliaryCoordinate()
+    a.set_properties({"cf_role": "trajectory_id"})
+    a.nc_set_variable("campaign")
+
+    # Use missing data when the cf_role is not already defined
+    data = cf.Data([""], mask=[True])
+    a.set_data(data)
+    traj_aux_coord = field.set_construct(
+        a, axes=(cf_role_axis,), copy=False)
+    print("traj_aux_coord IS:", traj_aux_coord)
+
+    return cf_role_axis, traj_aux_coord
 
 
 @timeit
@@ -1446,21 +1470,27 @@ def create_contiguous_ragged_array_output(unproc_output):
     # a 2D underlying array for the aggregation and compression. Note
     # we need to pad all to same size first, so can't combine with 'for'
     # loop above. (TODO list comp eventually is probably best.)
-    for f in unproc_output:
-        create_cf_role(f)
+    for index, field in enumerate(unproc_output):
+        if index == 1:
+            print("BEFORE")
+            field.dump()
+        cf_role_axis, traj_aux_coord = create_cf_role(field, index)
+        if index == 1:
+            print("AFTER")
+            field.dump()
 
-    print("NOW HAVE")
-    for f in unproc_output:
-        print("NEXT")
-        print(f)
+        # TODO upgrade to debug logger once sorted functionality
+        logger.info(f"Field with cf_role created is: {field}")
 
     # Aggregate the output tracks e.g. flights into a single field
-    f = cf.aggregate(unproc_output, relaxed_identities=True)
+    f = cf.aggregate(
+        unproc_output, axes=cf_role_axis, relaxed_identities=True)
     if len(f) == 1:
         f = f[0]
     else:
         # Rerun aggregation in verbose mode and then fail
-        cf.aggregate(f, relaxed_identities=True, verbose=-1)
+        cf.aggregate(
+            f, axes=cf_role_axis, relaxed_identities=True, verbose=-1)
         raise ValueError(
             "Towards creation of the contiguous ragged array DSG output, "
             "aggregation failed. See verbose report above.")
@@ -1825,24 +1855,53 @@ def main():
     # is a lone Field or non-singular FieldList.
     compound_output = len(output_fields) > 1
     output_path_name = f"{outputs_dir}/cra_{args.output_file_name}"
+    # TODO need to make more general for satellite check?
+    is_satellite_case = preprocess_obs == "satellite"
 
+    # Four cases to handle distinctly: single or compound, traj or satellite
     if compound_output:
-        # Combine the fields now since they should all constitute one
-        # DSG feature.
-        ### output = output_fields.concatenate()
         logger.info(
             f"Have compound output, a FieldList of length {len(output_fields)}"
         )
-        # Create and write CRA outputs
-        cra_output = create_contiguous_ragged_array_output(
-            output_fields)
-        # Write field to disk in contiguous ragged array DSG format
-        write_output_data(cra_output, output_path_name)
+        if is_satellite_case:
+            logger.info("Compound satellite case: concatenating outputs.")
+            # Case of multiple satellite swaths, but they all count as
+            # the same feature (just from input data split up into
+            # separate swaths) so they constitute one DSG feature and
+            # we can just concatenate all of the data in this case.
+            output = output_fields.concatenate()
+            write_output_data(output, output_path_name)
+        else:
+            logger.info(
+                "Compound trajectory case: forming contiguous ragged array"
+                "DSG output."
+            )
+            # Case of multiple trajectories e.g. flight paths, which are
+            # separate features so should be combined into a CRA.
+
+            # Create and write CRA outputs
+            cra_output = create_contiguous_ragged_array_output(
+                output_fields)
+            # Write field to disk in contiguous ragged array DSG format
+            write_output_data(cra_output, output_path_name)
     else:
         output = output_fields[0]  # unpack lone field in this case
         logger.info(
             f"Have singular output i.e. just one result field of: {output}"
         )
+        if is_satellite_case:
+            logger.info(
+                "Single satellite case: writing without further steps."
+            )
+            pass
+        else:
+            logger.info(
+                "Single trajectory case: ensuring featureType encoded."
+            )
+            # TODO CHECK if cf_role is present here, should be
+            # from obs anyway, if not create_cf_role, may need
+            # to use missing data if it is left.
+
         # Write field to disk, but not as CRA in this case
         write_output_data(output, output_path_name)
 
