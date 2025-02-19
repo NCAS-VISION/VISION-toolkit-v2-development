@@ -1415,37 +1415,56 @@ def time_interpolation(
 
     return final_result_field
 
+
 @timeit
-def create_cf_role(field, trajectory_index):
-    """TODO.
+def get_cf_role(obs_field):
+    """Return if present the construct where 'cf_role' equals 'trajectory_id'.
 
-    TODO rename create to set for better API."""
-    # TODO this cf_role data name/tag needs to be pulled in from
-    # the obs data - or if there isn't one, put missing data in.
-    # So we don't set this ourselves.
+    TODO: DETAILED DOCS
+    """
+    # Assume only one TODO decide most robust way to deal with possible multi
+    return obs_field.construct("cf_role=trajectory_id", default=None)
 
-    # TODO check as to whether the role/feature already exists!
-    # And if does, can just use that, no need to recreate.
 
-    # domain_axis: ncdim%dim, size one
+@timeit
+def set_cf_role(obs_field):
+    """Create and set on the field a new auxiliary coordinate for a trajectory.
+
+    The new coordinate will be defined for a new size one domain axis and
+    will have 'cf_role' set to 'trajectory_id'. If such a coordinate already
+    exists it will be returned instead of creation of a new one.
+
+    TODO: DETAILED DOCS
+    """
+    # TODO: do we also need to ensure global 'featureType': 'trajectory'
+    # alongside this?
+
+    # Is there already a cf_role? Then we are all good.
+    cf_role_aux_coord = get_cf_role(obs_field)
+    if cf_role_aux_coord:
+        return cf_role_aux_coord
+
+    # It doesn't exist already, so define one with missing data
+
+    # First create and set the domain axis (ncdim%dim) of size one
     da = cf.DomainAxis(1)
     da.nc_set_dimension("trajectory")
-    cf_role_axis = field.set_construct(da, copy=False)
-    print("cf_role_axis IS", cf_role_axis)
+    da_construct = obs_field.set_construct(da, copy=False)
+    logger.debug(f"Setting size one domain axis of {da_construct}")
 
-    # auxiliary_coordinate: cf_role=trajectory_id
+    # Then create and set the corresponding auxiliary coordinate
     a = cf.AuxiliaryCoordinate()
     a.set_properties({"cf_role": "trajectory_id"})
     a.nc_set_variable("campaign")
 
-    # Use missing data when the cf_role is not already defined
-    data = cf.Data([""], mask=[True])
-    a.set_data(data)
-    traj_aux_coord = field.set_construct(
-        a, axes=(cf_role_axis,), copy=False)
-    print("traj_aux_coord IS:", traj_aux_coord)
+    # Set the missing data on the aux. coordinate
+    missing_data = cf.Data([""], mask=[True])
+    a.set_data(missing_data)
+    traj_aux_coord = obs_field.set_construct(
+        a, axes=(da_construct,), copy=False)
+    logger.info(f"Setting cf role trajectory aux. coord. of: {traj_aux_coord}")
 
-    return cf_role_axis, traj_aux_coord
+    return cf_role_aux_coord
 
 
 @timeit
@@ -1474,7 +1493,7 @@ def create_contiguous_ragged_array_output(unproc_output):
         if index == 1:
             print("BEFORE")
             field.dump()
-        cf_role_axis, traj_aux_coord = create_cf_role(field, index)
+        cf_role_axis, traj_aux_coord = set_cf_role(field, index)
         if index == 1:
             print("AFTER")
             field.dump()
@@ -1899,7 +1918,7 @@ def main():
                 "Single trajectory case: ensuring featureType encoded."
             )
             # TODO CHECK if cf_role is present here, should be
-            # from obs anyway, if not create_cf_role, may need
+            # from obs anyway, if not set_cf_role, may need
             # to use missing data if it is left.
 
         # Write field to disk, but not as CRA in this case
