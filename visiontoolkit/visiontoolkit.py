@@ -159,7 +159,7 @@ def read_obs_input_data(obs_data_path):
     logger.info(
         f"Observational data input location is: '{obs_data_path}'\n"
     )
-    fl = cf.read(obs_data_path, ignore_read_error=True)
+    fl = cf.read(obs_data_path)
     if not fl:
         return
 
