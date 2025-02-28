@@ -9,6 +9,15 @@ import visiontoolkit
 
 
 class TestGeneral:
+    """Test the VISION Toolkit application in general.
+
+    This includes minimal command-line specification and in
+    particular checking for sensible error messages upon lack of
+    adequate configuration provision. Testing here covers anything
+    general or that which does not run the main co-location code.
+
+    """
+
     def test_help(self, capsys):
         """Test the `$ visiontoolkit --help` command."""
         # Setup to run command
@@ -43,6 +52,30 @@ class TestGeneral:
         assert (
             "-h, --help            show this help message and exit"
         ) in cmd_stdout_ignore_newlines
+
+
+class TestFlightObservationsUMModel:
+    """Test toolkit for case of flight path observations and UM model input.
+    """
+    pass
+
+
+class TestFlightObservationsWRFModel:
+    """Test toolkit for case of flight path observations and WRF model input.
+    """
+    pass
+
+
+class TestSatelliteObservationsUMModel:
+    """Test toolkit for case of satellite observations and UM model input.
+    """
+    pass
+
+
+class TestSatelliteObservationsWRFModel:
+    """Test toolkit for case of satellite observations and WRF model input.
+    """
+    pass
 
 
 if __name__ == "__main__":
