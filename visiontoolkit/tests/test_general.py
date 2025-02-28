@@ -8,6 +8,21 @@ from unittest.mock import patch  # Only using patch, not unittest
 import visiontoolkit
 
 
+@pytest.fixture
+def provide_data():
+    pass
+
+
+@pytest.fixture
+def setup_test():
+    pass
+
+
+@pytest.fixture
+def teardown_test():
+    pass
+
+
 class TestGeneral:
     """Test the VISION Toolkit application in general.
 
