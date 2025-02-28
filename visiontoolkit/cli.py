@@ -430,13 +430,14 @@ def process_config():
         f"Default configuration is:\n{pformat(CONFIG_DEFAULTS)}\n"
     )
 
-    # 2.  Get configuration from file
+    # 2.  Get configuration from file, if provided
     config_file = parsed_args.config_file
+    config_from_file = {}
     if config_file:
         config_from_file = process_config_file(config_file)
-    logger.info(
-        f"Configuration from file is:\n{pformat(config_from_file)}\n"
-    )
+        logger.info(
+            f"Configuration from file is:\n{pformat(config_from_file)}\n"
+        )
 
     # Combining 1 and 2: apply config. file values to override defaults
     pre_cli_config = {**CONFIG_DEFAULTS, **config_from_file}  # keeps leftmost
