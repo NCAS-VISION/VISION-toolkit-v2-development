@@ -463,7 +463,8 @@ def process_config():
 def validate_config(final_config_namespace):
     """TODO"""
     # TODO add validation in incrementally to cover all input options & args
-
+    print("final_config_namespace is", final_config_namespace)
+    
     # outputs_dir: create if does not exist
     if not os.path.exists(final_config_namespace.outputs_dir):
         logger.info(
