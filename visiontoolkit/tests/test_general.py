@@ -69,7 +69,7 @@ class TestGeneral:
         ) in cmd_stdout_ignore_newlines
 
     def test_verbosity(self, capsys):
-        """Test the `$ visiontoolkit -` command."""
+        """Test the `$ visiontoolkit -v(vvv)` commands to edit verbosity."""
         pass  # TODO
 
 
@@ -233,119 +233,91 @@ class TestFlightObservationsUMModel:
 
 class TestFlightObservationsWRFModel:
     """Test toolkit for case of flight path observations and WRF model input."""
+    # Base configuration, which the specific configurations tend to build on
+    # so use these as a base to override with edited values for the final
+    # specific configurations
+    base_config_flight_wrf = {
+        'model-data-path': '../pre-processing/wrf-model-data-preprocessing/wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc',
+        'obs-data-path': '../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc',
+        "chosen-obs-field": "mole_fraction_of_ozone_in_air",
+        'chosen-model-field': 'ncvar%T',
+        "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
+        "vertical-colocation-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
+        "cfp-mapset-config": {
+            "latmax": 54,
+            "latmin": 50,
+            "lonmax": 2,
+            "lonmin": -2,
+            "resolution": "10m",
+        },
+        "cfp-input-levs-config": {"max": 60, "min": 0, "step": 5},
+        "cfp-output-levs-config": {"max": -1, "min": -11, "step": 1},
+    }
 
+    # c1: TODO describe main reasons for config.
     c1_flight_wrf = {
-        "cfp-cscale": "WhiteBlueGreenYellowRed",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {
-            "max": 1e-07,
-            "min": 5e-08,
-            "step": 2.5e-09,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": False,
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-        "output-file-name": "um_faam_stanco_1_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-faam-stanco-1",
-        "plot-of-input-obs-track-only": 2,
+        **base_config_flight_wrf,
+        **{
+            # Changes relative to base configuration choice, if any
+            'start-time-override': '2023-07-10 12:00:00',
+            'plot-of-input-obs-track-only': 2,
+            'skip-all-plotting': True,
+            # Not relevant to testing: names outputs
+            'output-file-name': 'wrf_faam_stanco_1_vision_result.nc',
+            'outputs-dir': 'toolkit-outputs/wrf-faam-stanco-1',
+        }
     }
+    # c2: TODO describe main reasons for config.
     c2_flight_wrf = {
-        "cfp-input-levs-config": {"max": 60, "min": 0, "step": 5},
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {"max": -1, "min": -11, "step": 1},
-        "chosen-model-field": "ncvar%T",
-        "chosen-obs-field": "mole_fraction_of_ozone_in_air",
-        "model-data-path": "../pre-processing/wrf-model-data-preprocessing/wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-        "output-file-name": "wrf_faam_stanco_2_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/wrf-faam-stanco-2",
-        "plot-of-input-obs-track-only": 0,
-        "show-plot-of-input-obs": False,
-        "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
-        "start-time-override": "2023-07-11 18:00:00",
-        "vertical-colocation-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
+        **base_config_flight_wrf,
+        **{
+            # Changes relative to base configuration choice, if any
+            "start-time-override": "2023-07-11 18:00:00",
+            "plot-of-input-obs-track-only": 0,
+            "show-plot-of-input-obs": False,
+            # Not relevant to testing: names outputs
+            "output-file-name": "wrf_faam_stanco_2_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/wrf-faam-stanco-2",
+        }
     }
+    # c3: TODO describe main reasons for config.
     c3_flight_wrf = {
-        "cfp-cscale": "WhiteBlueGreenYellowRed",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {
-            "max": 1e-07,
-            "min": 5e-08,
-            "step": 2.5e-09,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "mole_fraction_of_ozone_in_air",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-        "output-file-name": "um_faam_stanco_3_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-faam-stanco-3",
-        "plot-of-input-obs-track-only": 0,
-        "show-plot-of-input-obs": False,
-        "start-time-override": "2017-07-17 03:14:15",
+        **base_config_flight_wrf,
+        **{
+            # Changes relative to base configuration choice, if any
+            'start-time-override': '2023-07-13 00:00:00',
+            'show-plot-of-input-obs': False,
+            # Not relevant to testing: names outputs
+            'output-file-name': 'wrf_faam_stanco_3_vision_result.nc',
+            'outputs-dir': 'toolkit-outputs/wrf-faam-stanco-3',
+        }
     }
+    # c4: TODO describe main reasons for config.
     c4_flight_wrf = {
-        "cfp-input-levs-config": {"max": 60, "min": 0, "step": 5},
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {"max": -1, "min": -11, "step": 1},
-        "chosen-model-field": "ncvar%T",
-        "chosen-obs-field": "mole_fraction_of_ozone_in_air",
-        "model-data-path": "../pre-processing/wrf-model-data-preprocessing/wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-        "output-file-name": "wrf_faam_stanco_4_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/wrf-faam-stanco-4",
-        "show-plot-of-input-obs": False,
-        "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
-        "start-time-override": "2023-07-12 03:14:15",
-        "vertical-colocation-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
+        **base_config_flight_wrf,
+        **{
+            # Changes relative to base configuration choice, if any
+            "start-time-override": "2023-07-12 03:14:15",
+            "show-plot-of-input-obs": False,
+            # Not relevant to testing: names outputs
+            "output-file-name": "wrf_faam_stanco_4_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/wrf-faam-stanco-4",
+        }
     }
+    # c5: TODO describe main reasons for config.
     c5_flight_wrf = {
-        "cfp-input-levs-config": {"max": -1, "min": -11, "step": 1},
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {"max": 60, "min": 0, "step": 5},
-        "chosen-model-field": "ncvar%T",
-        "chosen-obs-field": "ncvar%tc",
-        "model-data-path": "../pre-processing/wrf-model-data-preprocessing/wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc",
-        "obs-data-path": "../data/2025-laurents-twopoint-flight/field.nc",
-        "output-file-name": "wrf_faam_stanco_5_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/wrf-faam-stanco-5",
-        "plot-of-input-obs-track-only": False,
-        "skip-all-plotting": True,
-        "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
-        "start-time-override": "2023-07-10 12:00:00",
-        "vertical-colocation-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
+        **base_config_flight_wrf,
+        **{
+            # Changes relative to base configuration choice, if any
+            "obs-data-path": "../data/2025-laurents-twopoint-flight/field.nc",
+            "chosen-obs-field": "ncvar%tc",
+            "start-time-override": "2023-07-10 12:00:00",
+            "plot-of-input-obs-track-only": False,
+            "skip-all-plotting": True,
+            # Not relevant to testing: names outputs
+            "output-file-name": "wrf_faam_stanco_5_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/wrf-faam-stanco-5",
+        }
     }
 
     # Start of actual testing
