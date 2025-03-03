@@ -51,7 +51,7 @@ class TestGeneral:
         assert "usage: VISION TOOLKIT" in cmd_stdout
         assert (
             "Virtual Integration of Satellite and In-Situ Observation "
-            "Networks (VISION) toolkit flight simulator"
+            "Networks (VISION) Toolkit Version 2"
         ) in cmd_stdout_ignore_newlines
 
         # 3. Assert ASCII project symbol appears

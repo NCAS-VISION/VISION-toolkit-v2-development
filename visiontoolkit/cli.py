@@ -380,7 +380,7 @@ def cli_parser():
         prog="VISION TOOLKIT",
         description=(
             "Virtual Integration of Satellite and In-Situ Observation "
-            "Networks (VISION) toolkit flight simulator"
+            "Networks (VISION) Toolkit Version 2"
         ),
     )
     process_cli_arguments(parser)
