@@ -75,150 +75,38 @@ class TestGeneral:
 
 class TestFlightObservationsUMModel:
     """Test toolkit for case of flight path observations and UM model input."""
-
-    # Constant pressure levels - 5 configurations to test on (c1 - c5)
-    c1_flight_um = {
-        "cfp-cscale": "WhiteBlueGreenYellowRed",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {
-            "max": 1e-07,
-            "min": 5e-08,
-            "step": 2.5e-09,
-        },
+    # Base configurations, which the specific configurations tend to build on
+    # so use these as a base to override with edited values for the final
+    # specific configurations
+    base_config_constant_vert_levs = {
+        # Data paths and chosen fields
+        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
+        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
         "chosen-model-field": "id%UM_m01s51i010_vn1105",
         "chosen-obs-field": False,
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-        "output-file-name": "um_faam_stanco_1_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-faam-stanco-1",
+        # cf-plot config.
+        "cfp-cscale": "WhiteBlueGreenYellowRed",
+        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
+        "cfp-mapset-config": {
+            "latmax": 54,
+            "latmin": 50,
+            "lonmax": 2,
+            "lonmin": -2,
+            "resolution": "10m",
+        },
+        "cfp-output-levs-config": {
+            "max": 1e-07,
+            "min": 5e-08,
+            "step": 2.5e-09,
+        },
         "plot-of-input-obs-track-only": 2,
     }
-    c2_flight_um_constant_levs = {
-        "cfp-cscale": "WhiteBlueGreenYellowRed",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {
-            "max": 1e-07,
-            "min": 5e-08,
-            "step": 2.5e-09,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "mole_fraction_of_ozone_in_air",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-        "output-file-name": "um_faam_stanco_2_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-faam-stanco-2",
-        "plot-of-input-obs-track-only": 0,
-        "show-plot-of-input-obs": False,
-        "start-time-override": "2017-07-13 05:00:00",
-    }
-    c3_flight_um = {
-        "cfp-cscale": "WhiteBlueGreenYellowRed",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {
-            "max": 1e-07,
-            "min": 5e-08,
-            "step": 2.5e-09,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "mole_fraction_of_ozone_in_air",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-        "output-file-name": "um_faam_stanco_3_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-faam-stanco-3",
-        "plot-of-input-obs-track-only": 0,
-        "show-plot-of-input-obs": False,
-        "start-time-override": "2017-07-17 03:14:15",
-    }
-    c4_flight_um = {
-        "cfp-cscale": "WhiteBlueGreenYellowRed",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {
-            "max": 1e-07,
-            "min": 5e-08,
-            "step": 2.5e-09,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "mole_fraction_of_ozone_in_air",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF-two-point-1.nc",
-        "output-file-name": "um_faam_stanco_4_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-faam-stanco-4",
-        "plot-of-input-obs-track-only": 2,
-    }
-    c5_flight_um = {
-        "cfp-cscale": "WhiteBlueGreenYellowRed",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {
-            "max": 1e-07,
-            "min": 5e-08,
-            "step": 2.5e-09,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "mole_fraction_of_ozone_in_air",
-        "halo-size": 0,
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF-two-point-2.nc",
-        "output-file-name": "um_faam_stanco_5_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-faam-stanco-5",
-        "plot-of-input-obs-track-only": 2,
-    }
-
-    # Hybrid height vertical levels - 3 configurations to test on (c6 - c8)
-    c6_flight_um = {
-        "cfp-cscale": "WhiteBlueGreenYellowRed",
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {"max": 290, "min": 250, "step": 2},
-        "chosen-model-field": "air_temperature",
-        "chosen-obs-field": False,
+    base_config_hybid_height = {
+        # Data paths and chosen fields
         "model-data-path": "../data/2025-maria-um-hybrid/*.pp",
         "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
         "orography": "../data/2025-maria-um-hybrid/orography.pp",
-        "output-file-name": "um_hh_faam_stanco_1_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-hybrid-height-faam-stanco-1",
-        "start-time-override": "1998-02-21 11:50:00",
-    }
-    c7_flight_um = {
+        # cf-plot config.
         "cfp-cscale": "WhiteBlueGreenYellowRed",
         "cfp-mapset-config": {
             "latmax": 54,
@@ -227,34 +115,119 @@ class TestFlightObservationsUMModel:
             "lonmin": -2,
             "resolution": "10m",
         },
-        "chosen-model-field": "id%UM_m01s34i104_vn1105",
-        "chosen-obs-field": "mole_fraction_of_ozone_in_air",
-        "model-data-path": "../data/2025-maria-um-hybrid/*[!orography].pp",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-        "orography": "../data/2025-maria-um-hybrid/orography.pp",
-        "output-file-name": "um_hh_faam_stanco_2_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-hybrid-height-faam-stanco-2",
-        "start-time-override": "1998-02-21 11:50:00",
-    }
-    c8_flight_um = {
-        "cfp-cscale": "WhiteBlueGreenYellowRed",
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        "chosen-model-field": "id%UM_m01s34i117_vn1105",
-        "chosen-obs-field": False,
-        "model-data-path": "../data/2025-maria-um-hybrid/*[!orography].pp",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
-        "orography": "../data/2025-maria-um-hybrid/orography.pp",
-        "output-file-name": "um_hh_faam_stanco_3_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-hybrid-height-faam-stanco-3",
+        # Other
         "start-time-override": "1998-02-21 11:50:00",
     }
 
+    # Constant pressure levels - 5 configurations to test on (c1 - c5)
+    # c1: TODO describe main reasons for config.
+    c1_flight_um = {
+        **base_config_constant_vert_levs,
+        **{
+            # Changes relative to base configuration choice, if any
+            "plot-of-input-obs-track-only": 2,
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_faam_stanco_1_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-faam-stanco-1",
+        }
+    }
+    # c2: TODO describe main reasons for config.
+    c2_flight_um_constant_levs = {
+        **base_config_constant_vert_levs,
+        **{
+            # Changes relative to base configuration choice, if any
+            "start-time-override": "2017-07-13 05:00:00",
+            "chosen-obs-field": "mole_fraction_of_ozone_in_air",
+            "plot-of-input-obs-track-only": 0,
+            "show-plot-of-input-obs": False,
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_faam_stanco_2_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-faam-stanco-2",
+        }
+    }
+    # c3: TODO describe main reasons for config.
+    c3_flight_um = {
+        **base_config_constant_vert_levs,
+        **{
+            # Changes relative to base configuration choice, if any
+            "start-time-override": "2017-07-17 03:14:15",
+            "chosen-obs-field": "mole_fraction_of_ozone_in_air",
+            "plot-of-input-obs-track-only": 0,
+            "show-plot-of-input-obs": False,
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_faam_stanco_3_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-faam-stanco-3",
+        }
+    }
+    # c4: TODO describe main reasons for config.
+    c4_flight_um = {
+        **base_config_constant_vert_levs,
+        **{
+            # Changes relative to base configuration choice, if any
+            "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF-two-point-1.nc",
+            "chosen-obs-field": "mole_fraction_of_ozone_in_air",
+            "plot-of-input-obs-track-only": 2,
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_faam_stanco_4_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-faam-stanco-4",
+        }
+    }
+    # c5: TODO describe main reasons for config.
+    c5_flight_um = {
+        **base_config_constant_vert_levs,
+        **{
+            # Changes relative to base configuration choice, if any
+            "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF-two-point-2.nc",
+            "chosen-obs-field": "mole_fraction_of_ozone_in_air",
+            "halo-size": 0,
+            "plot-of-input-obs-track-only": 2,
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_faam_stanco_5_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-faam-stanco-5",
+        }
+    }
+
+    # Hybrid height vertical levels - 3 configurations to test on (c6 - c8)
+    # c6: TODO describe main reasons for config.
+    c6_flight_um = {
+        **base_config_hybid_height,
+        **{
+            # Changes relative to base configuration choice, if any
+            "chosen-model-field": "air_temperature",
+            "chosen-obs-field": False,
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_hh_faam_stanco_1_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-hybrid-height-faam-stanco-1",
+        }
+    }
+    # c7: TODO describe main reasons for config.
+    c7_flight_um = {
+        **base_config_hybid_height,
+        **{
+            # Changes relative to base configuration choice, if any
+            "model-data-path": "../data/2025-maria-um-hybrid/*[!orography].pp",
+            "chosen-model-field": "id%UM_m01s34i104_vn1105",
+            "chosen-obs-field": "mole_fraction_of_ozone_in_air",
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_hh_faam_stanco_2_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-hybrid-height-faam-stanco-2",
+        }
+    }
+    # c8: TODO describe main reasons for config.
+    c8_flight_um = {
+        **base_config_hybid_height,
+        **{
+            # Changes relative to base configuration choice, if any
+            "model-data-path": "../data/2025-maria-um-hybrid/*[!orography].pp",
+            "chosen-model-field": "id%UM_m01s34i117_vn1105",
+            "chosen-obs-field": False,
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_hh_faam_stanco_3_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-hybrid-height-faam-stanco-3",
+        }
+    }
+
+    # Start of actual testing
     pass
 
 
@@ -374,6 +347,8 @@ class TestFlightObservationsWRFModel:
         "start-time-override": "2023-07-10 12:00:00",
         "vertical-colocation-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
     }
+
+    # Start of actual testing
     pass
 
 
@@ -591,6 +566,8 @@ class TestSatelliteObservationsUMModel:
         "skip-all-plotting": True,
         "start-time-override": "2017-07-21 00:00:00",
     }
+
+    # Start of actual testing
     pass
 
 
@@ -600,6 +577,8 @@ class TestSatelliteObservationsWRFModel:
     # All testing for this case is still TODO, so add at once as both JSON
     # and converted Python dict here.
     c1_satellite_wrf = {}  # etc.
+
+    # Start of actual testing
     pass
 
 
