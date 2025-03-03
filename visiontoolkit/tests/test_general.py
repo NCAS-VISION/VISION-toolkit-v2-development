@@ -326,217 +326,247 @@ class TestFlightObservationsWRFModel:
 
 class TestSatelliteObservationsUMModel:
     """Test toolkit for case of satellite observations and UM model input."""
+    # Base configuration, which the specific configurations tend to build on
+    # so use these as a base to override with edited values for the final
+    # specific configurations
+    base_config_satellite_um = {
+        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
+        "preprocess-mode-obs": "satellite",
+        "chosen-model-field": "id%UM_m01s51i010_vn1105",
+        "skip-all-plotting": False,
+    }
 
     # Define configurations to use
-    # TODO consolidate these to build up from base one with shared settings
+    # c1: TODO describe main reasons for config.
     c1_satellite_um = {
-        "cfp-cscale": "inferno",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {
-            "boundinglat": -60,
-            "lon_0": 0,
-            "proj": "spstere",
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {
-            "max": 6.5e-08,
-            "min": 5.5e-08,
-            "step": 5e-10,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
-        "terms of principal component weights.",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc",
-        "output-file-name": "um_satellite_1_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-satellite-1",
-        "preprocess-mode-obs": "satellite",
-        "show-plot-of-input-obs": False,
-        "skip-all-plotting": False,
-        "start-time-override": "2017-07-17 03:14:15",
+        **base_config_satellite_um,
+        **{
+            # Changes relative to base configuration choice, if any
+            "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
+            "terms of principal component weights.",
+            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc",
+            "start-time-override": "2017-07-17 03:14:15",
+            "cfp-cscale": "inferno",
+            "show-plot-of-input-obs": False,
+            "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
+            "cfp-mapset-config": {
+                "boundinglat": -60,
+                "lon_0": 0,
+                "proj": "spstere",
+                "resolution": "10m",
+            },
+            "cfp-output-levs-config": {
+                "max": 6.5e-08,
+                "min": 5.5e-08,
+                "step": 5e-10,
+            },
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_satellite_1_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-satellite-1",
+            }
     }
+    # c2: TODO describe main reasons for config.
     c2_satellite_um = {
-        "cfp-cscale": "inferno",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {"resolution": "10m"},
-        "cfp-output-levs-config": {
-            "max": 6.5e-08,
-            "min": 5.5e-08,
-            "step": 5e-10,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
-        "terms of principal component weights.",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc",
-        "output-file-name": "um_satellite_2_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-satellite-2",
-        "preprocess-mode-obs": "satellite",
-        "skip-all-plotting": False,
-        "start-time-override": "2017-07-13 05:00:00",
+        **base_config_satellite_um,
+        **{
+            # Changes relative to base configuration choice, if any
+            "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
+            "terms of principal component weights.",
+            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc",
+            "preprocess-mode-obs": "satellite",
+            "start-time-override": "2017-07-13 05:00:00",
+            "cfp-cscale": "inferno",
+            "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
+            "cfp-mapset-config": {"resolution": "10m"},
+            "cfp-output-levs-config": {
+                "max": 6.5e-08,
+                "min": 5.5e-08,
+                "step": 5e-10,
+            },
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_satellite_2_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-satellite-2",
+        }
     }
+    # c3: TODO describe main reasons for config.
     c3_satellite_um = {
-        "cfp-cscale": "inferno",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {
-            "boundinglat": -60,
-            "lon_0": 0,
-            "proj": "spstere",
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {
-            "max": 6.5e-08,
-            "min": 5.5e-08,
-            "step": 5e-10,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
-        "terms of principal component weights.",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703013854z_20170703032054z_350_399-v1000.nc",
-        "output-file-name": "um_satellite_3_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-satellite-3",
-        "preprocess-mode-obs": "satellite",
-        "skip-all-plotting": False,
-        "start-time-override": "2017-07-17 03:14:15",
+        **base_config_satellite_um,
+        **{
+            # Changes relative to base configuration choice, if any
+            "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
+            "terms of principal component weights.",
+            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703013854z_20170703032054z_350_399-v1000.nc",
+            "start-time-override": "2017-07-17 03:14:15",
+            "cfp-cscale": "inferno",
+            "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
+            "cfp-mapset-config": {
+                "boundinglat": -60,
+                "lon_0": 0,
+                "proj": "spstere",
+                "resolution": "10m",
+            },
+            "cfp-output-levs-config": {
+                "max": 6.5e-08,
+                "min": 5.5e-08,
+                "step": 5e-10,
+            },
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_satellite_3_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-satellite-3",
+        }
     }
+    # c4: TODO describe main reasons for config.
     c4_satellite_um = {
-        "cfp-cscale": "plasma",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {"proj": "robin", "resolution": "10m"},
-        "cfp-output-levs-config": {
-            "max": 1.2e-07,
-            "min": 5e-08,
-            "step": 5e-09,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
-        "terms of principal component weights.",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_000_049-v1000.nc",
-        "output-file-name": "um_satellite_4_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-satellite-4",
-        "preprocess-mode-obs": "satellite",
-        "skip-all-plotting": False,
-        "start-time-override": "2017-07-21 06:15:00",
+        **base_config_satellite_um,
+        **{
+            # Changes relative to base configuration choice, if any
+            "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
+            "terms of principal component weights.",
+            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_000_049-v1000.nc",
+            "start-time-override": "2017-07-21 06:15:00",
+            "cfp-cscale": "plasma",
+            "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
+            "cfp-mapset-config": {"proj": "robin", "resolution": "10m"},
+            "cfp-output-levs-config": {
+                "max": 1.2e-07,
+                "min": 5e-08,
+                "step": 5e-09,
+            },
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_satellite_4_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-satellite-4",
+        }
     }
+    # c5: TODO describe main reasons for config.
     c5_satellite_um = {
-        "cfp-cscale": "plasma",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {"proj": "robin", "resolution": "10m"},
-        "cfp-output-levs-config": {"max": 1e-07, "min": 5e-08, "step": 5e-09},
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "air_temperature",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_050_099-v1000.nc",
-        "output-file-name": "um_satellite_5_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-satellite-5",
-        "preprocess-mode-obs": "satellite",
-        "skip-all-plotting": False,
-        "start-time-override": "2017-07-12 10:45:00",
+        **base_config_satellite_um,
+        **{
+            # Changes relative to base configuration choice, if any
+            "chosen-obs-field": "air_temperature",
+            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_050_099-v1000.nc",
+            "start-time-override": "2017-07-12 10:45:00",
+            "cfp-cscale": "plasma",
+            "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
+            "cfp-mapset-config": {"proj": "robin", "resolution": "10m"},
+            "cfp-output-levs-config": {"max": 1e-07, "min": 5e-08, "step": 5e-09},
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_satellite_5_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-satellite-5",
+        }
     }
+    # c6: TODO describe main reasons for config.
     c6_satellite_um = {
-        "cfp-cscale": "inferno",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {
-            "latmax": 45,
-            "latmin": 10,
-            "lonmax": 165,
-            "lonmin": 125,
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {
-            "max": 6.5e-08,
-            "min": 5.5e-08,
-            "step": 5e-10,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "long_name=Retrieved emissivity",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/marias-satellite-example-data/satellite-data-leap-second/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20161231234157z_20170101012357z_100_149-v1000.nc",
-        "output-file-name": "um_satellite_6_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-satellite-6",
-        "preprocess-mode-obs": "satellite",
-        "skip-all-plotting": False,
-        "start-time-override": "2017-07-17 12:00:00",
+        **base_config_satellite_um,
+        **{
+            # Changes relative to base configuration choice, if any
+            "chosen-obs-field": "long_name=Retrieved emissivity",
+            "obs-data-path": "../data/marias-satellite-example-data/satellite-data-leap-second/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20161231234157z_20170101012357z_100_149-v1000.nc",
+            "start-time-override": "2017-07-17 12:00:00",
+            "cfp-cscale": "inferno",
+            "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
+            "cfp-mapset-config": {
+                "latmax": 45,
+                "latmin": 10,
+                "lonmax": 165,
+                "lonmin": 125,
+                "resolution": "10m",
+            },
+            "cfp-output-levs-config": {
+                "max": 6.5e-08,
+                "min": 5.5e-08,
+                "step": 5e-10,
+            },
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_satellite_6_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-satellite-6",
+        }
     }
+    # c7: TODO describe main reasons for config.
     c7_satellite_um = {
-        "cfp-cscale": "inferno",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {
-            "boundinglat": -65,
-            "lon_0": 0,
-            "proj": "spstere",
-            "resolution": "10m",
-        },
-        "cfp-output-levs-config": {
-            "max": 6.5e-08,
-            "min": 5.5e-08,
-            "step": 5e-10,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
-        "terms of principal component weights.",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc",
-        "output-file-name": "um_satellite_7_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-satellite-7",
-        "preprocess-mode-obs": "satellite",
-        "satellite-plugin-config": {"npres": "npres"},
-        "skip-all-plotting": False,
-        "start-time-override": "2017-07-13 05:00:00",
+        **base_config_satellite_um,
+        **{
+            # Changes relative to base configuration choice, if any
+            "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
+            "terms of principal component weights.",
+            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc",
+            "satellite-plugin-config": {"npres": "npres"},
+            "start-time-override": "2017-07-13 05:00:00",
+            "cfp-cscale": "inferno",
+            "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
+            "cfp-mapset-config": {
+                "boundinglat": -65,
+                "lon_0": 0,
+                "proj": "spstere",
+                "resolution": "10m",
+            },
+            "cfp-output-levs-config": {
+                "max": 6.5e-08,
+                "min": 5.5e-08,
+                "step": 5e-10,
+            },
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_satellite_7_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-satellite-7",
+        }
     }
+    # c8: TODO describe main reasons for config.
     c8_satellite_um = {
-        "cfp-cscale": "plasma",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {"resolution": "10m"},
-        "cfp-output-levs-config": {
-            "max": 1.6e-07,
-            "min": 2e-08,
-            "step": 2e-08,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "long_name=Land fraction",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_*.nc",
-        "output-file-name": "um_satellite_8_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-satellite-8",
-        "preprocess-mode-obs": "satellite",
-        "skip-all-plotting": False,
-        "start-time-override": "2017-07-21 00:00:00",
+        **base_config_satellite_um,
+        **{
+            # Changes relative to base configuration choice, if any
+            "chosen-obs-field": "long_name=Land fraction",
+            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_*.nc",
+            "start-time-override": "2017-07-21 00:00:00",
+            "cfp-cscale": "plasma",
+            "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
+            "cfp-mapset-config": {"resolution": "10m"},
+            "cfp-output-levs-config": {
+                "max": 1.6e-07,
+                "min": 2e-08,
+                "step": 2e-08,
+            },
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_satellite_8_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-satellite-8",
+        }
     }
+    # c9: TODO describe main reasons for config.
     c9_satellite_um = {
-        "cfp-cscale": "plasma",
-        "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
-        "cfp-mapset-config": {"proj": "robin", "resolution": "10m"},
-        "cfp-output-levs-config": {
-            "max": 1.6e-07,
-            "min": 2e-08,
-            "step": 2e-08,
-        },
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
-        "terms of principal component weights.",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-201707032*",
-        "output-file-name": "um_satellite_9_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-satellite-9",
-        "preprocess-mode-obs": "satellite",
-        "show-plot-of-input-obs": False,
-        "skip-all-plotting": False,
-        "start-time-override": "2017-07-21 00:00:00",
+        **base_config_satellite_um,
+        **{
+            # Changes relative to base configuration choice, if any
+            "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
+            "terms of principal component weights.",
+            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-201707032*",
+            "start-time-override": "2017-07-21 00:00:00",
+            "show-plot-of-input-obs": False,
+            "cfp-cscale": "plasma",
+            "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
+            "cfp-mapset-config": {"proj": "robin", "resolution": "10m"},
+            "cfp-output-levs-config": {
+                "max": 1.6e-07,
+                "min": 2e-08,
+                "step": 2e-08,
+            },
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_satellite_9_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-satellite-9",
+        }
     }
+    # c10: TODO describe main reasons for config.
     c10_satellite_um = {
-        "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
-        "terms of principal component weights.",
-        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/marias-satellite-example-data/satellite-data/*",
-        "output-file-name": "um_satellite_10_vision_result.nc",
-        "outputs-dir": "toolkit-outputs/um-satellite-10",
-        "preprocess-mode-obs": "satellite",
-        "skip-all-plotting": True,
-        "start-time-override": "2017-07-21 00:00:00",
+        **base_config_satellite_um,
+        **{
+            # Changes relative to base configuration choice, if any
+            "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
+            "terms of principal component weights.",
+            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/*",
+            "start-time-override": "2017-07-21 00:00:00",
+            "skip-all-plotting": True,
+            # Not relevant to testing: names outputs
+            "output-file-name": "um_satellite_10_vision_result.nc",
+            "outputs-dir": "toolkit-outputs/um-satellite-10",
+        }
     }
 
     # Start of actual testing
