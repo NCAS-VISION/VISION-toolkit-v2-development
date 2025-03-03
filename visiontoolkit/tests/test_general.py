@@ -76,7 +76,147 @@ class TestGeneral:
 class TestFlightObservationsUMModel:
     """Test toolkit for case of flight path observations and UM model input.
     """
-    c1_flight_um = {}
+    c1_flight_um = {
+        'cfp-cscale': 'WhiteBlueGreenYellowRed',
+        'cfp-input-levs-config': {'max': 55, 'min': -5, 'step': 5},
+        'cfp-mapset-config': {'latmax': 54,
+                              'latmin': 50,
+                              'lonmax': 2,
+                              'lonmin': -2,
+                              'resolution': '10m'},
+        'cfp-output-levs-config': {'max': 1e-07, 'min': 5e-08, 'step': 2.5e-09},
+        'chosen-model-field': 'id%UM_m01s51i010_vn1105',
+        'chosen-obs-field': False,
+        'model-data-path': '../data/main-workwith-test-ISO-simulator/Model_Input',
+        'obs-data-path': '../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc',
+        'output-file-name': 'um_faam_stanco_1_vision_result.nc',
+        'outputs-dir': 'toolkit-outputs/um-faam-stanco-1',
+        'plot-of-input-obs-track-only': 2
+    }
+    c2_flight_um = {
+        'cfp-cscale': 'WhiteBlueGreenYellowRed',
+        'cfp-input-levs-config': {'max': 55, 'min': -5, 'step': 5},
+        'cfp-mapset-config': {'latmax': 54,
+                              'latmin': 50,
+                              'lonmax': 2,
+                              'lonmin': -2,
+                              'resolution': '10m'},
+        'cfp-output-levs-config': {'max': 1e-07, 'min': 5e-08, 'step': 2.5e-09},
+        'chosen-model-field': 'id%UM_m01s51i010_vn1105',
+        'chosen-obs-field': 'mole_fraction_of_ozone_in_air',
+        'model-data-path': '../data/main-workwith-test-ISO-simulator/Model_Input',
+        'obs-data-path': '../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc',
+        'output-file-name': 'um_faam_stanco_2_vision_result.nc',
+        'outputs-dir': 'toolkit-outputs/um-faam-stanco-2',
+        'plot-of-input-obs-track-only': 0,
+        'show-plot-of-input-obs': False,
+        'start-time-override': '2017-07-13 05:00:00'
+    }
+    c3_flight_um = {
+        'cfp-cscale': 'WhiteBlueGreenYellowRed',
+        'cfp-input-levs-config': {'max': 55, 'min': -5, 'step': 5},
+        'cfp-mapset-config': {'latmax': 54,
+                              'latmin': 50,
+                              'lonmax': 2,
+                              'lonmin': -2,
+                              'resolution': '10m'},
+        'cfp-output-levs-config': {'max': 1e-07, 'min': 5e-08, 'step': 2.5e-09},
+        'chosen-model-field': 'id%UM_m01s51i010_vn1105',
+        'chosen-obs-field': 'mole_fraction_of_ozone_in_air',
+        'model-data-path': '../data/main-workwith-test-ISO-simulator/Model_Input',
+        'obs-data-path': '../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc',
+        'output-file-name': 'um_faam_stanco_3_vision_result.nc',
+        'outputs-dir': 'toolkit-outputs/um-faam-stanco-3',
+        'plot-of-input-obs-track-only': 0,
+        'show-plot-of-input-obs': False,
+        'start-time-override': '2017-07-17 03:14:15'
+    }
+    c4_flight_um = {
+        'cfp-cscale': 'WhiteBlueGreenYellowRed',
+        'cfp-input-levs-config': {'max': 55, 'min': -5, 'step': 5},
+        'cfp-mapset-config': {'latmax': 54,
+                              'latmin': 50,
+                              'lonmax': 2,
+                              'lonmin': -2,
+                              'resolution': '10m'},
+        'cfp-output-levs-config': {'max': 1e-07, 'min': 5e-08, 'step': 2.5e-09},
+        'chosen-model-field': 'id%UM_m01s51i010_vn1105',
+        'chosen-obs-field': 'mole_fraction_of_ozone_in_air',
+        'model-data-path': '../data/main-workwith-test-ISO-simulator/Model_Input',
+        'obs-data-path': '../data/compliant-data/core_faam_20170703_c016_STANCO_CF-two-point-1.nc',
+        'output-file-name': 'um_faam_stanco_4_vision_result.nc',
+        'outputs-dir': 'toolkit-outputs/um-faam-stanco-4',
+        'plot-of-input-obs-track-only': 2
+    }
+    c5_flight_um = {
+        'cfp-cscale': 'WhiteBlueGreenYellowRed',
+        'cfp-input-levs-config': {'max': 55, 'min': -5, 'step': 5},
+        'cfp-mapset-config': {'latmax': 54,
+                              'latmin': 50,
+                              'lonmax': 2,
+                              'lonmin': -2,
+                              'resolution': '10m'},
+        'cfp-output-levs-config': {'max': 1e-07, 'min': 5e-08, 'step': 2.5e-09},
+        'chosen-model-field': 'id%UM_m01s51i010_vn1105',
+        'chosen-obs-field': 'mole_fraction_of_ozone_in_air',
+        'halo-size': 0,
+        'model-data-path': '../data/main-workwith-test-ISO-simulator/Model_Input',
+        'obs-data-path': '../data/compliant-data/core_faam_20170703_c016_STANCO_CF-two-point-2.nc',
+        'output-file-name': 'um_faam_stanco_5_vision_result.nc',
+        'outputs-dir': 'toolkit-outputs/um-faam-stanco-5',
+        'plot-of-input-obs-track-only': 2
+    }
+
+    c6_flight_um = {
+        'cfp-cscale': 'WhiteBlueGreenYellowRed',
+        'cfp-mapset-config': {'latmax': 54,
+                              'latmin': 50,
+                              'lonmax': 2,
+                              'lonmin': -2,
+                              'resolution': '10m'},
+        'cfp-output-levs-config': {'max': 290, 'min': 250, 'step': 2},
+        'chosen-model-field': 'air_temperature',
+        'chosen-obs-field': False,
+        'model-data-path': '../data/2025-maria-um-hybrid/*.pp',
+        'obs-data-path': '../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc',
+        'orography': '../data/2025-maria-um-hybrid/orography.pp',
+        'output-file-name': 'um_hh_faam_stanco_1_vision_result.nc',
+        'outputs-dir': 'toolkit-outputs/um-hybrid-height-faam-stanco-1',
+        'start-time-override': '1998-02-21 11:50:00'
+    }
+    c7_flight_um = {
+        'cfp-cscale': 'WhiteBlueGreenYellowRed',
+        'cfp-mapset-config': {'latmax': 54,
+                              'latmin': 50,
+                              'lonmax': 2,
+                              'lonmin': -2,
+                              'resolution': '10m'},
+        'chosen-model-field': 'id%UM_m01s34i104_vn1105',
+        'chosen-obs-field': 'mole_fraction_of_ozone_in_air',
+        'model-data-path': '../data/2025-maria-um-hybrid/*[!orography].pp',
+        'obs-data-path': '../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc',
+        'orography': '../data/2025-maria-um-hybrid/orography.pp',
+        'output-file-name': 'um_hh_faam_stanco_2_vision_result.nc',
+        'outputs-dir': 'toolkit-outputs/um-hybrid-height-faam-stanco-2',
+        'start-time-override': '1998-02-21 11:50:00'
+    }
+    c8_flight_um = {
+        'cfp-cscale': 'WhiteBlueGreenYellowRed',
+        'cfp-mapset-config': {'latmax': 54,
+                              'latmin': 50,
+                              'lonmax': 2,
+                              'lonmin': -2,
+                              'resolution': '10m'},
+        'chosen-model-field': 'id%UM_m01s34i117_vn1105',
+        'chosen-obs-field': False,
+        'model-data-path': '../data/2025-maria-um-hybrid/*[!orography].pp',
+        'obs-data-path': '../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc',
+        'orography': '../data/2025-maria-um-hybrid/orography.pp',
+        'output-file-name': 'um_hh_faam_stanco_3_vision_result.nc',
+        'outputs-dir': 'toolkit-outputs/um-hybrid-height-faam-stanco-3',
+        'start-time-override': '1998-02-21 11:50:00'
+    }
+
     pass
 
 
