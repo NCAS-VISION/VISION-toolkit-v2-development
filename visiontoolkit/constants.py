@@ -76,16 +76,16 @@ CONFIG_DEFAULTS = {
         "legend": True,  # TODO sepaarte into setvars config and plot opts
         "colorbar": False,
         "markersize": 0.5,
-        "linewidth": 0,  # turn off line plotting to only have markers
+        "linewidth": 0.0,  # turn off line plotting to only have markers
         "title": (
             "Input: flight track from observational field to co-locate model "
             "field onto"
         ),
     },
     "cfp-input-general-config": {
-        "legend": True,  # TODO sepaarte into setvars config and plot opts
+        "legend": True,  # TODO separate into setvars config and plot opts
         "markersize": 5,
-        "linewidth": 0.4,
+        "linewidth": 0.0,
         "title": (
             "Input: observational field (path, to be used for "
             "co-location, with its corresponding data, to be ignored)"
@@ -95,7 +95,7 @@ CONFIG_DEFAULTS = {
     "cfp-output-general-config": {
         "legend": True,
         "markersize": 5,
-        "linewidth": 0.4,
+        "linewidth": 0.0,
         "title": "Result: model co-located onto observational path",
     },
 }
