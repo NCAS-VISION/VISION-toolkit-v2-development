@@ -1269,7 +1269,6 @@ def time_interpolation(
         "*** Begin iteration over pairwise 'segments'. ***\n"
         f"Segments to loop over are, pairwise: {model_times.datetime_array}"
     )
-    print("THIS IS", list(pairwise(model_times.datetime_array)))
 
     # Note the length of (pairwise(model_times.datetime_array) is equal to
     # model_times_len - 1 by its nature, e.g. A, B, C -> (A, B), (B, C)).
@@ -1491,11 +1490,9 @@ def create_contiguous_ragged_array_output(unproc_output):
     # loop above. (TODO list comp eventually is probably best.)
     for index, field in enumerate(unproc_output):
         if index == 1:
-            print("BEFORE")
             field.dump()
         cf_role_axis, traj_aux_coord = set_cf_role(field, index)
         if index == 1:
-            print("AFTER")
             field.dump()
 
         # TODO upgrade to debug logger once sorted functionality
