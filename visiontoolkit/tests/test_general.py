@@ -1,4 +1,4 @@
-"""Test suite for the VISION Toolkit."""
+"""Functional/end-to-end tests for the VISION Toolkit."""
 
 import sys
 
@@ -78,10 +78,11 @@ class TestFlightObservationsUMModel:
     # Base configurations, which the specific configurations tend to build on
     # so use these as a base to override with edited values for the final
     # specific configurations
+    obs_data_root = "../data/compliant-data/"
     base_config_constant_vert_levs = {
         # Data paths and chosen fields
         "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
+        "obs-data-path": f"{obs_data_root}core_faam_20170703_c016_STANCO_CF.nc",
         "chosen-model-field": "id%UM_m01s51i010_vn1105",
         "chosen-obs-field": False,
         # cf-plot config.
@@ -104,7 +105,9 @@ class TestFlightObservationsUMModel:
     base_config_hybid_height = {
         # Data paths and chosen fields
         "model-data-path": "../data/2025-maria-um-hybrid/*.pp",
-        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
+        "obs-data-path": (
+            f"{obs_data_root}core_faam_20170703_c016_STANCO_CF.nc"
+        ),
         "orography": "../data/2025-maria-um-hybrid/orography.pp",
         # cf-plot config.
         "cfp-cscale": "WhiteBlueGreenYellowRed",
@@ -164,7 +167,7 @@ class TestFlightObservationsUMModel:
         **base_config_constant_vert_levs,
         **{
             # Changes relative to base configuration choice, if any
-            "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF-two-point-1.nc",
+            "obs-data-path": f"{obs_data_root}core_faam_20170703_c016_STANCO_CF-two-point-1.nc",
             "chosen-obs-field": "mole_fraction_of_ozone_in_air",
             "plot-of-input-obs-track-only": 2,
             # Not relevant to testing: names outputs
@@ -177,7 +180,7 @@ class TestFlightObservationsUMModel:
         **base_config_constant_vert_levs,
         **{
             # Changes relative to base configuration choice, if any
-            "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF-two-point-2.nc",
+            "obs-data-path": f"{obs_data_root}core_faam_20170703_c016_STANCO_CF-two-point-2.nc",
             "chosen-obs-field": "mole_fraction_of_ozone_in_air",
             "halo-size": 0,
             "plot-of-input-obs-track-only": 2,
@@ -237,7 +240,10 @@ class TestFlightObservationsWRFModel:
     # so use these as a base to override with edited values for the final
     # specific configurations
     base_config_flight_wrf = {
-        'model-data-path': '../pre-processing/wrf-model-data-preprocessing/wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc',
+        'model-data-path': (
+            "../pre-processing/wrf-model-data-preprocessing/"
+            "wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc"
+        ),
         'obs-data-path': '../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc',
         "chosen-obs-field": "mole_fraction_of_ozone_in_air",
         'chosen-model-field': 'ncvar%T',
@@ -329,6 +335,10 @@ class TestSatelliteObservationsUMModel:
     # Base configuration, which the specific configurations tend to build on
     # so use these as a base to override with edited values for the final
     # specific configurations
+    obs_data_dir = "../data/marias-satellite-example-data/satellite-data/"
+    obs_data_root = (
+        f"{obs_data_dir}ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw"
+    )
     base_config_satellite_um = {
         "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
         "preprocess-mode-obs": "satellite",
@@ -344,7 +354,7 @@ class TestSatelliteObservationsUMModel:
             # Changes relative to base configuration choice, if any
             "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
             "terms of principal component weights.",
-            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc",
+            "obs-data-path": f"{obs_data_root}-20170703201158z_20170703215054z_350_399-v1000.nc",
             "start-time-override": "2017-07-17 03:14:15",
             "cfp-cscale": "inferno",
             "show-plot-of-input-obs": False,
@@ -372,7 +382,7 @@ class TestSatelliteObservationsUMModel:
             # Changes relative to base configuration choice, if any
             "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
             "terms of principal component weights.",
-            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc",
+            "obs-data-path": f"{obs_data_root}-20170703201158z_20170703215054z_350_399-v1000.nc",
             "preprocess-mode-obs": "satellite",
             "start-time-override": "2017-07-13 05:00:00",
             "cfp-cscale": "inferno",
@@ -395,7 +405,7 @@ class TestSatelliteObservationsUMModel:
             # Changes relative to base configuration choice, if any
             "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
             "terms of principal component weights.",
-            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703013854z_20170703032054z_350_399-v1000.nc",
+            "obs-data-path": f"{obs_data_root}-20170703013854z_20170703032054z_350_399-v1000.nc",
             "start-time-override": "2017-07-17 03:14:15",
             "cfp-cscale": "inferno",
             "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
@@ -422,7 +432,7 @@ class TestSatelliteObservationsUMModel:
             # Changes relative to base configuration choice, if any
             "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
             "terms of principal component weights.",
-            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_000_049-v1000.nc",
+            "obs-data-path": f"{obs_data_root}-20170703201158z_20170703215054z_000_049-v1000.nc",
             "start-time-override": "2017-07-21 06:15:00",
             "cfp-cscale": "plasma",
             "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
@@ -443,7 +453,7 @@ class TestSatelliteObservationsUMModel:
         **{
             # Changes relative to base configuration choice, if any
             "chosen-obs-field": "air_temperature",
-            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_050_099-v1000.nc",
+            "obs-data-path": f"{obs_data_root}-20170703201158z_20170703215054z_050_099-v1000.nc",
             "start-time-override": "2017-07-12 10:45:00",
             "cfp-cscale": "plasma",
             "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
@@ -460,7 +470,7 @@ class TestSatelliteObservationsUMModel:
         **{
             # Changes relative to base configuration choice, if any
             "chosen-obs-field": "long_name=Retrieved emissivity",
-            "obs-data-path": "../data/marias-satellite-example-data/satellite-data-leap-second/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20161231234157z_20170101012357z_100_149-v1000.nc",
+            "obs-data-path": f"{obs_data_root}-20161231234157z_20170101012357z_100_149-v1000.nc",
             "start-time-override": "2017-07-17 12:00:00",
             "cfp-cscale": "inferno",
             "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
@@ -488,7 +498,7 @@ class TestSatelliteObservationsUMModel:
             # Changes relative to base configuration choice, if any
             "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
             "terms of principal component weights.",
-            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_350_399-v1000.nc",
+            "obs-data-path": f"{obs_data_root}-20170703201158z_20170703215054z_350_399-v1000.nc",
             "satellite-plugin-config": {"npres": "npres"},
             "start-time-override": "2017-07-13 05:00:00",
             "cfp-cscale": "inferno",
@@ -515,7 +525,7 @@ class TestSatelliteObservationsUMModel:
         **{
             # Changes relative to base configuration choice, if any
             "chosen-obs-field": "long_name=Land fraction",
-            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-20170703201158z_20170703215054z_*.nc",
+            "obs-data-path": f"{obs_data_root}-20170703201158z_20170703215054z_*.nc",
             "start-time-override": "2017-07-21 00:00:00",
             "cfp-cscale": "plasma",
             "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
@@ -535,9 +545,11 @@ class TestSatelliteObservationsUMModel:
         **base_config_satellite_um,
         **{
             # Changes relative to base configuration choice, if any
-            "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
-            "terms of principal component weights.",
-            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw-201707032*",
+            "chosen-obs-field": (
+                "long_name=State vector for atmospheric temperature in "
+                "terms of principal component weights."
+            ),
+            "obs-data-path": f"{obs_data_root}-201707032*",
             "start-time-override": "2017-07-21 00:00:00",
             "show-plot-of-input-obs": False,
             "cfp-cscale": "plasma",
@@ -558,9 +570,11 @@ class TestSatelliteObservationsUMModel:
         **base_config_satellite_um,
         **{
             # Changes relative to base configuration choice, if any
-            "chosen-obs-field": "long_name=State vector for atmospheric temperature in "
-            "terms of principal component weights.",
-            "obs-data-path": "../data/marias-satellite-example-data/satellite-data/*",
+            "chosen-obs-field": (
+                "long_name=State vector for atmospheric temperature in "
+                "terms of principal component weights."
+            ),
+            "obs-data-path": f"{obs_data_dir}/*",
             "start-time-override": "2017-07-21 00:00:00",
             "skip-all-plotting": True,
             # Not relevant to testing: names outputs
