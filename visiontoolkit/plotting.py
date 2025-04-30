@@ -88,14 +88,12 @@ def preview_plots(
 
 def output_plots(
     output,
-    obs_t_identifier,
     cfp_output_levs_config,
     outputs_dir,
     plotname_start,
     new_obs_starttime,
     cfp_output_general_config,
     verbose,
-    preprocess_model=False,
 ):
     """Generate a post-colocation result plot of the track(s) or swath(s).
 
@@ -105,27 +103,6 @@ def output_plots(
     TODO: DETAILED DOCS
     """
     cfp_output_general_config.update(verbose=verbose)
-
-    # Upgrade the aux coor to a dim coor, so we can plot the trajectory.
-    # TODO: avoid doing this, as is not 'proper', when there is a way to
-    #       just use the aux. coor for cfp.traj: the way to support in a new
-    #       cf-plot version is to check if the input is a featureType, then
-    #       if it is to look for aux coords not dim coords, since if it is one
-    #       there should never be dim coords.
-    # TODO: another cpflot feature that will help here: generalise the
-    #       trajectory function for not just contiguous ragged array, as
-    #       the present docs state, but for any *multidimensional orthogonal
-    #       arrays* e.g. DSGs, as here. Talking about 'ragged arrays' is a
-    #       massive red herring. In which case, generalise it so that the input
-    #       can be a field with a 2D *or* a 1D array to plot. If 1D, it means
-    #       it has a trajectory dimension leading, which can be dropped.
-
-    # WRF ONLY, TODO move underlying logic to pre-processing so as not to
-    # clog up main module
-    if preprocess_model == "WRF":
-        aux_coor_t = output.auxiliary_coordinate(obs_t_identifier)
-        dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
-        output.set_construct(dim_coor_t, axes="ncdim%obs")
 
     # Make and open the final plot
     # NOTE: can try 'legend_lines=True' for the lines plotted with average
@@ -154,4 +131,3 @@ def output_plots(
 
     cfp.gclose()
     logger.info("Plot created.")
-
