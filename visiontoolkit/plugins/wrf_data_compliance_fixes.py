@@ -9,33 +9,34 @@ logger = logging.getLogger(__name__)
 
 
 def wrf_extra_compliance_fixes(
-        model_field_bb, z_coord, z_axes_spec, vertical_sn,
+        model_field_bb, z_coord, z_axes_spec, z_id,
         model_t_identifier
 ):
-    """Extra CF compliance fixes for WRF data. TODO move this out of toolkit!
+    """Extra CF compliance fixes for WRF data.
 
     TODO: DETAILED DOCS
     """
     # TODO possible bug in WRF pre-proc or in cf whereby aux coord axes
-    # are not in compatible order with the data axes, so do a HACKY SWAP:
-    # WRF pre-proc
-    new_z_coord = z_coord.swapaxes(1, 0)  # TODO NOT WORKING?
-    model_field_bb.del_construct(vertical_sn)
+    # are not in compatible order with the data axes. For now, swap
+    # them over but this should be rectified with WRF experts.
+    new_z_coord = z_coord.swapaxes(1, 0)
+    model_field_bb.del_construct(z_id)
     txyz_axes = [model_t_identifier,] + z_axes_spec
-    # TODO rename vertical_sn to z_id or z_key or similar
-    new_vertical_id = model_field_bb.set_construct(
+    new_z_id = model_field_bb.set_construct(
         new_z_coord,
         axes=txyz_axes,
     )
-    z_coord = model_field_bb.coordinate(new_vertical_id)
-    z_coord.set_property("standard_name", value=vertical_sn)
+    z_coord = model_field_bb.coordinate(new_z_id)
+    z_coord.set_property("standard_name", value=z_id)
 
     return z_coord
 
 
 def wrf_further_compliance_fixes(
-        model_field_z_per_time, vertical_sn, time_da_index, z_axes_spec):
-    """More CF compliance fixes for WRF data. TODO move this out of toolkit!
+        model_field_z_per_time, vertical_sn, time_da_index, z_axes_spec,
+        lat_id="ncvar%XLAT", lon_id="ncvar%XLONG",
+):
+    """More CF compliance fixes for WRF data.
 
     TODO: DETAILED DOCS
     """
@@ -61,17 +62,18 @@ def wrf_further_compliance_fixes(
 
     # Also need to squeeze x and y aux coords! for those 2D aux
     # lat and lons! Then everything is all set up for the 3D Z regrids
-    # HACK FIRST USE DIRECT NAMES TO GET WORKIN: ncvar%XLAT, ncvar%XLONG
-    for a_name in ("ncvar%XLAT", "ncvar%XLONG") and source_axes:
-        # These keys are safe to get, since raised error if they
-        # werne't present above.
+    for a_name in (lat_id, lon_id) and source_axes:
+        # These keys are safe to get, since raise error if they
+        # weren't present above
         x_y_axes_spec = [source_axes["Y"], source_axes["X"]]
 
         a_coord = model_field_z_per_time.coordinate(a_name)
         model_field_z_per_time.del_construct(a_name)
+
+        # Is this safe - can other dim be size 1 that we don't want to squeeze?
         fin_a_coord = (
             a_coord.squeeze()
-        )  # safe - can other dim be size 1?
+        )
         model_field_z_per_time.set_construct(
             fin_a_coord,
             axes=x_y_axes_spec,
