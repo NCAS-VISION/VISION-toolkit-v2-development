@@ -401,8 +401,14 @@ class TestSatelliteObservationsUMModel:
     # so use these as a base to override with edited values for the final
     # specific configurations
     obs_data_dir = "../data/marias-satellite-example-data/satellite-data/"
+    obs_data_dir_for_leap_second = (
+        "../data/marias-satellite-example-data/satellite-data-leap-second/"
+    )
     obs_data_root = (
         f"{obs_data_dir}ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw"
+    )
+    obs_data_root_ls = (
+        f"{obs_data_dir_for_leap_second}ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw"
     )
     base_config_satellite_um = {
         "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
@@ -550,7 +556,7 @@ class TestSatelliteObservationsUMModel:
             **{
                 # Changes relative to base configuration choice, if any
                 "chosen-obs-field": "long_name=Retrieved emissivity",
-                "obs-data-path": f"{self.obs_data_root}-20161231234157z_20170101012357z_100_149-v1000.nc",
+                "obs-data-path": f"{self.obs_data_root_ls}-20161231234157z_20170101012357z_100_149-v1000.nc",
                 "start-time-override": "2017-07-17 12:00:00",
                 "cfp-cscale": "inferno",
                 "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
