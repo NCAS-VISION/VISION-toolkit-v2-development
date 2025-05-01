@@ -661,6 +661,7 @@ def bounding_box_query(
         f"{model_coord} of {model_field} "
     )
 
+    print("COORD TIGHT BOUDS", coord_tight_bounds)
     obs_min, obs_max = coord_tight_bounds
 
     # Get an array with truth values representing whether the obs values
@@ -669,6 +670,7 @@ def bounding_box_query(
     # TODO could combine into one 'wo' to simplify, probably?
     # Note we can't do 'wo' since for these cases there wouldn't be
     # want zeros.
+    print("HAVE", obs_min, model_coord)
     min_query_result = cf.lt(obs_min) == model_coord
     max_query_result = cf.gt(obs_max) == model_coord
 
@@ -762,8 +764,15 @@ def subspace_to_spatiotemporal_bounding_box(
     # For a DSG, the spatial coordinates will always be auxiliary:
     obs_X = obs_field.auxiliary_coordinate("X")
     obs_Y = obs_field.auxiliary_coordinate("Y")
+
     if not no_vertical:
-        obs_Z = obs_field.auxiliary_coordinate(vertical_key)
+        # TODO consolidate this - should be sorted elsewhere, may have been missed
+        # Need to convert from the vertical_key for the Z coord in the
+        # model_field after possible coord computation, to the vertical
+        # key for the equivalent in the obs field
+        m_vertical_id = model_field.coordinate(vertical_key).identity()
+        o_vertical_key = obs_field.coordinate(m_vertical_id, key=True)
+        obs_Z = obs_field.auxiliary_coordinate(o_vertical_key)
 
     # Prep. towards the temporal BB component.
     # TODO: are we assuming the model and obs data are strictly increasing, as
@@ -791,6 +800,7 @@ def subspace_to_spatiotemporal_bounding_box(
     y_coord_tight_bounds = obs_Y.data.minimum(), obs_Y.data.maximum()
     if not no_vertical:
         z_coord_tight_bounds = obs_Z.data.minimum(), obs_Z.data.maximum()
+        print("Z bounds is", z_coord_tight_bounds)
     t_coord_tight_bounds = obs_times.data.minimum(), obs_times.data.maximum()
 
     bb_kwargs = {
@@ -969,7 +979,8 @@ def subspace_to_spatiotemporal_bounding_box(
                 # doesn't know what point to 'halo' around. So we need to
                 # be more clever.
                 # TODO we decided to write this into this module then
-                # move it out as a new query to cf eventun which caseally.
+                # move it out as a new query to cf eventally.
+                model_field.dump()
                 model_field_bb = bounding_box_query(
                     model_field,
                     vertical_key,
@@ -1072,8 +1083,14 @@ def spatial_interpolation(
             model_t_identifier, item=True
         )
 
+        ###m_vertical_id = model_field_bb.coordinate(vertical_key).identity()
+        ###o_vertical_key = obs_field.coordinate(m_vertical_id, key=True)
+
         # Get the axes positions first before we iterate
         z_coord = model_field_bb.coordinate(vertical_key)
+        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+        print("Z IS", z_coord)
+
         data_axes = model_field_bb.get_data_axes()
         time_da = model_field_bb.domain_axis(model_t_identifier, key=True)
         time_da_index = data_axes.index(time_da)
@@ -1090,6 +1107,9 @@ def spatial_interpolation(
                     "Invalid 'source_axes' input, should have 'X' and 'Y' "
                     f"keys but didn't get those for input: {source_axes}"
                 )
+
+        print("GOT", apply_wrf_preproc_to_move)
+        apply_wrf_preproc_to_move = True
 
         # TODO WRF fixes to pull out:
         if apply_wrf_preproc_to_move:
@@ -1115,6 +1135,8 @@ def spatial_interpolation(
                     z_axes_spec,
                 )
 
+            print("HERE LM ISSUE")
+            print(model_field_z_per_time)
             # Do the regrids weighting operation for the 3D Z in each case
             spatially_colocated_field_comp = model_field_z_per_time.regrids(
                 obs_field,

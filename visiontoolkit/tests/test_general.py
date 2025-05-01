@@ -297,7 +297,7 @@ class TestFlightObservationsWRFModel:
     # specific configurations
     base_config_flight_wrf = {
         "model-data-path": (
-            "../../pre-processing/wrf-model-data-preprocessing/"
+            "../pre-processing/wrf-model-data-preprocessing/"
             "wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc"
         ),
         "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
@@ -378,6 +378,13 @@ class TestFlightObservationsWRFModel:
         }
         run_toolkit_with_config(c4_flight_wrf, capsys, tmp_path)
 
+    @pytest.mark.skip(
+        # TODO
+        reason=(
+            "points too far apart in cell space, we've agreed this shouldn't "
+            "be supported as a case but need to add better error to explain"
+        )
+    )
     def test_config_c5_flight_wrf(self, capsys, tmp_path):
         """TODO c5: TODO describe main reasons for config."""
         c5_flight_wrf = {
