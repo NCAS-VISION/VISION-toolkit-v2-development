@@ -79,8 +79,11 @@ class TestGeneral:
         ) in cmd_stdout_ignore_newlines
 
 
-class TestFlightObservationsUMModel:
-    """Test toolkit for case of flight path observations and UM model input."""
+class TestFlightObservationsUMModelConstantPressure:
+    """Test toolkit for case of flight path observations and UM model input.
+
+    These cases have constant pressure levels.
+    """
     # Base configurations, which the specific configurations tend to build on
     # so use these as a base to override with edited values for the final
     # specific configurations
@@ -108,27 +111,6 @@ class TestFlightObservationsUMModel:
         },
         "plot-of-input-obs-track-only": 2,
     }
-    base_config_hybid_height = {
-        # Data paths and chosen fields
-        "model-data-path": "../data/2025-maria-um-hybrid/*.pp",
-        "obs-data-path": (
-            f"{obs_data_root}core_faam_20170703_c016_STANCO_CF.nc"
-        ),
-        "orography": "../data/2025-maria-um-hybrid/orography.pp",
-        # cf-plot config.
-        "cfp-cscale": "WhiteBlueGreenYellowRed",
-        "cfp-mapset-config": {
-            "latmax": 54,
-            "latmin": 50,
-            "lonmax": 2,
-            "lonmin": -2,
-            "resolution": "10m",
-        },
-        # Other
-        "start-time-override": "1998-02-21 11:50:00",
-    }
-
-    # Constant pressure levels - 5 configurations to test on (c1 - c5)
 
     def test_config_c1_flight_um(self, capsys, tmp_path):
         """TODO c1: TODO describe main reasons for config."""
@@ -211,7 +193,52 @@ class TestFlightObservationsUMModel:
         }
         run_toolkit_with_config(c5_flight_um, capsys, tmp_path)
 
-    # Hybrid height vertical levels - 3 configurations to test on (c6 - c8)
+
+class TestFlightObservationsUMModelHybridHeight:
+    """Test toolkit for case of flight path observations and UM model input.
+
+    These cases have hybrid height vertical levels.
+    """
+    # TODO in these cases, plotting issue from cf-plot apparent bug, so
+    # turn all plotting off - see commented out lines.
+
+    # Base configurations, which the specific configurations tend to build on
+    # so use these as a base to override with edited values for the final
+    # specific configurations
+    obs_data_root = "../data/compliant-data/"
+    base_config_hybid_height = {
+        # Data paths and chosen fields
+        "model-data-path": "../data/2025-maria-um-hybrid/*.pp",
+        "obs-data-path": (
+            f"{obs_data_root}core_faam_20170703_c016_STANCO_CF.nc"
+        ),
+        "orography": "../data/2025-maria-um-hybrid/orography.pp",
+        # cf-plot config.
+        "cfp-cscale": "WhiteBlueGreenYellowRed",
+        "cfp-mapset-config": {
+            "latmax": 54,
+            "latmin": 50,
+            "lonmax": 2,
+            "lonmin": -2,
+            "resolution": "10m",
+        },
+        # NOTE for now need both of these levels (input and output cases)
+        # set for any plotting, else hit a cf-plot
+        # bug that hasn't been fixed for 3.4.0
+        # "cfp-input-levs-config": {
+        #     "max": 1e-07,
+        #     "min": 5e-08,
+        #     "step": 2.5e-09,
+        # },
+        # "cfp-output-levs-config": {
+        #     "max": 9.0e-08,
+        #     "min": 4.5e-08,
+        #     "step": 0.5e-08,
+        # },
+        "skip-all-plotting": True,
+        # Other
+        "start-time-override": "1998-02-21 11:50:00",
+    }
 
     def test_config_c6_flight_um(self, capsys, tmp_path):
         """TODO c6: TODO describe main reasons for config."""
@@ -234,7 +261,7 @@ class TestFlightObservationsUMModel:
             **self.base_config_hybid_height,
             **{
                 # Changes relative to base configuration choice, if any
-                "model-data-path": "../../data/2025-maria-um-hybrid/*[!orography].pp",
+                "model-data-path": "../data/2025-maria-um-hybrid/*[!orography].pp",
                 "chosen-model-field": "id%UM_m01s34i104_vn1105",
                 "chosen-obs-field": "mole_fraction_of_ozone_in_air",
                 # Not relevant to testing: names outputs
@@ -250,7 +277,7 @@ class TestFlightObservationsUMModel:
             **self.base_config_hybid_height,
             **{
                 # Changes relative to base configuration choice, if any
-                "model-data-path": "../../data/2025-maria-um-hybrid/*[!orography].pp",
+                "model-data-path": "../data/2025-maria-um-hybrid/*[!orography].pp",
                 "chosen-model-field": "id%UM_m01s34i117_vn1105",
                 "chosen-obs-field": False,
                 # Not relevant to testing: names outputs
@@ -271,7 +298,7 @@ class TestFlightObservationsWRFModel:
             "../../pre-processing/wrf-model-data-preprocessing/"
             "wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc"
         ),
-        'obs-data-path': '../../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc',
+        'obs-data-path': '../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc',
         "chosen-obs-field": "mole_fraction_of_ozone_in_air",
         'chosen-model-field': 'ncvar%T',
         "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
@@ -355,7 +382,7 @@ class TestFlightObservationsWRFModel:
             **self.base_config_flight_wrf,
             **{
                 # Changes relative to base configuration choice, if any
-                "obs-data-path": "../../data/2025-laurents-twopoint-flight/field.nc",
+                "obs-data-path": "../data/2025-laurents-twopoint-flight/field.nc",
                 "chosen-obs-field": "ncvar%tc",
                 "start-time-override": "2023-07-10 12:00:00",
                 "plot-of-input-obs-track-only": False,
@@ -373,17 +400,16 @@ class TestSatelliteObservationsUMModel:
     # Base configuration, which the specific configurations tend to build on
     # so use these as a base to override with edited values for the final
     # specific configurations
-    obs_data_dir = "../../data/marias-satellite-example-data/satellite-data/"
+    obs_data_dir = "../data/marias-satellite-example-data/satellite-data/"
     obs_data_root = (
         f"{obs_data_dir}ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw"
     )
     base_config_satellite_um = {
-        "model-data-path": "../../data/main-workwith-test-ISO-simulator/Model_Input",
+        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
         "preprocess-mode-obs": "satellite",
         "chosen-model-field": "id%UM_m01s51i010_vn1105",
         "skip-all-plotting": False,
     }
-
 
     def test_config_c1_satellite_um(self, capsys, tmp_path):
         """TODO c1: TODO describe main reasons for config."""

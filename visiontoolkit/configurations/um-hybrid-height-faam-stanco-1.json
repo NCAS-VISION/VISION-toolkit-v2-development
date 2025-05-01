@@ -7,17 +7,5 @@
     "chosen-model-field":"air_temperature",
     "outputs-dir":"toolkit-outputs/um-hybrid-height-faam-stanco-1",
     "output-file-name":"um_hh_faam_stanco_1_vision_result.nc",
-    "cfp-cscale": "WhiteBlueGreenYellowRed",
-    "cfp-mapset-config":{
-        "lonmin":-2,
-        "lonmax":2,
-        "latmin":50,
-        "latmax":54,
-        "resolution":"10m"
-    },
-    "cfp-output-levs-config":{
-        "min":250,
-        "max":290,
-        "step":2
-    }
+    "skip-all-plotting":true
 }
