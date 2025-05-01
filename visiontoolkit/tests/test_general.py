@@ -10,7 +10,7 @@ import visiontoolkit
 
 
 def run_toolkit_with_config(config_dict, capsys, tmp_path):
-    """Test command `$ visiontoolkit --config-file=<config as mock json>`.
+    """Test command `$ visiontoolkit --config-file=<config as temp json>`.
 
     Helper function for testing visiontookit on a given config. via the
     capsys fixture.
@@ -25,10 +25,12 @@ def run_toolkit_with_config(config_dict, capsys, tmp_path):
 
     with patch.object(
             sys, "argv",
-            ["visiontoolkit.py", "--config-file", str(config_file)]  # "--help"]
+            ["visiontoolkit.py", "--config-file", str(config_file)]
     ):
-        with pytest.raises(SystemExit):
-            visiontoolkit.main()
+        visiontoolkit.main()
+
+    captured = capsys.readouterr()
+    return captured
 
 
 class TestGeneral:
