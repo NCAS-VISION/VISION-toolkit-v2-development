@@ -9,26 +9,26 @@ from unittest.mock import patch, mock_open
 import visiontoolkit
 
 
-def run_toolkit_with_config(config_dict, capsys):
+def run_toolkit_with_config(config_dict, capsys, tmp_path):
     """Test command `$ visiontoolkit --config-file=<config as mock json>`.
 
     Helper function for testing visiontookit on a given config. via the
     capsys fixture.
     """
+    # NOTE: seems like we can't simply mock open to simulate reading the JSON
+    # file via mock_open because of internal cf-python file existence checks,
+    # so we need to write out a temporary file to test a real JSON config. file
+    # from the equivalent config. dict of keys and values. Also this matches
+    # real-world behaviour preoperly so is safer as a testing approach.
+    config_file = tmp_path / "config_file.json"
+    config_file.write_text(json.dumps(config_dict))
 
-    # Convert dict to JSON string
-    mock_json = json.dumps(config_dict)
-
-    # Mock open to simulate reading the JSON file
-    m = mock_open(read_data=mock_json)
-
-    with patch("builtins.open", m):
-        with patch.object(
-                sys, "argv",
-                ["visiontoolkit.py", "--config-file", "fake_config.json"]
-        ):
-            with pytest.raises(SystemExit):
-                visiontoolkit.main()
+    with patch.object(
+            sys, "argv",
+            ["visiontoolkit.py", "--config-file", str(config_file)]  # "--help"]
+    ):
+        with pytest.raises(SystemExit):
+            visiontoolkit.main()
 
 
 class TestGeneral:
@@ -41,7 +41,7 @@ class TestGeneral:
 
     """
 
-    def test_help(self, capsys):
+    def test_help(self, capsys, tmp_path):
         """Test the `$ visiontoolkit --help` command."""
         # Setup to run command
         with patch.object(sys, "argv", ["visiontoolkit.py", "--help"]):
@@ -76,20 +76,16 @@ class TestGeneral:
             "-h, --help            show this help message and exit"
         ) in cmd_stdout_ignore_newlines
 
-    def test_verbosity(self, capsys):
-        """Test the `$ visiontoolkit -v(vvv)` commands to edit verbosity."""
-        pass  # TODO
-
 
 class TestFlightObservationsUMModel:
     """Test toolkit for case of flight path observations and UM model input."""
     # Base configurations, which the specific configurations tend to build on
     # so use these as a base to override with edited values for the final
     # specific configurations
-    obs_data_root = "../../data/compliant-data/"
+    obs_data_root = "../data/compliant-data/"
     base_config_constant_vert_levs = {
         # Data paths and chosen fields
-        "model-data-path": "../../data/main-workwith-test-ISO-simulator/Model_Input",
+        "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
         "obs-data-path": f"{obs_data_root}core_faam_20170703_c016_STANCO_CF.nc",
         "chosen-model-field": "id%UM_m01s51i010_vn1105",
         "chosen-obs-field": False,
@@ -112,11 +108,11 @@ class TestFlightObservationsUMModel:
     }
     base_config_hybid_height = {
         # Data paths and chosen fields
-        "model-data-path": "../../data/2025-maria-um-hybrid/*.pp",
+        "model-data-path": "../data/2025-maria-um-hybrid/*.pp",
         "obs-data-path": (
             f"{obs_data_root}core_faam_20170703_c016_STANCO_CF.nc"
         ),
-        "orography": "../../data/2025-maria-um-hybrid/orography.pp",
+        "orography": "../data/2025-maria-um-hybrid/orography.pp",
         # cf-plot config.
         "cfp-cscale": "WhiteBlueGreenYellowRed",
         "cfp-mapset-config": {
@@ -132,7 +128,7 @@ class TestFlightObservationsUMModel:
 
     # Constant pressure levels - 5 configurations to test on (c1 - c5)
 
-    def test_config_c1_flight_um(self, capsys):
+    def test_config_c1_flight_um(self, capsys, tmp_path):
         """TODO c1: TODO describe main reasons for config."""
         c1_flight_um = {
             **self.base_config_constant_vert_levs,
@@ -144,9 +140,9 @@ class TestFlightObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-1",
             }
         }
-        run_toolkit_with_config(c1_flight_um, capsys)
+        run_toolkit_with_config(c1_flight_um, capsys, tmp_path)
 
-    def test_config_c2_flight_um(self, capsys):
+    def test_config_c2_flight_um(self, capsys, tmp_path):
         """TODO c2: TODO describe main reasons for config."""
         c2_flight_um = {
             **self.base_config_constant_vert_levs,
@@ -161,9 +157,9 @@ class TestFlightObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-2",
             }
         }
-        run_toolkit_with_config(c2_flight_um, capsys)
+        run_toolkit_with_config(c2_flight_um, capsys, tmp_path)
 
-    def test_config_c3_flight_um(self, capsys):
+    def test_config_c3_flight_um(self, capsys, tmp_path):
         """TODO c3: TODO describe main reasons for config."""
         c3_flight_um = {
             **self.base_config_constant_vert_levs,
@@ -178,9 +174,9 @@ class TestFlightObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-3",
             }
         }
-        run_toolkit_with_config(c3_flight_um, capsys)
+        run_toolkit_with_config(c3_flight_um, capsys, tmp_path)
 
-    def test_config_c4_flight_um(self, capsys):
+    def test_config_c4_flight_um(self, capsys, tmp_path):
         """TODO c4: TODO describe main reasons for config."""
         c4_flight_um = {
             **self.base_config_constant_vert_levs,
@@ -194,9 +190,9 @@ class TestFlightObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-4",
             }
         }
-        run_toolkit_with_config(c4_flight_um, capsys)
+        run_toolkit_with_config(c4_flight_um, capsys, tmp_path)
 
-    def test_config_c5_flight_um(self, capsys):
+    def test_config_c5_flight_um(self, capsys, tmp_path):
         """TODO c5: TODO describe main reasons for config."""
         c5_flight_um = {
             **self.base_config_constant_vert_levs,
@@ -211,11 +207,11 @@ class TestFlightObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-5",
             }
         }
-        run_toolkit_with_config(c5_flight_um, capsys)
+        run_toolkit_with_config(c5_flight_um, capsys, tmp_path)
 
     # Hybrid height vertical levels - 3 configurations to test on (c6 - c8)
 
-    def test_config_c6_flight_um(self, capsys):
+    def test_config_c6_flight_um(self, capsys, tmp_path):
         """TODO c6: TODO describe main reasons for config."""
         c6_flight_um = {
             **self.base_config_hybid_height,
@@ -228,9 +224,9 @@ class TestFlightObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-hybrid-height-faam-stanco-1",
             }
         }
-        run_toolkit_with_config(c6_flight_um, capsys)
+        run_toolkit_with_config(c6_flight_um, capsys, tmp_path)
 
-    def test_config_c7_flight_um(self, capsys):
+    def test_config_c7_flight_um(self, capsys, tmp_path):
         """TODO c7: TODO describe main reasons for config."""
         c7_flight_um = {
             **self.base_config_hybid_height,
@@ -244,9 +240,9 @@ class TestFlightObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-hybrid-height-faam-stanco-2",
             }
         }
-        run_toolkit_with_config(c7_flight_um, capsys)
+        run_toolkit_with_config(c7_flight_um, capsys, tmp_path)
 
-    def test_config_c8_flight_um(self, capsys):
+    def test_config_c8_flight_um(self, capsys, tmp_path):
         """TODO c8: TODO describe main reasons for config."""
         c8_flight_um = {
             **self.base_config_hybid_height,
@@ -260,7 +256,7 @@ class TestFlightObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-hybrid-height-faam-stanco-3",
             }
         }
-        run_toolkit_with_config(c8_flight_um, capsys)
+        run_toolkit_with_config(c8_flight_um, capsys, tmp_path)
 
 
 class TestFlightObservationsWRFModel:
@@ -289,7 +285,7 @@ class TestFlightObservationsWRFModel:
         "cfp-output-levs-config": {"max": -1, "min": -11, "step": 1},
     }
 
-    def test_config_c1_flight_wrf(self, capsys):
+    def test_config_c1_flight_wrf(self, capsys, tmp_path):
         """TODO c1: TODO describe main reasons for config."""
         c1_flight_wrf = {
             **self.base_config_flight_wrf,
@@ -303,9 +299,9 @@ class TestFlightObservationsWRFModel:
                 'outputs-dir': 'toolkit-outputs/wrf-faam-stanco-1',
             }
         }
-        run_toolkit_with_config(c1_flight_wrf, capsys)
+        run_toolkit_with_config(c1_flight_wrf, capsys, tmp_path)
 
-    def test_config_c2_flight_wrf(self, capsys):
+    def test_config_c2_flight_wrf(self, capsys, tmp_path):
         """TODO c2: TODO describe main reasons for config."""
         c2_flight_wrf = {
             **self.base_config_flight_wrf,
@@ -319,9 +315,9 @@ class TestFlightObservationsWRFModel:
                 "outputs-dir": "toolkit-outputs/wrf-faam-stanco-2",
             }
         }
-        run_toolkit_with_config(c2_flight_wrf, capsys)
+        run_toolkit_with_config(c2_flight_wrf, capsys, tmp_path)
 
-    def test_config_c3_flight_wrf(self, capsys):
+    def test_config_c3_flight_wrf(self, capsys, tmp_path):
         """TODO c3: TODO describe main reasons for config."""
         c3_flight_wrf = {
             **self.base_config_flight_wrf,
@@ -334,9 +330,9 @@ class TestFlightObservationsWRFModel:
                 'outputs-dir': 'toolkit-outputs/wrf-faam-stanco-3',
             }
         }
-        run_toolkit_with_config(c3_flight_wrf, capsys)
+        run_toolkit_with_config(c3_flight_wrf, capsys, tmp_path)
 
-    def test_config_c4_flight_wrf(self, capsys):
+    def test_config_c4_flight_wrf(self, capsys, tmp_path):
         """TODO c4: TODO describe main reasons for config."""
         c4_flight_wrf = {
             **self.base_config_flight_wrf,
@@ -349,9 +345,9 @@ class TestFlightObservationsWRFModel:
                 "outputs-dir": "toolkit-outputs/wrf-faam-stanco-4",
             }
         }
-        run_toolkit_with_config(c4_flight_wrf, capsys)
+        run_toolkit_with_config(c4_flight_wrf, capsys, tmp_path)
 
-    def test_config_c5_flight_wrf(self, capsys):
+    def test_config_c5_flight_wrf(self, capsys, tmp_path):
         """TODO c5: TODO describe main reasons for config."""
         c5_flight_wrf = {
             **self.base_config_flight_wrf,
@@ -367,7 +363,7 @@ class TestFlightObservationsWRFModel:
                 "outputs-dir": "toolkit-outputs/wrf-faam-stanco-5",
             }
         }
-        run_toolkit_with_config(c5_flight_wrf, capsys)
+        run_toolkit_with_config(c5_flight_wrf, capsys, tmp_path)
 
 
 class TestSatelliteObservationsUMModel:
@@ -387,7 +383,7 @@ class TestSatelliteObservationsUMModel:
     }
 
 
-    def test_config_c1_satellite_um(self, capsys):
+    def test_config_c1_satellite_um(self, capsys, tmp_path):
         """TODO c1: TODO describe main reasons for config."""
         c1_satellite_um = {
             **self.base_config_satellite_um,
@@ -416,9 +412,9 @@ class TestSatelliteObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-satellite-1",
                 }
         }
-        run_toolkit_with_config(c1_satellite_um, capsys)
+        run_toolkit_with_config(c1_satellite_um, capsys, tmp_path)
 
-    def test_config_c2_satellite_um(self, capsys):
+    def test_config_c2_satellite_um(self, capsys, tmp_path):
         """TODO c2: TODO describe main reasons for config."""
         c2_satellite_um = {
             **self.base_config_satellite_um,
@@ -442,9 +438,9 @@ class TestSatelliteObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-satellite-2",
             }
         }
-        run_toolkit_with_config(c2_satellite_um, capsys)
+        run_toolkit_with_config(c2_satellite_um, capsys, tmp_path)
 
-    def test_config_c3_satellite_um(self, capsys):
+    def test_config_c3_satellite_um(self, capsys, tmp_path):
         """TODO c3: TODO describe main reasons for config."""
         c3_satellite_um = {
             **self.base_config_satellite_um,
@@ -472,9 +468,9 @@ class TestSatelliteObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-satellite-3",
             }
         }
-        run_toolkit_with_config(c3_satellite_um, capsys)
+        run_toolkit_with_config(c3_satellite_um, capsys, tmp_path)
 
-    def test_config_c4_satellite_um(self, capsys):
+    def test_config_c4_satellite_um(self, capsys, tmp_path):
         """TODO c4: TODO describe main reasons for config."""
         c4_satellite_um = {
             **self.base_config_satellite_um,
@@ -497,9 +493,9 @@ class TestSatelliteObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-satellite-4",
             }
         }
-        run_toolkit_with_config(c4_satellite_um, capsys)
+        run_toolkit_with_config(c4_satellite_um, capsys, tmp_path)
 
-    def test_config_c5_satellite_um(self, capsys):
+    def test_config_c5_satellite_um(self, capsys, tmp_path):
         """TODO c5: TODO describe main reasons for config."""
         c5_satellite_um = {
             **self.base_config_satellite_um,
@@ -517,9 +513,9 @@ class TestSatelliteObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-satellite-5",
             }
         }
-        run_toolkit_with_config(c5_satellite_um, capsys)
+        run_toolkit_with_config(c5_satellite_um, capsys, tmp_path)
 
-    def test_config_c6_satellite_um(self, capsys):
+    def test_config_c6_satellite_um(self, capsys, tmp_path):
         """TODO c6: TODO describe main reasons for config."""
         c6_satellite_um = {
             **self.base_config_satellite_um,
@@ -547,9 +543,9 @@ class TestSatelliteObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-satellite-6",
             }
         }
-        run_toolkit_with_config(c6_satellite_um, capsys)
+        run_toolkit_with_config(c6_satellite_um, capsys, tmp_path)
 
-    def test_config_c7_satellite_um(self, capsys):
+    def test_config_c7_satellite_um(self, capsys, tmp_path):
         """TODO c7: TODO describe main reasons for config."""
         c7_satellite_um = {
             **self.base_config_satellite_um,
@@ -578,9 +574,9 @@ class TestSatelliteObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-satellite-7",
             }
         }
-        run_toolkit_with_config(c7_satellite_um, capsys)
+        run_toolkit_with_config(c7_satellite_um, capsys, tmp_path)
 
-    def test_config_c8_satellite_um(self, capsys):
+    def test_config_c8_satellite_um(self, capsys, tmp_path):
         """TODO c8: TODO describe main reasons for config."""
         c8_satellite_um = {
             **self.base_config_satellite_um,
@@ -602,9 +598,9 @@ class TestSatelliteObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-satellite-8",
             }
         }
-        run_toolkit_with_config(c8_satellite_um, capsys)
+        run_toolkit_with_config(c8_satellite_um, capsys, tmp_path)
 
-    def test_config_c9_satellite_um(self, capsys):
+    def test_config_c9_satellite_um(self, capsys, tmp_path):
         """TODO c9: TODO describe main reasons for config."""
         c9_satellite_um = {
             **self.base_config_satellite_um,
@@ -630,9 +626,9 @@ class TestSatelliteObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-satellite-9",
             }
         }
-        run_toolkit_with_config(c9_satellite_um, capsys)
+        run_toolkit_with_config(c9_satellite_um, capsys, tmp_path)
 
-    def test_config_c10_satellite_um(self, capsys):
+    def test_config_c10_satellite_um(self, capsys, tmp_path):
         """TODO c10: TODO describe main reasons for config."""
         c10_satellite_um = {
             **self.base_config_satellite_um,
@@ -650,7 +646,7 @@ class TestSatelliteObservationsUMModel:
                 "outputs-dir": "toolkit-outputs/um-satellite-10",
             }
         }
-        run_toolkit_with_config(c10_satellite_um, capsys)
+        run_toolkit_with_config(c10_satellite_um, capsys, tmp_path)
 
 
 class TestSatelliteObservationsWRFModel:
