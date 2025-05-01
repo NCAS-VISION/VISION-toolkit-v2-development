@@ -661,7 +661,6 @@ def bounding_box_query(
         f"{model_coord} of {model_field} "
     )
 
-    print("COORD TIGHT BOUDS", coord_tight_bounds)
     obs_min, obs_max = coord_tight_bounds
 
     # Get an array with truth values representing whether the obs values
@@ -670,7 +669,6 @@ def bounding_box_query(
     # TODO could combine into one 'wo' to simplify, probably?
     # Note we can't do 'wo' since for these cases there wouldn't be
     # want zeros.
-    print("HAVE", obs_min, model_coord)
     min_query_result = cf.lt(obs_min) == model_coord
     max_query_result = cf.gt(obs_max) == model_coord
 
@@ -1019,6 +1017,7 @@ def spatial_interpolation(
     no_vertical,
     vertical_key,
     apply_wrf_preproc_to_move=False,
+    wrf_extra_comp=False,
 ):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
 
@@ -1088,8 +1087,6 @@ def spatial_interpolation(
 
         # Get the axes positions first before we iterate
         z_coord = model_field_bb.coordinate(vertical_key)
-        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        print("Z IS", z_coord)
 
         data_axes = model_field_bb.get_data_axes()
         time_da = model_field_bb.domain_axis(model_t_identifier, key=True)
@@ -1108,11 +1105,7 @@ def spatial_interpolation(
                     f"keys but didn't get those for input: {source_axes}"
                 )
 
-        print("GOT", apply_wrf_preproc_to_move)
-        apply_wrf_preproc_to_move = True
-
-        # TODO WRF fixes to pull out:
-        if apply_wrf_preproc_to_move:
+        if wrf_extra_comp:
             z_coord = wrf_extra_compliance_fixes(
                 model_field_bb,
                 z_coord,
@@ -1127,16 +1120,16 @@ def spatial_interpolation(
                 **{model_t_identifier: mtime}
             )
 
-            if apply_wrf_preproc_to_move:
+            if wrf_extra_comp:
                 wrf_further_compliance_fixes(
                     model_field_z_per_time,
                     vertical_key,
                     time_da_index,
                     z_axes_spec,
+                    source_axes,
                 )
 
-            print("HERE LM ISSUE")
-            print(model_field_z_per_time)
+            # LM issue is here
             # Do the regrids weighting operation for the 3D Z in each case
             spatially_colocated_field_comp = model_field_z_per_time.regrids(
                 obs_field,
@@ -1319,7 +1312,6 @@ def time_interpolation(
         "*** Begin iteration over pairwise 'segments'. ***\n"
         f"Segments to loop over are, pairwise: {model_times.datetime_array}"
     )
-    print("THIS IS", list(pairwise(model_times.datetime_array)))
 
     # Note the length of (pairwise(model_times.datetime_array) is equal to
     # model_times_len - 1 by its nature, e.g. A, B, C -> (A, B), (B, C)).
@@ -1541,11 +1533,9 @@ def create_contiguous_ragged_array_output(unproc_output):
     # loop above. (TODO list comp eventually is probably best.)
     for index, field in enumerate(unproc_output):
         if index == 1:
-            print("BEFORE")
             field.dump()
         cf_role_axis, traj_aux_coord = set_cf_role(field, index)
         if index == 1:
-            print("AFTER")
             field.dump()
 
         # TODO upgrade to debug logger once sorted functionality
@@ -1759,6 +1749,10 @@ def colocate_single_file(
         vertical_key=vertical_key,
     )
 
+    extra_compliance_proc_for_wrf = False
+    if preprocess_obs == "wrf":
+        extra_compliance_proc_for_wrf = True
+
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
         obs_field,
@@ -1769,6 +1763,7 @@ def colocate_single_file(
         model_t_identifier,
         no_vertical,
         vertical_key=vertical_key,
+        wrf_extra_comp=extra_compliance_proc_for_wrf,
     )
 
     # For such cases as satellite swaths, the times can straddle model points

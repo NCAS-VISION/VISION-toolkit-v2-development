@@ -301,6 +301,7 @@ class TestFlightObservationsWRFModel:
             "wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc"
         ),
         "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
+        "preprocess-mode-obs":"wrf",
         "chosen-obs-field": "mole_fraction_of_ozone_in_air",
         "chosen-model-field": "ncvar%T",
         "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
