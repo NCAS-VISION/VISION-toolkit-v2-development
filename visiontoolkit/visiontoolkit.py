@@ -1563,14 +1563,12 @@ def make_output_plots(
     """
     output_plots(
         output,
-        obs_t_identifier,
         cfp_output_levs_config,
         outputs_dir,
         plotname_start,
         new_obs_starttime,
         cfp_output_general_config,
         verbose,
-        preprocess_model=False,
     )
 
 
