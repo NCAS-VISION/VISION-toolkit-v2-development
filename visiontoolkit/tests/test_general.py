@@ -24,8 +24,7 @@ def run_toolkit_with_config(config_dict, capsys, tmp_path):
     config_file.write_text(json.dumps(config_dict))
 
     with patch.object(
-            sys, "argv",
-            ["visiontoolkit.py", "--config-file", str(config_file)]
+        sys, "argv", ["visiontoolkit.py", "--config-file", str(config_file)]
     ):
         visiontoolkit.main()
 
@@ -84,6 +83,7 @@ class TestFlightObservationsUMModelConstantPressure:
 
     These cases have constant pressure levels.
     """
+
     # Base configurations, which the specific configurations tend to build on
     # so use these as a base to override with edited values for the final
     # specific configurations
@@ -122,7 +122,7 @@ class TestFlightObservationsUMModelConstantPressure:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_faam_stanco_1_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-1",
-            }
+            },
         }
         run_toolkit_with_config(c1_flight_um, capsys, tmp_path)
 
@@ -139,7 +139,7 @@ class TestFlightObservationsUMModelConstantPressure:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_faam_stanco_2_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-2",
-            }
+            },
         }
         run_toolkit_with_config(c2_flight_um, capsys, tmp_path)
 
@@ -156,7 +156,7 @@ class TestFlightObservationsUMModelConstantPressure:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_faam_stanco_3_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-3",
-            }
+            },
         }
         run_toolkit_with_config(c3_flight_um, capsys, tmp_path)
 
@@ -172,7 +172,7 @@ class TestFlightObservationsUMModelConstantPressure:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_faam_stanco_4_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-4",
-            }
+            },
         }
         run_toolkit_with_config(c4_flight_um, capsys, tmp_path)
 
@@ -189,7 +189,7 @@ class TestFlightObservationsUMModelConstantPressure:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_faam_stanco_5_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-5",
-            }
+            },
         }
         run_toolkit_with_config(c5_flight_um, capsys, tmp_path)
 
@@ -199,6 +199,7 @@ class TestFlightObservationsUMModelHybridHeight:
 
     These cases have hybrid height vertical levels.
     """
+
     # TODO in these cases, plotting issue from cf-plot apparent bug, so
     # turn all plotting off - see commented out lines.
 
@@ -251,7 +252,7 @@ class TestFlightObservationsUMModelHybridHeight:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_hh_faam_stanco_1_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-hybrid-height-faam-stanco-1",
-            }
+            },
         }
         run_toolkit_with_config(c6_flight_um, capsys, tmp_path)
 
@@ -267,7 +268,7 @@ class TestFlightObservationsUMModelHybridHeight:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_hh_faam_stanco_2_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-hybrid-height-faam-stanco-2",
-            }
+            },
         }
         run_toolkit_with_config(c7_flight_um, capsys, tmp_path)
 
@@ -283,24 +284,25 @@ class TestFlightObservationsUMModelHybridHeight:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_hh_faam_stanco_3_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-hybrid-height-faam-stanco-3",
-            }
+            },
         }
         run_toolkit_with_config(c8_flight_um, capsys, tmp_path)
 
 
 class TestFlightObservationsWRFModel:
     """Test toolkit for case of flight path observations and WRF model input."""
+
     # Base configuration, which the specific configurations tend to build on
     # so use these as a base to override with edited values for the final
     # specific configurations
     base_config_flight_wrf = {
-        'model-data-path': (
+        "model-data-path": (
             "../../pre-processing/wrf-model-data-preprocessing/"
             "wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc"
         ),
-        'obs-data-path': '../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc',
+        "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
         "chosen-obs-field": "mole_fraction_of_ozone_in_air",
-        'chosen-model-field': 'ncvar%T',
+        "chosen-model-field": "ncvar%T",
         "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
         "vertical-colocation-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
         "cfp-mapset-config": {
@@ -320,13 +322,13 @@ class TestFlightObservationsWRFModel:
             **self.base_config_flight_wrf,
             **{
                 # Changes relative to base configuration choice, if any
-                'start-time-override': '2023-07-10 12:00:00',
-                'plot-of-input-obs-track-only': 2,
-                'skip-all-plotting': True,
+                "start-time-override": "2023-07-10 12:00:00",
+                "plot-of-input-obs-track-only": 2,
+                "skip-all-plotting": True,
                 # Not relevant to testing: names outputs
-                'output-file-name': 'wrf_faam_stanco_1_vision_result.nc',
-                'outputs-dir': 'toolkit-outputs/wrf-faam-stanco-1',
-            }
+                "output-file-name": "wrf_faam_stanco_1_vision_result.nc",
+                "outputs-dir": "toolkit-outputs/wrf-faam-stanco-1",
+            },
         }
         run_toolkit_with_config(c1_flight_wrf, capsys, tmp_path)
 
@@ -342,7 +344,7 @@ class TestFlightObservationsWRFModel:
                 # Not relevant to testing: names outputs
                 "output-file-name": "wrf_faam_stanco_2_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/wrf-faam-stanco-2",
-            }
+            },
         }
         run_toolkit_with_config(c2_flight_wrf, capsys, tmp_path)
 
@@ -352,12 +354,12 @@ class TestFlightObservationsWRFModel:
             **self.base_config_flight_wrf,
             **{
                 # Changes relative to base configuration choice, if any
-                'start-time-override': '2023-07-13 00:00:00',
-                'show-plot-of-input-obs': False,
+                "start-time-override": "2023-07-13 00:00:00",
+                "show-plot-of-input-obs": False,
                 # Not relevant to testing: names outputs
-                'output-file-name': 'wrf_faam_stanco_3_vision_result.nc',
-                'outputs-dir': 'toolkit-outputs/wrf-faam-stanco-3',
-            }
+                "output-file-name": "wrf_faam_stanco_3_vision_result.nc",
+                "outputs-dir": "toolkit-outputs/wrf-faam-stanco-3",
+            },
         }
         run_toolkit_with_config(c3_flight_wrf, capsys, tmp_path)
 
@@ -372,7 +374,7 @@ class TestFlightObservationsWRFModel:
                 # Not relevant to testing: names outputs
                 "output-file-name": "wrf_faam_stanco_4_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/wrf-faam-stanco-4",
-            }
+            },
         }
         run_toolkit_with_config(c4_flight_wrf, capsys, tmp_path)
 
@@ -390,13 +392,14 @@ class TestFlightObservationsWRFModel:
                 # Not relevant to testing: names outputs
                 "output-file-name": "wrf_faam_stanco_5_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/wrf-faam-stanco-5",
-            }
+            },
         }
         run_toolkit_with_config(c5_flight_wrf, capsys, tmp_path)
 
 
 class TestSatelliteObservationsUMModel:
     """Test toolkit for case of satellite observations and UM model input."""
+
     # Base configuration, which the specific configurations tend to build on
     # so use these as a base to override with edited values for the final
     # specific configurations
@@ -404,12 +407,8 @@ class TestSatelliteObservationsUMModel:
     obs_data_dir_for_leap_second = (
         "../data/marias-satellite-example-data/satellite-data-leap-second/"
     )
-    obs_data_root = (
-        f"{obs_data_dir}ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw"
-    )
-    obs_data_root_ls = (
-        f"{obs_data_dir_for_leap_second}ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw"
-    )
+    obs_data_root = f"{obs_data_dir}ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw"
+    obs_data_root_ls = f"{obs_data_dir_for_leap_second}ral-l2p-tqoe-iasi_mhs_amsu_metopa-tir_mw"
     base_config_satellite_um = {
         "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
         "preprocess-mode-obs": "satellite",
@@ -444,7 +443,7 @@ class TestSatelliteObservationsUMModel:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_satellite_1_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-satellite-1",
-                }
+            },
         }
         run_toolkit_with_config(c1_satellite_um, capsys, tmp_path)
 
@@ -470,7 +469,7 @@ class TestSatelliteObservationsUMModel:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_satellite_2_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-satellite-2",
-            }
+            },
         }
         run_toolkit_with_config(c2_satellite_um, capsys, tmp_path)
 
@@ -500,7 +499,7 @@ class TestSatelliteObservationsUMModel:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_satellite_3_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-satellite-3",
-            }
+            },
         }
         run_toolkit_with_config(c3_satellite_um, capsys, tmp_path)
 
@@ -525,7 +524,7 @@ class TestSatelliteObservationsUMModel:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_satellite_4_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-satellite-4",
-            }
+            },
         }
         run_toolkit_with_config(c4_satellite_um, capsys, tmp_path)
 
@@ -541,11 +540,15 @@ class TestSatelliteObservationsUMModel:
                 "cfp-cscale": "plasma",
                 "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
                 "cfp-mapset-config": {"proj": "robin", "resolution": "10m"},
-                "cfp-output-levs-config": {"max": 1e-07, "min": 5e-08, "step": 5e-09},
+                "cfp-output-levs-config": {
+                    "max": 1e-07,
+                    "min": 5e-08,
+                    "step": 5e-09,
+                },
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_satellite_5_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-satellite-5",
-            }
+            },
         }
         run_toolkit_with_config(c5_satellite_um, capsys, tmp_path)
 
@@ -575,7 +578,7 @@ class TestSatelliteObservationsUMModel:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_satellite_6_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-satellite-6",
-            }
+            },
         }
         run_toolkit_with_config(c6_satellite_um, capsys, tmp_path)
 
@@ -606,7 +609,7 @@ class TestSatelliteObservationsUMModel:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_satellite_7_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-satellite-7",
-            }
+            },
         }
         run_toolkit_with_config(c7_satellite_um, capsys, tmp_path)
 
@@ -630,7 +633,7 @@ class TestSatelliteObservationsUMModel:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_satellite_8_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-satellite-8",
-            }
+            },
         }
         run_toolkit_with_config(c8_satellite_um, capsys, tmp_path)
 
@@ -658,7 +661,7 @@ class TestSatelliteObservationsUMModel:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_satellite_9_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-satellite-9",
-            }
+            },
         }
         run_toolkit_with_config(c9_satellite_um, capsys, tmp_path)
 
@@ -678,7 +681,7 @@ class TestSatelliteObservationsUMModel:
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_satellite_10_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-satellite-10",
-            }
+            },
         }
         run_toolkit_with_config(c10_satellite_um, capsys, tmp_path)
 
