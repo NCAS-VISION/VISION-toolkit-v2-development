@@ -20,14 +20,18 @@ def wrf_extra_compliance_fixes(
     # are not in compatible order with the data axes. For now, swap
     # them over but this should be rectified with WRF experts.
     new_z_coord = z_coord.swapaxes(1, 0)
+    z_name = model_field_bb.construct(z_id).standard_name
     model_field_bb.del_construct(z_id)
     txyz_axes = [model_t_identifier,] + z_axes_spec
     new_z_id = model_field_bb.set_construct(
-        new_z_coord,  ##z_coord,
+        new_z_coord,
         axes=txyz_axes,
     )
     z_coord = model_field_bb.coordinate(new_z_id)
-    z_coord.set_property("standard_name", value=z_id)
+
+    # Must take care to set standard name not key as the value! To aid this
+    # could do with renaming variables to make them clearer (TODO)
+    z_coord.set_property("standard_name", value=z_name)
 
     return z_coord
 
@@ -50,11 +54,13 @@ def wrf_further_compliance_fixes(
     fin_z_coord = z_coord_per_time
 
     ###z_axes_spec = ["time"] + z_axes_spec  # SLB recent addition, check
-    model_field_z_per_time.set_construct(
+    new_z_id = model_field_z_per_time.set_construct(
         fin_z_coord,
         axes=z_axes_spec,
         ### key=vertical_sn, would this help? seems not
     )
+    z_coord = model_field_z_per_time.coordinate(new_z_id)
+    z_coord.set_property("standard_name", value=vertical_sn)
 
     logger.info(
         f"Squeezed Z coordinate: {z_coord_per_time},"
@@ -66,6 +72,10 @@ def wrf_further_compliance_fixes(
 
     # Also need to squeeze x and y aux coords! for those 2D aux
     # lat and lons! Then everything is all set up for the 3D Z regrids
+    # (need to do this so we have lat and lon coords which are usable
+    # for the regrids later, else get the error:
+    # ValueError: Could not find 1-d nor 2-d latitude and longitude coordinates
+    # )
     for a_name in (lat_id, lon_id) and source_axes:
         # These keys are safe to get, since raise error if they
         # weren't present above
@@ -78,8 +88,8 @@ def wrf_further_compliance_fixes(
         fin_a_coord = (
             a_coord.squeeze()
         )
-        a = model_field_z_per_time.set_construct(
+        new_a_id = model_field_z_per_time.set_construct(
             fin_a_coord,
             axes=x_y_axes_spec,
-            ### key=vertical_sn, would this help? seems not
         )
+        a_coord = model_field_z_per_time.coordinate(new_a_id)

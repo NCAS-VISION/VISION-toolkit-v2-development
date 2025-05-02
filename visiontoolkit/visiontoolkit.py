@@ -798,7 +798,6 @@ def subspace_to_spatiotemporal_bounding_box(
     y_coord_tight_bounds = obs_Y.data.minimum(), obs_Y.data.maximum()
     if not no_vertical:
         z_coord_tight_bounds = obs_Z.data.minimum(), obs_Z.data.maximum()
-        print("Z bounds is", z_coord_tight_bounds)
     t_coord_tight_bounds = obs_times.data.minimum(), obs_times.data.maximum()
 
     bb_kwargs = {
@@ -1016,7 +1015,6 @@ def spatial_interpolation(
     model_t_identifier,
     no_vertical,
     vertical_key,
-    apply_wrf_preproc_to_move=False,
     wrf_extra_comp=False,
 ):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
@@ -1027,8 +1025,6 @@ def spatial_interpolation(
 
     TODO: DETAILED DOCS
     """
-    # TODO: UGRID grids might need some extra steps/work for this.
-
     logger.info("Starting spatial interpolation (regridding) step...")
 
     if no_vertical:
@@ -1082,9 +1078,6 @@ def spatial_interpolation(
             model_t_identifier, item=True
         )
 
-        ###m_vertical_id = model_field_bb.coordinate(vertical_key).identity()
-        ###o_vertical_key = obs_field.coordinate(m_vertical_id, key=True)
-
         # Get the axes positions first before we iterate
         z_coord = model_field_bb.coordinate(vertical_key)
 
@@ -1129,12 +1122,25 @@ def spatial_interpolation(
                     source_axes,
                 )
 
-            # LM issue is here
+            # SLB note LM issue was here, now fixed but check logic
+            # TODO: UGRID grids might need some extra steps/work for this.
+            # Determine obs vertical key for same coord as in model as vertical_key
+            m_vertical_id = model_field_bb.coordinate(vertical_key).identity()
+            o_vertical_key = obs_field.coordinate(m_vertical_id, key=True)
+
             # Do the regrids weighting operation for the 3D Z in each case
             spatially_colocated_field_comp = model_field_z_per_time.regrids(
                 obs_field,
                 method=interpolation_method,
-                z=vertical_key,
+                # NOTE for e.g. WRF cases show need both of these, i.e.
+                # two separate z kwargs instead of z=vertical_key as one
+                # arg to define both
+                # (z='Z' is equivalent to src_z='Z', dst_z='Z'), see:
+                # https://ncas-cms.github.io/cf-python/method/
+                # cf.Field.regrids.html?highlight=regrids#cf.Field.regrids
+                ### z=vertical_key,
+                src_z=vertical_key,
+                dst_z=o_vertical_key,
                 ln_z=True,  # TODO should we use a log here in this case?
                 src_axes=source_axes,
             )
@@ -1145,10 +1151,9 @@ def spatial_interpolation(
             spatially_colocated_fields.append(spatially_colocated_field_comp)
         # Finally, need to concatenate the individually-regridded per-time
         # components
-        # SADIE
         spatially_colocated_field = cf.Field.concatenate(
             spatially_colocated_fields,
-            axis=time_da_index,  ###model_t_identifier,
+            axis=time_da_index,  # old: was model_t_identifier,
         )
         logger.info(
             f"Final concatenated field (from 3D Z colocated fields) is "
@@ -1753,6 +1758,7 @@ def colocate_single_file(
     if preprocess_obs == "wrf":
         extra_compliance_proc_for_wrf = True
 
+    # SADIE HERE ISSUE
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
         obs_field,
