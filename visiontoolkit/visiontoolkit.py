@@ -1231,6 +1231,8 @@ def time_subspace_per_segment(
         s1.dimension_coordinate(model_t_identifier)
         - s0.dimension_coordinate(model_t_identifier)
     ).data
+    # SLB TODO: note this [index] casues WRF issues as reported by
+    # LM - work out for what cases required, if any
     distances_0 = (
         s0.auxiliary_coordinate(model_t_identifier)[index]
         - s0.dimension_coordinate(model_t_identifier)
@@ -1981,18 +1983,23 @@ def main():
         # Write field to disk, but not as CRA in this case
         write_output_data(output, output_path_name)
 
+    # WRF ONLY
+    # TODO do we even need this? Is kinda odgy metadata thing to do anyway...
+    if preprocess_model == "WRF":
+        aux_coor_t = output.auxiliary_coordinate(obs_t_identifier)
+        dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
+        output.set_construct(dim_coor_t, axes="ncdim%obs")
+
     if not skip_all_plotting:
         # Plot the output
         make_output_plots(
             output,
-            obs_t_identifier,
             args.cfp_output_levs_config,
             outputs_dir,
             plotname_start,
             args.start_time_override,
             args.cfp_output_general_config,
             verbose,
-            preprocess_model,
         )
 
 

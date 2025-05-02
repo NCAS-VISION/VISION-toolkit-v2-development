@@ -1,13 +1,19 @@
 # VISION-toolkit-v2-development
 
-**Development towards Version 2 of the VISION project toolkit**
+**Version 2 of the VISION project toolkit**
 
-:warning: Note this code is *actively under development* and no guarantees about
-functionality or about documentation or testing can be made. For a released
-earlier version of the toolkit, please see and use the tool provided in the
+:warning: Note this code is *under development though should be relatively stable now*, though
+there may be some changes. For a released earlier version of the toolkit, please see and
+use the tool provided in the
 [`VISION-toolkit`](https://github.com/NCAS-VISION/VISION-toolkit) repository,
 and consult the documentation there. (When this code is ready it will be copied to that
 repository as its canonical home and marked as Version 2.0 of the toolkit.) :warning:
+
+## Context
+
+For context on this toolkit and its scientific and technical background, please consult
+[these slides](https://github.com/sadielbartholomew/sadielbartholomew/blob/master/talks-and-workshops/VISION_UoR_Met_Dept_lunchtime_seminar.pdf)
+from a recent talk given by a VISION team member.
 
 ## Instructions for setup and use
 
@@ -19,31 +25,18 @@ repository as its canonical home and marked as Version 2.0 of the toolkit.) :war
    you can run and use the command `visiontoolkit` instead of having to call the script
    with the Python interpreter.
 
-4. The **environment** you need will to run it requires a custom branch of
-   cf-plot, and otherwise you will need all the
-   dependencies of that and of cf-python. So, to get the right
-   Python environment (`conda` and/or `mamba` will make it simplest):
+4. The **environment** you need will to run it requires the following:
 
-   1. Ensure you are using Python version 3.10 or later.
-   2. Install the latest cf-python and cf-plot (noting in the latter case this
-      is mostly to ensure you have the right dependencies because we will
-      then go on to install a specific branch from cf-plot as below).
-      To do this, see the instructions at:
-
-      * https://ncas-cms.github.io/cf-python/installation.html
-      * https://ncas-cms.github.io/cf-plot/build/download.html#to-install-cf-plot
-
-   3. You need the latest version of cf-plot on a specific branch where a special
-      bug-fix patch has been applied, so use the `generalise-traj` branch required
-      using the following command:
-      `pip install git+https://github.com/NCAS-CMS/cf-plot.git@generalise-traj`
+   1. Python version 3.10 or later;
+   2. cf-python at a version of minimum of 3.17.0,
+     see https://ncas-cms.github.io/cf-python/installation.html for guidance;
+   3. cf-plot  at a version of minimum 3.4.0, see https://ncas-cms.github.io/cf-plot/installation.html
+   for guidance.
 
 
 ### Running the toolkit
 
-The script has now been given minimal packaging so it can be
-run as a command after installation as per the above instructions. See the available
-CLI from running:
+The script is packaged so it can be run as a command after installation as per the above instructions. See the available command-line interface from running:
 
 ```console
 $ visiontoolkit --help
@@ -64,5 +57,12 @@ or using WRF model input:
 ```console
 $ cd visiontoolkit
 $ visiontoolkit --config-file="configurations/wrf-faam-stanco-1.json"
+```
+
+The above examples are of flight trajectories. A satellite observation case example is:
+
+```console
+$ cd visiontoolkit
+$ visiontoolkit --config-file="configurations/um-satellite-1.json"
 ```
 
