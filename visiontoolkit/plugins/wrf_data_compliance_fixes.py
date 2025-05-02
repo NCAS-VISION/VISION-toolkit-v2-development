@@ -53,11 +53,9 @@ def wrf_further_compliance_fixes(
     z_coord_per_time.squeeze(time_da_index, inplace=True)
     fin_z_coord = z_coord_per_time
 
-    ###z_axes_spec = ["time"] + z_axes_spec  # SLB recent addition, check
     new_z_id = model_field_z_per_time.set_construct(
         fin_z_coord,
         axes=z_axes_spec,
-        ### key=vertical_sn, would this help? seems not
     )
     z_coord = model_field_z_per_time.coordinate(new_z_id)
     z_coord.set_property("standard_name", value=vertical_sn)
@@ -71,11 +69,10 @@ def wrf_further_compliance_fixes(
     )
 
     # Also need to squeeze x and y aux coords! for those 2D aux
-    # lat and lons! Then everything is all set up for the 3D Z regrids
-    # (need to do this so we have lat and lon coords which are usable
+    # lat and lons! Then everything is all set up for the 3D Z regrids.
+    # Need to do this so we have lat and lon coords which are usable
     # for the regrids later, else get the error:
     # ValueError: Could not find 1-d nor 2-d latitude and longitude coordinates
-    # )
     for a_name in (lat_id, lon_id) and source_axes:
         # These keys are safe to get, since raise error if they
         # weren't present above
