@@ -10,21 +10,21 @@
     "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
     "plot-of-input-obs-track-only": false,
     "skip-all-plotting":true,
-    "cfp-output-levs-config":{
-        "min":0,
-        "max":60,
-        "step":5
-    },
-    "cfp-input-levs-config":{
-        "min":-11,
-        "max":-1,
-        "step":1
-    },
     "cfp-mapset-config": {
         "lonmin": -2,
         "lonmax": 2,
         "latmin": 50,
         "latmax": 54,
         "resolution": "10m"
+    },
+    "cfp-input-levs-config":{
+        "min":0,
+        "max":60,
+        "step":5
+    },
+    "cfp-output-levs-config":{
+        "min":-11,
+        "max":-1,
+        "step":1
     }
 }

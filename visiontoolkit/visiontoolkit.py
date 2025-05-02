@@ -23,10 +23,11 @@ from .plotting import preview_plots, output_plots
 
 # Plugins imports
 from .plugins.satellite_compliance_converter import satellite_compliance_plugin
+
 # Should be able to pull this plugin out for responsibility of WRF users?
 from .plugins.wrf_data_compliance_fixes import (
     wrf_extra_compliance_fixes,
-    wrf_further_compliance_fixes
+    wrf_further_compliance_fixes,
 )
 
 
@@ -106,6 +107,7 @@ class InternalsIssue(Exception):
 # Core functions
 # ----------------------------------------------------------------------------
 
+
 def get_env_and_diagnostics_report():
     """Provide an optional report of environment and diagnostics.
 
@@ -156,15 +158,14 @@ def read_obs_input_data(obs_data_path):
 
     TODO: DETAILED DOCS
     """
-    logger.info(
-        f"Observational data input location is: '{obs_data_path}'\n"
-    )
-    fl = cf.read(obs_data_path, ignore_read_error=True)
+    logger.info(f"Observational data input location is: '{obs_data_path}'\n")
+    fl = cf.read(obs_data_path)
     if not fl:
         return
 
     logger.info(
-        "Read in observational data. For example, its first field is:\n")
+        "Read in observational data. For example, its first field is:\n"
+    )
     logger.info(fl[0].dump(display=False))
 
     return fl
@@ -176,9 +177,7 @@ def read_model_input_data(model_data_path):
 
     TODO: DETAILED DOCS
     """
-    logger.info(
-        f"Model data input location is: '{model_data_path}'\n"
-    )
+    logger.info(f"Model data input location is: '{model_data_path}'\n")
     fl = cf.read(model_data_path)
 
     logger.info("Read in model data. For example, its first field is:\n")
@@ -225,7 +224,8 @@ def get_input_fields_of_interest(fl, chosen_field, is_model=True):
 
 @timeit
 def vertical_parametric_computation(
-        model_field, parametric_standard_name, cr_only=False):
+    model_field, parametric_standard_name, cr_only=False
+):
     """Return a model field with arbitrary computed vertical coordinates.
 
     Helper function for specific vertical coordinate computations, which are
@@ -273,9 +273,7 @@ def vertical_parametric_computation(
     aux_after = set(model_field_with_computed.auxiliary_coordinates().keys())
     # Unpack to 1-tuple to get the lone item in the set, confirming it is lone
     (computed_aux_key,) = aux_after.difference(aux_before)
-    logger.info(
-        f"Parametric vertical coordinate key is '{computed_aux_key}'."
-    )
+    logger.info(f"Parametric vertical coordinate key is '{computed_aux_key}'.")
 
     return model_field_with_computed, computed_aux_key
 
@@ -297,7 +295,7 @@ def vertical_parametric_computation_ahhc(model_field, orog_field):
     TODO: DETAILED DOCS
     """
     # Pre=processing to get the orography attached
-    #cr = vertical_parametric_computation(
+    # cr = vertical_parametric_computation(
     #    model_field, "atmosphere_hybrid_height_coordinate", cr_only=True)
 
     # Attach the orography field into the model field as a
@@ -311,7 +309,8 @@ def vertical_parametric_computation_ahhc(model_field, orog_field):
     orog_key = model_field.set_construct(orog_da, axes=orog_axes)
 
     cr = vertical_parametric_computation(
-        model_field, "atmosphere_hybrid_height_coordinate", cr_only=True)
+        model_field, "atmosphere_hybrid_height_coordinate", cr_only=True
+    )
     cr.coordinate_conversion.set_domain_ancillary("orog", orog_key)
 
     # Now can do the actual computation
@@ -321,7 +320,8 @@ def vertical_parametric_computation_ahhc(model_field, orog_field):
     # Appendix D section linked above. But it is
     # safest to take the computed name instead of assuming it.
     return vertical_parametric_computation(
-        model_field, "atmosphere_hybrid_height_coordinate")
+        model_field, "atmosphere_hybrid_height_coordinate"
+    )
 
 
 @timeit
@@ -345,7 +345,8 @@ def vertical_parametric_computation_ahspc(model_field):
     # case, see CF Conventions Appendix D section linked above. But it is
     # safest to take the computed name instead of assuming it.
     return vertical_parametric_computation(
-        model_field, "atmosphere_hybrid_sigma_pressure_coordinate")
+        model_field, "atmosphere_hybrid_sigma_pressure_coordinate"
+    )
 
 
 @timeit
@@ -395,13 +396,16 @@ def satellite_plugin(fieldlist, chosen_field, config=None):
 
     Define this is own function so we can apply the timing decorator.
     """
-    return satellite_compliance_plugin(
-        fieldlist, chosen_field, config=config), True
+    return (
+        satellite_compliance_plugin(fieldlist, chosen_field, config=config),
+        True,
+    )
 
 
 @timeit
 def ensure_cf_compliance(
-        fieldlist, plugin, chosen_field=None, satellite_plugin_config=None):
+    fieldlist, plugin, chosen_field=None, satellite_plugin_config=None
+):
     """Ensure the chosen field is CF compliant with the correct format.
 
     TODO: DETAILED DOCS
@@ -415,16 +419,20 @@ def ensure_cf_compliance(
 
         # If no config is provided (None), the plugin will apply defaults
         return satellite_plugin(
-            fieldlist, chosen_field, config=satellite_plugin_config)
+            fieldlist, chosen_field, config=satellite_plugin_config
+        )
     elif plugin == "flight":
         raise NotImplementedError(
-            "Flight pre-processing plugin yet to be finalised.")
+            "Flight pre-processing plugin yet to be finalised."
+        )
     elif plugin == "UM":
         raise NotImplementedError(
-            "UM pre-processing plugin yet to be finalised.")
+            "UM pre-processing plugin yet to be finalised."
+        )
     elif plugin == "WRF":
         raise NotImplementedError(
-            "WRF pre-processing plugin yet to be finalised.")
+            "WRF pre-processing plugin yet to be finalised."
+        )
     else:
         return fieldlist, False  # second item indicates whether reduced
 
@@ -622,20 +630,22 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 
 @timeit
 def persist_all_metadata(field):
-    """Persist all of the metadata for a field.
-    """
-    logger.warning(
-        f"Persisting data for all metadata constructs of field."
-    )
+    """Persist all of the metadata for a field."""
+    logger.warning(f"Persisting data for all metadata constructs of field.")
     for construct_name, construct_obj in field.constructs.filter_by_data(
-            todict=True).items():
+        todict=True
+    ).items():
         logger.debug(f"Construct is {construct_name}")
         construct_obj.persist(inplace=True)
 
 
 def bounding_box_query(
-        model_field, model_id, coord_tight_bounds, model_coord, halo_size,
-        ascending=True,
+    model_field,
+    model_id,
+    coord_tight_bounds,
+    model_coord,
+    halo_size,
+    ascending=True,
 ):
     """Apply a custom query to get the bounding box.
 
@@ -704,10 +714,12 @@ def bounding_box_query(
     slice_on = [lower_index, upper_index]
 
     logger.info(
-        f"Bounding box indices are min {lower_index} and max {upper_index}")
+        f"Bounding box indices are min {lower_index} and max {upper_index}"
+    )
     # Now can do a subspace using these indices
     model_field_after_bb = model_field.subspace(
-        "envelope", halo_size, **{model_id: slice(*tuple(slice_on))})
+        "envelope", halo_size, **{model_id: slice(*tuple(slice_on))}
+    )
 
     logger.info(f"Results from bounding box query is: {model_field_after_bb}")
 
@@ -716,8 +728,12 @@ def bounding_box_query(
 
 @timeit
 def subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field, halo_size, verbose, no_vertical=False,
-        vertical_key="Z",
+    obs_field,
+    model_field,
+    halo_size,
+    verbose,
+    no_vertical=False,
+    vertical_key="Z",
 ):
     """Extract only relevant data in the model field via a 4D subspace.
 
@@ -746,8 +762,15 @@ def subspace_to_spatiotemporal_bounding_box(
     # For a DSG, the spatial coordinates will always be auxiliary:
     obs_X = obs_field.auxiliary_coordinate("X")
     obs_Y = obs_field.auxiliary_coordinate("Y")
+
     if not no_vertical:
-        obs_Z = obs_field.auxiliary_coordinate(vertical_key)
+        # TODO consolidate this - should be sorted elsewhere, may have been missed
+        # Need to convert from the vertical_key for the Z coord in the
+        # model_field after possible coord computation, to the vertical
+        # key for the equivalent in the obs field
+        m_vertical_id = model_field.coordinate(vertical_key).identity()
+        o_vertical_key = obs_field.coordinate(m_vertical_id, key=True)
+        obs_Z = obs_field.auxiliary_coordinate(o_vertical_key)
 
     # Prep. towards the temporal BB component.
     # TODO: are we assuming the model and obs data are strictly increasing, as
@@ -855,8 +878,11 @@ def subspace_to_spatiotemporal_bounding_box(
             # TODO we decided to write this into this module then move it out
             # as a new query to cf eventually.
             model_field = bounding_box_query(
-                model_field, model_t_id, t_coord_tight_bounds, model_times,
-                halo_size
+                model_field,
+                model_t_id,
+                t_coord_tight_bounds,
+                model_times,
+                halo_size,
             )
 
         logger.info(
@@ -905,7 +931,9 @@ def subspace_to_spatiotemporal_bounding_box(
             wo_count_x = np.sum(wo_query_x.array)
             # TODO choose right < value here, should probably be 1 but check
             # how halo effects might influence
-            if wo_count_x < 3:  # extend by 1 each side to acount for halo effect
+            if (
+                wo_count_x < 3
+            ):  # extend by 1 each side to acount for halo effect
                 model_field = bounding_box_query(
                     model_field, "X", x_coord_tight_bounds, X, halo_size
                 )
@@ -918,7 +946,9 @@ def subspace_to_spatiotemporal_bounding_box(
             wo_count_y = np.sum(wo_query_y.array)
             # TODO choose right < value here, should probably be 1 but check
             # how halo effects might influence
-            if wo_count_y < 3:  # extend by 1 each side to acount for halo effect
+            if (
+                wo_count_y < 3
+            ):  # extend by 1 each side to acount for halo effect
                 model_field = bounding_box_query(
                     model_field, "Y", y_coord_tight_bounds, X, halo_size
                 )
@@ -936,9 +966,7 @@ def subspace_to_spatiotemporal_bounding_box(
             vertical_kwargs = {vertical_key: cf.wi(*z_coord_tight_bounds)}
             try:
                 model_field_bb = model_field.subspace(
-                    "envelope",
-                    halo_size,
-                    **vertical_kwargs
+                    "envelope", halo_size, **vertical_kwargs
                 )
             except ValueError:
                 # (Same case/note as other try/except to bounding_box_query)
@@ -948,9 +976,12 @@ def subspace_to_spatiotemporal_bounding_box(
                 # doesn't know what point to 'halo' around. So we need to
                 # be more clever.
                 # TODO we decided to write this into this module then
-                # move it out as a new query to cf eventun which caseally.
+                # move it out as a new query to cf eventally.
+                model_field.dump()
                 model_field_bb = bounding_box_query(
-                    model_field, vertical_key, z_coord_tight_bounds,
+                    model_field,
+                    vertical_key,
+                    z_coord_tight_bounds,
                     model_field.coordinate(vertical_key),
                     # Assume we have pressure here, hence descending! TODO
                     # generalise this
@@ -976,15 +1007,15 @@ def subspace_to_spatiotemporal_bounding_box(
 
 @timeit
 def spatial_interpolation(
-        obs_field,
-        model_field_bb,
-        interpolation_method,
-        interpolation_z_coord,
-        source_axes,
-        model_t_identifier,
-        no_vertical,
-        vertical_key,
-        apply_wrf_preproc_to_move=False,
+    obs_field,
+    model_field_bb,
+    interpolation_method,
+    interpolation_z_coord,
+    source_axes,
+    model_t_identifier,
+    no_vertical,
+    vertical_key,
+    wrf_extra_comp=False,
 ):
     """Interpolate the flight path spatially (3D for X-Y and vertical Z).
 
@@ -994,15 +1025,12 @@ def spatial_interpolation(
 
     TODO: DETAILED DOCS
     """
-    # TODO: UGRID grids might need some extra steps/work for this.
-
-    logger.info(
-        "Starting spatial interpolation (regridding) step..."
-    )
+    logger.info("Starting spatial interpolation (regridding) step...")
 
     if no_vertical:
         logger.warning(
-            f"Doing spatial regridding without using vertical levels.")
+            f"Doing spatial regridding without using vertical levels."
+        )
         spatially_colocated_field = model_field_bb.regrids(
             obs_field,
             method=interpolation_method,
@@ -1052,14 +1080,17 @@ def spatial_interpolation(
 
         # Get the axes positions first before we iterate
         z_coord = model_field_bb.coordinate(vertical_key)
+
         data_axes = model_field_bb.get_data_axes()
         time_da = model_field_bb.domain_axis(model_t_identifier, key=True)
         time_da_index = data_axes.index(time_da)
 
         # First get relevant axes, checking source_axes is valid
-        z_axes_spec = ["Z",]
+        z_axes_spec = [
+            "Z",
+        ]
         if source_axes:
-            if (source_axes.get("X", False) and source_axes.get("Y", False)):
+            if source_axes.get("X", False) and source_axes.get("Y", False):
                 z_axes_spec.extend([source_axes["Y"], source_axes["X"]])
             else:
                 raise ConfigurationIssue(
@@ -1067,29 +1098,49 @@ def spatial_interpolation(
                     f"keys but didn't get those for input: {source_axes}"
                 )
 
-        # TODO WRF fixes to pull out:
-        if apply_wrf_preproc_to_move:
+        if wrf_extra_comp:
             z_coord = wrf_extra_compliance_fixes(
-                model_field_bb, z_coord, z_axes_spec, vertical_key,
-                model_t_identifier
+                model_field_bb,
+                z_coord,
+                z_axes_spec,
+                vertical_key,
+                model_t_identifier,
             )
-            
+
         spatially_colocated_fields = cf.FieldList()
         for mtime in model_bb_t:
             model_field_z_per_time = model_field_bb.subspace(
-                **{model_t_identifier: mtime})
+                **{model_t_identifier: mtime}
+            )
 
-            if apply_wrf_preproc_to_move:
+            if wrf_extra_comp:
                 wrf_further_compliance_fixes(
-                    model_field_z_per_time, vertical_key, time_da_index,
-                    z_axes_spec
+                    model_field_z_per_time,
+                    vertical_key,
+                    time_da_index,
+                    z_axes_spec,
+                    source_axes,
                 )
+
+            # SLB note LM issue was here, now fixed but check logic
+            # TODO: UGRID grids might need some extra steps/work for this.
+            # Determine obs vertical key for same coord as in model as vertical_key
+            m_vertical_id = model_field_bb.coordinate(vertical_key).identity()
+            o_vertical_key = obs_field.coordinate(m_vertical_id, key=True)
 
             # Do the regrids weighting operation for the 3D Z in each case
             spatially_colocated_field_comp = model_field_z_per_time.regrids(
                 obs_field,
                 method=interpolation_method,
-                z=vertical_key,
+                # NOTE for e.g. WRF cases show need both of these, i.e.
+                # two separate z kwargs instead of z=vertical_key as one
+                # arg to define both
+                # (z='Z' is equivalent to src_z='Z', dst_z='Z'), see:
+                # https://ncas-cms.github.io/cf-python/method/
+                # cf.Field.regrids.html?highlight=regrids#cf.Field.regrids
+                ### z=vertical_key,
+                src_z=vertical_key,
+                dst_z=o_vertical_key,
                 ln_z=True,  # TODO should we use a log here in this case?
                 src_axes=source_axes,
             )
@@ -1101,7 +1152,8 @@ def spatial_interpolation(
         # Finally, need to concatenate the individually-regridded per-time
         # components
         spatially_colocated_field = cf.Field.concatenate(
-            spatially_colocated_fields
+            spatially_colocated_fields,
+            axis=time_da_index,  # old: was model_t_identifier,
         )
         logger.info(
             f"Final concatenated field (from 3D Z colocated fields) is "
@@ -1148,18 +1200,14 @@ def time_subspace_per_segment(
         obs_time_key: q,
         model_time_key: [index],
     }
-    logger.info(
-        f"\nUsing subspace arguments for i=0 of: {s0_subspace_args}\n"
-    )
+    logger.info(f"\nUsing subspace arguments for i=0 of: {s0_subspace_args}\n")
     s0 = m.subspace(**s0_subspace_args)
 
     s1_subspace_args = {
         obs_time_key: q,
         model_time_key: [index + 1],
     }
-    logger.info(
-        f"Using subspace arguments for i=1 of: {s1_subspace_args}\n"
-    )
+    logger.info(f"Using subspace arguments for i=1 of: {s1_subspace_args}\n")
     s1 = m.subspace(**s1_subspace_args)
 
     # Squeeze here to remove size 1 dim ready for calculations to come,
@@ -1358,7 +1406,8 @@ def time_interpolation(
         if is_satellite_case:
             # Use 11th value (10) for now
             concatenated_weighted_values = concatenated_weighted_values[
-                10, :].squeeze()
+                10, :
+            ].squeeze()
 
     # Report on number of masked and unmasked data points for info/debugging
     masked_value_count = (
@@ -1376,12 +1425,10 @@ def time_interpolation(
     # correct.
     final_result_field = obs_field.copy()
     try:
-        final_result_field.set_data(
-            concatenated_weighted_values, inplace=True)
+        final_result_field.set_data(concatenated_weighted_values, inplace=True)
     except:
         final_result_field.set_data(
-            concatenated_weighted_values,
-            inplace=True, set_axes=False
+            concatenated_weighted_values, inplace=True, set_axes=False
         )
 
     # Finally, re-set the properties on the final result field so it has model
@@ -1462,7 +1509,8 @@ def set_cf_role(obs_field):
     missing_data = cf.Data([""], mask=[True])
     a.set_data(missing_data)
     traj_aux_coord = obs_field.set_construct(
-        a, axes=(da_construct,), copy=False)
+        a, axes=(da_construct,), copy=False
+    )
     logger.info(f"Setting cf role trajectory aux. coord. of: {traj_aux_coord}")
 
     return cf_role_aux_coord
@@ -1501,17 +1549,16 @@ def create_contiguous_ragged_array_output(unproc_output):
         logger.info(f"Field with cf_role created is: {field}")
 
     # Aggregate the output tracks e.g. flights into a single field
-    f = cf.aggregate(
-        unproc_output, axes=cf_role_axis, relaxed_identities=True)
+    f = cf.aggregate(unproc_output, axes=cf_role_axis, relaxed_identities=True)
     if len(f) == 1:
         f = f[0]
     else:
         # Rerun aggregation in verbose mode and then fail
-        cf.aggregate(
-            f, axes=cf_role_axis, relaxed_identities=True, verbose=-1)
+        cf.aggregate(f, axes=cf_role_axis, relaxed_identities=True, verbose=-1)
         raise ValueError(
             "Towards creation of the contiguous ragged array DSG output, "
-            "aggregation failed. See verbose report above.")
+            "aggregation failed. See verbose report above."
+        )
 
     # Sort by track e.g. flight start time
     f = f[np.argsort(f.coord("T")[:, 0].squeeze())]
@@ -1562,14 +1609,12 @@ def make_output_plots(
     """
     output_plots(
         output,
-        obs_t_identifier,
         cfp_output_levs_config,
         outputs_dir,
         plotname_start,
         new_obs_starttime,
         cfp_output_general_config,
         verbose,
-        preprocess_model=False,
     )
 
 
@@ -1606,13 +1651,16 @@ def colocate_single_file(
     if preprocess_obs:
         # SLB
         obs_field, reduced = ensure_cf_compliance(
-            obs_data, preprocess_obs, args.chosen_obs_field,
+            obs_data,
+            preprocess_obs,
+            args.chosen_obs_field,
             args.satellite_plugin_config,
         )
 
     if not reduced:
         obs_field = get_input_fields_of_interest(
-            obs_data, args.chosen_obs_field, is_model=False)
+            obs_data, args.chosen_obs_field, is_model=False
+        )
 
     # Persist obs field - do this as early as possible, but after
     # the pre-processing
@@ -1673,18 +1721,21 @@ def colocate_single_file(
         # Keep SUPPORTED_PARAMETRIC_CONVERSIONS list updated with cases use
         # so can ensure support wat needed from CF Conventions Appendix D
         if model_field.coordinate_reference(
-                "standard_name:atmosphere_hybrid_sigma_pressure_coordinate",
-                default=False
+            "standard_name:atmosphere_hybrid_sigma_pressure_coordinate",
+            default=False,
         ):
             model_field, vertical_key = vertical_parametric_computation_ahspc(
-                model_field)
+                model_field
+            )
         if model_field.coordinate_reference(
-                "standard_name:atmosphere_hybrid_height_coordinate",
-                default=False
+            "standard_name:atmosphere_hybrid_height_coordinate", default=False
         ):
             if orog_field:
-                model_field, vertical_key = vertical_parametric_computation_ahhc(
-                    model_field, orog_field)
+                model_field, vertical_key = (
+                    vertical_parametric_computation_ahhc(
+                        model_field, orog_field
+                    )
+                )
             else:
                 # TODO handle netCDF attached orography case, should just need
                 # a validation check if anything
@@ -1697,10 +1748,19 @@ def colocate_single_file(
     # Subspacing to remove irrelavant information, pre-colocation
     # TODO tidy passing through of computed vertical coord identifier
     model_field_bb, vertical_key = subspace_to_spatiotemporal_bounding_box(
-        obs_field, model_field, halo_size, verbose, no_vertical=no_vertical,
+        obs_field,
+        model_field,
+        halo_size,
+        verbose,
+        no_vertical=no_vertical,
         vertical_key=vertical_key,
     )
 
+    extra_compliance_proc_for_wrf = False
+    if preprocess_obs == "wrf":
+        extra_compliance_proc_for_wrf = True
+
+    # SADIE HERE ISSUE
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
         obs_field,
@@ -1711,6 +1771,7 @@ def colocate_single_file(
         model_t_identifier,
         no_vertical,
         vertical_key=vertical_key,
+        wrf_extra_comp=extra_compliance_proc_for_wrf,
     )
 
     # For such cases as satellite swaths, the times can straddle model points
@@ -1744,6 +1805,7 @@ def colocate_single_file(
 # Main procedure
 # ----------------------------------------------------------------------------
 
+
 @timeit
 def main():
     """Perform end-to-end model-to-observational co-location."""
@@ -1774,8 +1836,7 @@ def main():
     # of any deprecated options)
     # Note that e.g. "A" or "B" evaluates to "A"
     colocation_z_coord = args.vertical_colocation_coord or args.regrid_z_coord
-    interpolation_method = (
-        args.spatial_colocation_method or args.regrid_method)
+    interpolation_method = args.spatial_colocation_method or args.regrid_method
 
     # Need to do this again here to pick up on this module's logger
     setup_logging(verbose)
@@ -1783,17 +1844,17 @@ def main():
     # Read in model outside of a loop
     model_data = read_model_input_data(args.model_data_path)
     model_field = get_input_fields_of_interest(
-        model_data, args.chosen_model_field)
+        model_data, args.chosen_model_field
+    )
     if preprocess_model:
-            model_field, _ = ensure_cf_compliance(
-                model_field, preprocess_model)
+        model_field, _ = ensure_cf_compliance(model_field, preprocess_model)
 
     # If necessary to handle orography external file, read it in early to
     # fail early if it isn't readable or valid.
     orog_field = None
     if model_field.coordinate_reference(
-            "standard_name:atmosphere_hybrid_height_coordinate",
-            default=False,
+        "standard_name:atmosphere_hybrid_height_coordinate",
+        default=False,
     ):
         logger.info(
             "Detected parametric vertical coordinate requiring orography "
@@ -1818,9 +1879,7 @@ def main():
                     f"read-in for the dataset at path '{orog_data_path}'."
                 )
             orog_field = orog_fl[0]
-            logger.info(
-                f"Orography field set to use is:\n{orog_field}"
-            )
+            logger.info(f"Orography field set to use is:\n{orog_field}")
 
             # TODO also check suitability of orog field - might be bad
         else:
@@ -1836,7 +1895,8 @@ def main():
     logger.info(f"Read file list has length: {length_read_file_list}")
     if not read_file_list:
         raise DataReadingIssue(
-            f"Bad path, nothing readable by cf: {args.obs_data_path}")
+            f"Bad path, nothing readable by cf: {args.obs_data_path}"
+        )
 
     logger.info(
         "\n_____ Starting colocation iteration to cover a total of "
@@ -1867,7 +1927,8 @@ def main():
     # 3. Post-processing of co-located results and prepare outputs
     if not output_fields:
         raise InternalsIssue(
-            "Empty resulting FieldList: something went wrong!")
+            "Empty resulting FieldList: something went wrong!"
+        )
 
     # Create and process outputs. What we do depends on whether or result
     # is a lone Field or non-singular FieldList.
@@ -1898,8 +1959,7 @@ def main():
             # separate features so should be combined into a CRA.
 
             # Create and write CRA outputs
-            cra_output = create_contiguous_ragged_array_output(
-                output_fields)
+            cra_output = create_contiguous_ragged_array_output(output_fields)
             # Write field to disk in contiguous ragged array DSG format
             write_output_data(cra_output, output_path_name)
     else:

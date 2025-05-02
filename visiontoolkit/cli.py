@@ -26,8 +26,10 @@ def setup_logging(verbosity):
     # affecting other Python module ones, so this logic is necessary since the
     # more elegant way above doesn't seem to work whatever variation I try...
     loggers = [
-        logging.getLogger(name) for name in logging.root.manager.loggerDict
-        if name.startswith("visiontoolkit") or name.startswith("cf")
+        logging.getLogger(name)
+        for name in logging.root.manager.loggerDict
+        if name.startswith("visiontoolkit")
+        or name.startswith("cf")
         or name.startswith("cfdm")  # note cf-plot does not yet have logging
     ]
     for logger in loggers:
@@ -116,7 +118,7 @@ def process_cli_arguments(parser):
             "path location of the observational data, which can be provided "
             "in any form accepted by the 'cf.read' files argument, see: "
             "https://ncas-cms.github.io/cf-python/function/cf.read.html"
-        )
+        ),
     )
     parser.add_argument(
         "-m",
@@ -126,7 +128,7 @@ def process_cli_arguments(parser):
             "path location of the model data, which can be provided "
             "in any form accepted by the 'cf.read' files argument, see: "
             "https://ncas-cms.github.io/cf-python/function/cf.read.html"
-        )
+        ),
     )
     parser.add_argument(
         "--chosen-obs-field",
@@ -375,12 +377,12 @@ def process_cli_arguments(parser):
 
 
 def cli_parser():
-    """TODO DOCS."""   
+    """TODO DOCS."""
     parser = argparse.ArgumentParser(
         prog="VISION TOOLKIT",
         description=(
             "Virtual Integration of Satellite and In-Situ Observation "
-            "Networks (VISION) toolkit flight simulator"
+            "Networks (VISION) Toolkit Version 2"
         ),
     )
     process_cli_arguments(parser)
@@ -426,17 +428,16 @@ def process_config():
     # Want config. file input to have identical key names to the CLI ones,
     # namely with underscores as word delimiters, but for processing defaults
     # have to use hyphens since argparse converts to these for valid attr names
-    logger.debug(
-        f"Default configuration is:\n{pformat(CONFIG_DEFAULTS)}\n"
-    )
+    logger.debug(f"Default configuration is:\n{pformat(CONFIG_DEFAULTS)}\n")
 
-    # 2.  Get configuration from file
+    # 2.  Get configuration from file, if provided
     config_file = parsed_args.config_file
+    config_from_file = {}
     if config_file:
         config_from_file = process_config_file(config_file)
-    logger.info(
-        f"Configuration from file is:\n{pformat(config_from_file)}\n"
-    )
+        logger.info(
+            f"Configuration from file is:\n{pformat(config_from_file)}\n"
+        )
 
     # Combining 1 and 2: apply config. file values to override defaults
     pre_cli_config = {**CONFIG_DEFAULTS, **config_from_file}  # keeps leftmost
@@ -462,6 +463,7 @@ def process_config():
 def validate_config(final_config_namespace):
     """TODO"""
     # TODO add validation in incrementally to cover all input options & args
+    print("final_config_namespace is", final_config_namespace)
 
     # outputs_dir: create if does not exist
     if not os.path.exists(final_config_namespace.outputs_dir):
