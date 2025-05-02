@@ -355,7 +355,7 @@ class TestFlightObservationsWRFModel:
             **self.base_config_flight_wrf,
             **{
                 # Changes relative to base configuration choice, if any
-                "start-time-override": "2023-07-13 00:00:00",
+                "start-time-override": "2023-07-11 03:14:15",
                 "show-plot-of-input-obs": False,
                 # Not relevant to testing: names outputs
                 "output-file-name": "wrf_faam_stanco_3_vision_result.nc",

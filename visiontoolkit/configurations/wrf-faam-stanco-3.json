@@ -1,5 +1,5 @@
 {
-    "start-time-override": "2023-07-13 00:00:00",
+    "start-time-override": "2023-07-11 03:14:15",
     "obs-data-path": "../data/compliant-data/core_faam_20170703_c016_STANCO_CF.nc",
     "model-data-path": "../pre-processing/wrf-model-data-preprocessing/wrf-data-from-proc-stages/e2e-ready-wrf-update1.nc",
     "preprocess-mode-obs":"wrf",
