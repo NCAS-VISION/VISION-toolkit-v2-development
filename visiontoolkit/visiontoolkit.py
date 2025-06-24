@@ -1617,17 +1617,30 @@ def make_output_plots(
 @timeit
 def colocate_single_file(
     file_to_colocate,
-    index,
-    args,
+    chosen_obs_field,
+    model_field,
     preprocess_obs,
-    skip_all_plotting,
-    outputs_dir,
-    plotname_start,
-    verbose,
-    model_field,  # TODO pull this out of loop
-    halo_size,  # TODO use args instead of names since pass args in
+    satellite_plugin_config,  # needed?
+    index,
+    start_time_override,
+    halo_size,
     interpolation_method,
     colocation_z_coord,
+    source_axes,
+    history_message,
+    outputs_dir,
+    # --- Plotting only - consolidate to remove if no plotting
+    skip_all_plotting,
+    plotname_start,
+    show_plot_of_input_obs,
+    plot_of_input_obs_track_only,
+    cfp_mapset_config,
+    cfp_cscale,
+    cfp_input_levs_config,
+    cfp_input_track_only_config,
+    cfp_input_general_config,
+    # --- End of plotting inputs
+    verbose,
     orog_field=None,
 ):
     """Perform model-to-observational colocation using a single file source."""
@@ -1635,7 +1648,6 @@ def colocate_single_file(
         f"\n_____ Start of colocation iteration with file number {index + 1}: "
         f"{file_to_colocate} _____\n"
     )
-
     # Process and validate inputs, including optional preview plot
     obs_data = read_obs_input_data(file_to_colocate)
     if obs_data is None:
@@ -1645,32 +1657,31 @@ def colocate_single_file(
     # input may be a FieldList which gets reduced to less fields or to one
     reduced = False  # whether pre-processing reduces to one field
     if preprocess_obs:
-        # SLB
         obs_field, reduced = ensure_cf_compliance(
             obs_data,
             preprocess_obs,
-            args.chosen_obs_field,
-            args.satellite_plugin_config,
+            chosen_obs_field,
+            satellite_plugin_config,
         )
 
     if not reduced:
         obs_field = get_input_fields_of_interest(
-            obs_data, args.chosen_obs_field, is_model=False
+            obs_data, chosen_obs_field, is_model=False
         )
 
     # TODO: this has too many parameters for one function, separate out
     if not skip_all_plotting:
         make_preview_plots(
             obs_field,
-            args.show_plot_of_input_obs,
-            args.plot_of_input_obs_track_only,
+            show_plot_of_input_obs,
+            plot_of_input_obs_track_only,
             outputs_dir,
             plotname_start,
-            args.cfp_mapset_config,
-            args.cfp_cscale,
-            args.cfp_input_levs_config,
-            args.cfp_input_track_only_config,
-            args.cfp_input_general_config,
+            cfp_mapset_config,
+            cfp_cscale,
+            cfp_input_levs_config,
+            cfp_input_track_only_config,
+            cfp_input_general_config,
             verbose,
             index,
         )
@@ -1678,8 +1689,8 @@ def colocate_single_file(
     final_result_field, obs_t_identifier = colocate(
         model_field, obs_field, halo_size, verbose,
         interpolation_method, colocation_z_coord,
-        source_axes=args.source_axes, history_message=args.history_message,
-        override_obs_start_time=args.start_time_override,
+        source_axes=source_axes, history_message=history_message,
+        override_obs_start_time=start_time_override,
         preprocess_obs=preprocess_obs,
     )
 
@@ -1832,6 +1843,21 @@ def main():
     preprocess_obs = args.preprocess_mode_obs
     preprocess_model = args.preprocess_mode_model
     orog_data_path = args.orography
+    # SADIE NEW non-plotting
+    chosen_obs_field = args.chosen_obs_field
+    satellite_plugin_config = args.satellite_plugin_config
+    source_axes = args.source_axes
+    history_message = args.history_message
+    start_time_override = args.start_time_override
+    # NEW Plotting config
+    show_plot_of_input_obs = args.show_plot_of_input_obs
+    plot_of_input_obs_track_only = args.plot_of_input_obs_track_only
+    cfp_mapset_config = args.cfp_mapset_config
+    cfp_cscale = args.cfp_cscale
+    cfp_input_levs_config = args.cfp_input_levs_config
+    cfp_input_track_only_config = args.cfp_input_track_only_config
+    cfp_input_general_config = args.cfp_input_general_config
+
     # TODO: eventually remove the deprecated alternatives, but for now
     # accept both (see cli.py end of process_cli_arguments for the listing
     # of any deprecated options)
@@ -1908,17 +1934,30 @@ def main():
     for index, file_to_colocate in enumerate(read_file_list):
         file_fl_result, obs_t_identifier = colocate_single_file(
             file_to_colocate,
-            index,
-            args,
+            chosen_obs_field,
+            model_field,
             preprocess_obs,
-            skip_all_plotting,
-            outputs_dir,
-            plotname_start,
-            verbose,
-            model_field,  # TODO pull this out of loop
-            halo_size,  # TODO use args instead of names since pass args in
+            satellite_plugin_config,  # needed?
+            index,
+            start_time_override,
+            halo_size,
             interpolation_method,
             colocation_z_coord,
+            source_axes,
+            history_message,
+            outputs_dir,
+            # --- Plotting only - consolidate to remove if no plotting
+            skip_all_plotting,
+            plotname_start,
+            show_plot_of_input_obs,
+            plot_of_input_obs_track_only,
+            cfp_mapset_config,
+            cfp_cscale,
+            cfp_input_levs_config,
+            cfp_input_track_only_config,
+            cfp_input_general_config,
+            # --- End of plotting inputs
+            verbose,
             orog_field,
         )
         if file_fl_result is None:
@@ -1984,8 +2023,7 @@ def main():
         # Write field to disk, but not as CRA in this case
         write_output_data(output, output_path_name)
 
-    # WRF ONLY
-    # TODO do we even need this? Is kinda odgy metadata thing to do anyway...
+    # TODO do we even need this? Is kinda dodgy metadata thing to do anyway...
     if preprocess_model == "WRF":
         aux_coor_t = output.auxiliary_coordinate(obs_t_identifier)
         dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
