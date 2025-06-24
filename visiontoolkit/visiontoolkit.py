@@ -1585,7 +1585,6 @@ def write_output_data(final_result_field, output_path_name):
 @timeit
 def make_output_plots(
     output,
-    obs_t_identifier,
     cfp_output_levs_config,
     outputs_dir,
     plotname_start,
