@@ -1712,7 +1712,6 @@ def colocate(
             obs_times, obs_t_identifier, override_obs_start_time
         )
 
-    # TODO apply obs_t_identifier, model_t_identifier in further logic
     ensure_unit_calendar_consistency(obs_field, model_field)
 
     # Ensure the model time axes covers the entire time axes span of the
@@ -1722,9 +1721,7 @@ def colocate(
     # For the satellite swath cases, ignore vertical height since it is
     # dealt with by the averaging kernel.
     # TODO how do we account for the averging kernel work in this case?
-    no_vertical = False
-    if preprocess_obs == "satellite":
-        no_vertical = True
+    no_vertical = preprocess_obs == "satellite"
 
     # Where this is False, is taken as the key of the "Z" coordinate by default
     vertical_key = "Z"
@@ -1773,9 +1770,7 @@ def colocate(
         vertical_key=vertical_key,
     )
 
-    extra_compliance_proc_for_wrf = False
-    if preprocess_obs == "wrf":
-        extra_compliance_proc_for_wrf = True
+    extra_compliance_proc_for_wrf = preprocess_obs == "wrf"
 
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
