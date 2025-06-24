@@ -1268,7 +1268,6 @@ def time_interpolation(
     spatially_colocated_field,
     history_message,
     is_satellite_case=False,
-    split_segments=False,
 ):
     """Interpolate the flight path temporally (in time T).
 
@@ -1281,8 +1280,6 @@ def time_interpolation(
     TODO: DETAILED DOCS
     """
     logger.info("Starting time interpolation step.")
-    if split_segments:
-        logger.info("Using split segments.\n")
 
     # Setup ready for iteration...
     m = spatially_colocated_field.copy()
@@ -1788,11 +1785,7 @@ def colocate(
     # For such cases as satellite swaths, the times can straddle model points
     # so we need to chop these up into ones on each side of a model time
     # segment as per our approach below.
-    is_satellite_case = False
-    split_segments = False
-    if preprocess_obs == "satellite":
-        is_satellite_case = True
-        split_segments = True
+    is_satellite_case = preprocess_obs == "satellite"
 
     final_result_field = time_interpolation(
         obs_times,
@@ -1805,7 +1798,6 @@ def colocate(
         spatially_colocated_field,
         history_message,
         is_satellite_case=is_satellite_case,
-        split_segments=split_segments,
     )
 
     return final_result_field, obs_t_identifier
