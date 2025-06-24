@@ -1662,10 +1662,6 @@ def colocate_single_file(
             obs_data, args.chosen_obs_field, is_model=False
         )
 
-    # Persist obs field - do this as early as possible, but after
-    # the pre-processing
-    persist_all_metadata(obs_field)
-
     # TODO: this has too many parameters for one function, separate out
     if not skip_all_plotting:
         make_preview_plots(
@@ -1683,16 +1679,37 @@ def colocate_single_file(
             index,
         )
 
+    final_result_field, obs_t_identifier = colocate(
+        model_field, obs_field, halo_size, verbose,
+        interpolation_method, colocation_z_coord,
+        source_axes=args.source_axes, history_message=args.history_message,
+        override_obs_start_time=args.start_time_override,
+        preprocess_obs=preprocess_obs,
+    )
+
+    logger.info(f"End of colocation iteration with file: {file_to_colocate}")
+    return final_result_field, obs_t_identifier  # TODO remove obs_t from ret
+
+
+def colocate(
+        model_field, obs_field, halo_size, verbose, interpolation_method,
+        colocation_z_coord, source_axes, history_message,
+        override_obs_start_time=False,
+        preprocess_obs=False,
+    ):
+    """TODO."""
+    # Persist obs field as early as possible, but after any pre-processing
+    persist_all_metadata(obs_field)
+
     # Time coordinate considerations, pre-colocation
     times, time_identifiers = get_time_coords(obs_field, model_field)
     obs_times, model_times = times
     obs_t_identifier, model_t_identifier = time_identifiers
 
-    new_obs_starttime = args.start_time_override
-    if new_obs_starttime:
+    if override_obs_start_time:
         # TODO can just do in-place rather than re-assign, might be best?
         obs_times = set_start_datetime(
-            obs_times, obs_t_identifier, new_obs_starttime
+            obs_times, obs_t_identifier, override_obs_start_time
         )
 
     # TODO apply obs_t_identifier, model_t_identifier in further logic
@@ -1709,8 +1726,8 @@ def colocate_single_file(
     if preprocess_obs == "satellite":
         no_vertical = True
 
-    # Where this is False, is taken as the SN of the "Z" coordinate by default
-    vertical_key = "Z"  # TODO rename, Z is not a SN
+    # Where this is False, is taken as the key of the "Z" coordinate by default
+    vertical_key = "Z"
 
     # Handle parametric vertical coordinates:
     # TODO, replace this check on coord refs with a check on the requested
@@ -1760,14 +1777,13 @@ def colocate_single_file(
     if preprocess_obs == "wrf":
         extra_compliance_proc_for_wrf = True
 
-    # SADIE HERE ISSUE
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
         obs_field,
         model_field_bb,
         interpolation_method,
         colocation_z_coord,
-        args.source_axes,
+        source_axes,
         model_t_identifier,
         no_vertical,
         vertical_key=vertical_key,
@@ -1792,13 +1808,12 @@ def colocate_single_file(
         model_field,
         halo_size,
         spatially_colocated_field,
-        args.history_message,
+        history_message,
         is_satellite_case=is_satellite_case,
         split_segments=split_segments,
     )
 
-    logger.info(f"End of colocation iteration with file: {file_to_colocate}")
-    return final_result_field, obs_t_identifier  # TODO remove obs_t from ret
+    return final_result_field, obs_t_identifier
 
 
 # ----------------------------------------------------------------------------
