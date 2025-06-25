@@ -352,8 +352,7 @@ def vertical_parametric_computation_ahspc(model_field):
 @timeit
 def make_preview_plots(
     obs_field,
-    show_plot_of_input_obs,
-    plot_of_input_obs_track_only,
+    plot_mode,
     outputs_dir,
     plotname_start,
     cfp_mapset_config,
@@ -376,8 +375,7 @@ def make_preview_plots(
     """
     preview_plots(
         obs_field,
-        show_plot_of_input_obs,
-        plot_of_input_obs_track_only,
+        plot_mode,
         outputs_dir,
         plotname_start,
         cfp_mapset_config,
@@ -1630,10 +1628,8 @@ def colocate_single_file(
     history_message,
     outputs_dir,
     # --- Plotting only - consolidate to remove if no plotting
-    skip_all_plotting,
+    plot_mode,
     plotname_start,
-    show_plot_of_input_obs,
-    plot_of_input_obs_track_only,
     cfp_mapset_config,
     cfp_cscale,
     cfp_input_levs_config,
@@ -1670,11 +1666,10 @@ def colocate_single_file(
         )
 
     # TODO: this has too many parameters for one function, separate out
-    if not skip_all_plotting:
+    if plot_mode != 0:
         make_preview_plots(
             obs_field,
-            show_plot_of_input_obs,
-            plot_of_input_obs_track_only,
+            plot_mode,
             outputs_dir,
             plotname_start,
             cfp_mapset_config,
@@ -1839,31 +1834,64 @@ def main():
     plotname_start = args.plotname_start
     verbose = args.verbose
     halo_size = args.halo_size
-    skip_all_plotting = args.skip_all_plotting
     preprocess_obs = args.preprocess_mode_obs
     preprocess_model = args.preprocess_mode_model
     orog_data_path = args.orography
-    # SADIE NEW non-plotting
     chosen_obs_field = args.chosen_obs_field
     satellite_plugin_config = args.satellite_plugin_config
     source_axes = args.source_axes
     history_message = args.history_message
     start_time_override = args.start_time_override
-    # NEW Plotting config
-    show_plot_of_input_obs = args.show_plot_of_input_obs
-    plot_of_input_obs_track_only = args.plot_of_input_obs_track_only
+    # Plotting-only config
+    plot_mode = args.plot_mode  # NEW
     cfp_mapset_config = args.cfp_mapset_config
     cfp_cscale = args.cfp_cscale
     cfp_input_levs_config = args.cfp_input_levs_config
     cfp_input_track_only_config = args.cfp_input_track_only_config
     cfp_input_general_config = args.cfp_input_general_config
 
+    # *Deprcated alternatives processing*
     # TODO: eventually remove the deprecated alternatives, but for now
     # accept both (see cli.py end of process_cli_arguments for the listing
     # of any deprecated options)
     # Note that e.g. "A" or "B" evaluates to "A"
     colocation_z_coord = args.vertical_colocation_coord or args.regrid_z_coord
     interpolation_method = args.spatial_colocation_method or args.regrid_method
+    # 'Plot mode' config. option has condensed down 3 flags, so needs a bit
+    # more processing to convert into the new option. Also warn of
+    # deprecation
+    if (
+            args.skip_all_plotting or
+            args.show_plot_of_input_obs or
+            args.plot_of_input_obs_track_only
+    ):
+        if plot_mode is None:  # to distinguish from plot mode 0 (equiv. False)
+            logger.warning(
+                "Note the arguments 'skip-all-plotting', "
+                "'show-plot-of-input-obs' and 'plot-of-input-obs-track-only' "
+                "are deprecated and though they remain supported for now, "
+                "soon they will not be recognised. Instead please use "
+                "'plot-mode' which replaces all three with a mode integer "
+                "input."
+            )
+        else:
+            raise ConfigurationIssue(
+                "Can't set both 'plot-mode' and any of the deprecated "
+                "arguments 'skip-all-plotting', 'show-plot-of-input-obs' and "
+                "'plot-of-input-obs-track-only'. Please remove use of any of "
+                "those deprecated arguments."
+            )
+
+    # Now convert old trio of flags to plot-mode equivalent integer
+    if args.skip_all_plotting:
+        plot_mode == 0  # no plots
+    elif args.show_plot_of_input_obs:
+        if args.plot_of_input_obs_track_only:
+            plot_mode == 3  # plot outputs plus inputs on track only
+        else:
+            plot_mode == 1  # plot outputs plus normal (data on track) inputs 
+    else:
+        plot_mode == 2  # plot only outputs
 
     # Need to do this again here to pick up on this module's logger
     setup_logging(verbose)
@@ -1908,7 +1936,7 @@ def main():
             orog_field = orog_fl[0]
             logger.info(f"Orography field set to use is:\n{orog_field}")
 
-            # TODO also check suitability of orog field - might be bad
+            # TODO also check suitability of orog field - might be invalid
         else:
             pass  # TODO in this case is netCDF with attached orog, handle this
 
@@ -1947,10 +1975,8 @@ def main():
             history_message,
             outputs_dir,
             # --- Plotting only - consolidate to remove if no plotting
-            skip_all_plotting,
+            plot_mode,
             plotname_start,
-            show_plot_of_input_obs,
-            plot_of_input_obs_track_only,
             cfp_mapset_config,
             cfp_cscale,
             cfp_input_levs_config,
@@ -2029,7 +2055,7 @@ def main():
         dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
         output.set_construct(dim_coor_t, axes="ncdim%obs")
 
-    if not skip_all_plotting:
+    if plot_mode:  # i.e. plot_mode is any one but 0
         # Plot the output
         make_output_plots(
             output,
