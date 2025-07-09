@@ -26,8 +26,11 @@ The **environment** needed to install and run VISION v2 toolkit requires the fol
    1. Python version 3.10 or later;
    2. cf-python at a version of minimum of 3.17.0,
      see https://ncas-cms.github.io/cf-python/installation.html for guidance;
-   3. esmpy at version of minimum 8.7.0, see the 'Optional -> Regridding' sub-section in the installation
+   3. ESMPy at version of minimum 8.7.0, see the 'Optional -> Regridding' sub-section in the installation
    guidance for cf-python linked above for means to install this (conda/mamba makes it simplest);
+
+and if you want to do any plotting with the toolkit you will also need:
+
    4. cf-plot at a version of minimum 3.4.0, see https://ncas-cms.github.io/cf-plot/installation.html
    for guidance.
 
@@ -39,7 +42,7 @@ Note: soon the library will be added to PyPI and will be installable with `pip`.
 follow these steps.
 
 1.  Clone this repository. Use
-    `git clone <HTTPS path to this repo>` as below, or you can clone via SS or the GitHub CLI
+    `git clone <HTTPS path to this repo>` as below, or you can clone via SSH or the GitHub CLI
     (for help if required see
     https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository):
 

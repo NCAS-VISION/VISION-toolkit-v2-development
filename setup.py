@@ -25,7 +25,7 @@ extras_require = {
         "sphinx",
         "shibuya",  # chosen and configured docs theme
     ],
-    "pre-commit hooks": [
+    "pre_commit_hooks": [
         "pre-commit",
         "black",
         "flake8",

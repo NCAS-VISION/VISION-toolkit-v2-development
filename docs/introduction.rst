@@ -12,9 +12,9 @@ Introduction
 
 .. warning::
 
-   This documentation is under construction until the
-   end of March 2025, so significant parts may be missing
-   until that time.
+   This documentation is under development so may change
+   signfiicantly, but everything contained within should
+   remain accurate (and code snippets should run).
 
 
 What is the VISION Toolkit?
