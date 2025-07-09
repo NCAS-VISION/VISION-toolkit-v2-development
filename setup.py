@@ -20,9 +20,10 @@ tests_require = ()
 extras_require = {
     "plotting": [
         "cf-plot>=3.4.0",
-    ]
+    ],
     "documentation": [
         "sphinx",
+        "shibuya",  # chosen and configured docs theme
     ],
     "pre-commit hooks": [
         "pre-commit",
