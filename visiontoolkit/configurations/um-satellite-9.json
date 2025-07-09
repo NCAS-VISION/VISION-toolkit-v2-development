@@ -7,8 +7,7 @@
     "chosen-model-field":"id%UM_m01s51i010_vn1105",
     "outputs-dir":"toolkit-outputs/um-satellite-9",
     "output-file-name":"um_satellite_9_vision_result.nc",
-    "skip-all-plotting":false,
-    "show-plot-of-input-obs": false,
+    "plot-mode":2,
     "cfp-mapset-config":{
         "resolution":"10m",
         "proj":"robin"

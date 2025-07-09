@@ -58,7 +58,7 @@ CONFIG_DEFAULTS = {
     "vertical-colocation-coord": "air_pressure",
     "source-axes": False,
     # *** Plotting: what to plot and how to minimally configure it ***
-    "plot-mode": 2,
+    "plot-mode": 0,  # NEW DEFAULT, SLB ENSURE BACK COMPAT.
     "plotname-start": "vision_toolkit",
     # "parula" also works well, as alternative for dev. work:
     "cfp-cscale": "plasma",
@@ -101,7 +101,7 @@ CONFIG_DEFAULTS = {
     # or for demo'ing the code to compare the original observational data
     # to the co-located data to see the differences.
     #"show-plot-of-input-obs": True,
-    # "skip-all-plotting": False,
+    #"skip-all-plotting": False,
 }
 
 

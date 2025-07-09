@@ -6,8 +6,7 @@
     "chosen-model-field":"id%UM_m01s51i010_vn1105",
     "outputs-dir":"toolkit-outputs/um-faam-stanco-2",
     "output-file-name":"um_faam_stanco_2_vision_result.nc",
-    "show-plot-of-input-obs": false,
-    "plot-of-input-obs-track-only": 0,
+    "plot-mode":2,
     "cfp-cscale": "WhiteBlueGreenYellowRed",
     "cfp-mapset-config":{
         "lonmin":-2,

@@ -7,5 +7,4 @@
     "chosen-model-field":"id%UM_m01s51i010_vn1105",
     "outputs-dir":"toolkit-outputs/um-satellite-10",
     "output-file-name":"um_satellite_10_vision_result.nc",
-    "skip-all-plotting":true
 }

@@ -6,7 +6,7 @@
     "outputs-dir":"toolkit-outputs/um-faam-stanco-5",
     "output-file-name":"um_faam_stanco_5_vision_result.nc",
     "halo-size": 0, 
-    "plot-of-input-obs-track-only":2,
+    "plot-mode":3,
     "cfp-cscale": "WhiteBlueGreenYellowRed",
     "cfp-mapset-config":{
         "lonmin":-2,
