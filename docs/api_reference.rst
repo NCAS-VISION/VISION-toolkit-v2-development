@@ -45,6 +45,7 @@ Co-location and bounding
 .. autosummary::
    :toctree: generated
 
+   colocate
    colocate_single_file
    bounding_box_query
    subspace_to_spatiotemporal_bounding_box
