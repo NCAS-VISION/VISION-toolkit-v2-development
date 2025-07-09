@@ -1,3 +1,2 @@
 cf-python>=3.17.0
-cf-plot>=3.4.0
 esmpy>=8.7.0

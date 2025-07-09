@@ -18,7 +18,12 @@ long_description = (
 
 tests_require = ()
 extras_require = {
-    # "documentation": [],  # TODO add when add docs
+    "plotting": [
+        "cf-plot>=3.4.0",
+    ]
+    "documentation": [
+        "sphinx",
+    ],
     "pre-commit hooks": [
         "pre-commit",
         "black",
