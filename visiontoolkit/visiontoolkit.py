@@ -8,10 +8,14 @@ from itertools import pairwise  # requires Python 3.10+
 from pprint import pformat
 from time import time
 
+
 # Import cfplot here even though not explicitly used to avoid
 # plotting module seg faults - cfplot needs overall to be imported first.
 # Will need to bypass 'isort' movement of this.
-import cfplot as cfp  # noqa: F401
+try:
+    import cfplot as cfp  # noqa: F401
+except ImportError:
+    pass
 import cf
 
 import numpy as np
@@ -30,11 +34,6 @@ from .plugins.wrf_data_compliance_fixes import (
     wrf_further_compliance_fixes,
 )
 
-
-SUPPORTED_PARAMETRIC_CONVERSIONS = (
-    "atmosphere_hybrid_height_coordinate",
-    "atmosphere_hybrid_sigma_pressure_coordinate",
-)
 
 # ----------------------------------------------------------------------------
 # Set up timing and logging
@@ -1729,13 +1728,15 @@ def colocate(
     vertical_key = "Z"
 
     # Handle parametric vertical coordinates:
-    # TODO, replace this check on coord refs with a check on the requested
+    # Currently supported parametric conversions are:
+    #   "atmosphere_hybrid_height_coordinate"
+    #   "atmosphere_hybrid_sigma_pressure_coordinate"
+
+    # TODO, check on coord refs with a check on the requested
     # "vertical-colocation-coord", if doesn't have one try computing from a
     # coord ref, if not fail with elegant message.
     coord_refs = model_field.coordinate_references(default=False)
     if coord_refs:
-        # Keep SUPPORTED_PARAMETRIC_CONVERSIONS list updated with cases use
-        # so can ensure support wat needed from CF Conventions Appendix D
         if model_field.coordinate_reference(
             "standard_name:atmosphere_hybrid_sigma_pressure_coordinate",
             default=False,
@@ -1843,7 +1844,7 @@ def main():
     history_message = args.history_message
     start_time_override = args.start_time_override
     # Plotting-only config
-    plot_mode = args.plot_mode  # NEW
+    plot_mode = args.plot_mode
     cfp_mapset_config = args.cfp_mapset_config
     cfp_cscale = args.cfp_cscale
     cfp_input_levs_config = args.cfp_input_levs_config

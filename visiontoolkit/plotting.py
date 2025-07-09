@@ -3,7 +3,12 @@
 import logging
 
 # NOTE: keep this order (cfp then cf imported) to avoid Seg Fault issues
-import cfplot as cfp
+cfplot_imported = False
+try:
+    import cfplot as cfp  # noqa: F401
+    cfplot_imported = True
+except ImportError:
+    pass
 import cf
 
 import numpy as np
@@ -32,6 +37,11 @@ def preview_plots(
 
     TODO: DETAILED DOCS
     """
+    if not cfplot_imported:
+        raise ValueError(
+            "Unable to plot: must have suitable version of cf-plot installed "
+            "for VISION toolkit plotting functionality."
+        )
     # First configure general settings for plot
     # Change the viewpoint to be over the UK only, with high-res map outline
     cfp.mapset(**cfp_mapset_config)
@@ -113,6 +123,12 @@ def output_plots(
 
     TODO: DETAILED DOCS
     """
+    if not cfplot_imported:
+        raise ValueError(
+            "Unable to plot: must have suitable version of cf-plot installed "
+            "for VISION toolkit plotting functionality."
+        )
+
     cfp_output_general_config.update(verbose=verbose)
 
     # Make and open the final plot
