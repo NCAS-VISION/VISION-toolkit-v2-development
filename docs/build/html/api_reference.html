@@ -85,6 +85,7 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#co-location-and-bounding">Co-location and bounding</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.colocate.html">visiontoolkit.colocate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.colocate_single_file.html">visiontoolkit.colocate_single_file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.bounding_box_query.html">visiontoolkit.bounding_box_query</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/visiontoolkit.subspace_to_spatiotemporal_bounding_box.html">visiontoolkit.subspace_to_spatiotemporal_bounding_box</a></li>
@@ -212,7 +213,7 @@ data-aria-dark="Switch to auto color mode">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
           <section id="application-programming-interface-api-reference">
-<h1>Application Programming Interface (API) Reference<a class="headerlink" href="#application-programming-interface-api-reference" title="Link to this heading">¶</a></h1>
+<span id="pythonapi"></span><h1>Application Programming Interface (API) Reference<a class="headerlink" href="#application-programming-interface-api-reference" title="Link to this heading">¶</a></h1>
 <section id="full-program-as-executed-from-cli">
 <h2>Full program as executed from CLI<a class="headerlink" href="#full-program-as-executed-from-cli" title="Link to this heading">¶</a></h2>
 <div class="table-wrapper autosummary longtable docutils container">
@@ -253,7 +254,7 @@ data-aria-dark="Switch to auto color mode">
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.vertical_parametric_computation_ahspc.html#visiontoolkit.vertical_parametric_computation_ahspc" title="visiontoolkit.vertical_parametric_computation_ahspc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vertical_parametric_computation_ahspc</span></code></a>(...)</p></td>
 <td><p>Return a model field with computed 'air_pressure' vertical coordinate.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.ensure_cf_compliance.html#visiontoolkit.ensure_cf_compliance" title="visiontoolkit.ensure_cf_compliance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ensure_cf_compliance</span></code></a>(field, plugin[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.ensure_cf_compliance.html#visiontoolkit.ensure_cf_compliance" title="visiontoolkit.ensure_cf_compliance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ensure_cf_compliance</span></code></a>(fieldlist, plugin[, ...])</p></td>
 <td><p>Ensure the chosen field is CF compliant with the correct format.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.check_time_coverage.html#visiontoolkit.check_time_coverage" title="visiontoolkit.check_time_coverage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_time_coverage</span></code></a>(obs_times, model_times)</p></td>
@@ -277,22 +278,25 @@ data-aria-dark="Switch to auto color mode">
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.colocate_single_file.html#visiontoolkit.colocate_single_file" title="visiontoolkit.colocate_single_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">colocate_single_file</span></code></a>(file_to_colocate, ...)</p></td>
-<td><p>Perform model-to-observational colocation using a single file source.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.bounding_box_query.html#visiontoolkit.bounding_box_query" title="visiontoolkit.bounding_box_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bounding_box_query</span></code></a>(model_field, model_id, ...)</p></td>
-<td><p>Apply a custom query to get the bounding box.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.subspace_to_spatiotemporal_bounding_box.html#visiontoolkit.subspace_to_spatiotemporal_bounding_box" title="visiontoolkit.subspace_to_spatiotemporal_bounding_box"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subspace_to_spatiotemporal_bounding_box</span></code></a>(...)</p></td>
-<td><p>Extract only relevant data in the model field via a 4D subspace.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.spatial_interpolation.html#visiontoolkit.spatial_interpolation" title="visiontoolkit.spatial_interpolation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spatial_interpolation</span></code></a>(obs_field, ...[, ...])</p></td>
-<td><p>Interpolate the flight path spatially (3D for X-Y and vertical Z).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.time_subspace_per_segment.html#visiontoolkit.time_subspace_per_segment" title="visiontoolkit.time_subspace_per_segment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">time_subspace_per_segment</span></code></a>(index, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.colocate.html#visiontoolkit.colocate" title="visiontoolkit.colocate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">colocate</span></code></a>(model_field, obs_field, halo_size, ...)</p></td>
 <td><p>TODO.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.time_interpolation.html#visiontoolkit.time_interpolation" title="visiontoolkit.time_interpolation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">time_interpolation</span></code></a>(obs_times, model_times, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.colocate_single_file.html#visiontoolkit.colocate_single_file" title="visiontoolkit.colocate_single_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">colocate_single_file</span></code></a>(file_to_colocate, ...)</p></td>
+<td><p>Perform model-to-observational colocation using a single file source.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.bounding_box_query.html#visiontoolkit.bounding_box_query" title="visiontoolkit.bounding_box_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bounding_box_query</span></code></a>(model_field, model_id, ...)</p></td>
+<td><p>Apply a custom query to get the bounding box.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.subspace_to_spatiotemporal_bounding_box.html#visiontoolkit.subspace_to_spatiotemporal_bounding_box" title="visiontoolkit.subspace_to_spatiotemporal_bounding_box"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subspace_to_spatiotemporal_bounding_box</span></code></a>(...)</p></td>
+<td><p>Extract only relevant data in the model field via a 4D subspace.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.spatial_interpolation.html#visiontoolkit.spatial_interpolation" title="visiontoolkit.spatial_interpolation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spatial_interpolation</span></code></a>(obs_field, ...[, ...])</p></td>
+<td><p>Interpolate the flight path spatially (3D for X-Y and vertical Z).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.time_subspace_per_segment.html#visiontoolkit.time_subspace_per_segment" title="visiontoolkit.time_subspace_per_segment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">time_subspace_per_segment</span></code></a>(index, ...)</p></td>
+<td><p>TODO.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.time_interpolation.html#visiontoolkit.time_interpolation" title="visiontoolkit.time_interpolation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">time_interpolation</span></code></a>(obs_times, model_times, ...)</p></td>
 <td><p>Interpolate the flight path temporally (in time T).</p></td>
 </tr>
 </tbody>
@@ -374,16 +378,16 @@ data-aria-dark="Switch to auto color mode">
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.plotting.preview_plots.html#visiontoolkit.plotting.preview_plots" title="visiontoolkit.plotting.preview_plots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotting.preview_plots</span></code></a>(obs_field, ...[, index])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.plotting.preview_plots.html#visiontoolkit.plotting.preview_plots" title="visiontoolkit.plotting.preview_plots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotting.preview_plots</span></code></a>(obs_field, plot_mode, ...)</p></td>
 <td><p>Generate plots of the flight track for a pre-colocation preview.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.plotting.output_plots.html#visiontoolkit.plotting.output_plots" title="visiontoolkit.plotting.output_plots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotting.output_plots</span></code></a>(output, ...[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.plotting.output_plots.html#visiontoolkit.plotting.output_plots" title="visiontoolkit.plotting.output_plots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotting.output_plots</span></code></a>(output, ...)</p></td>
 <td><p>Generate a post-colocation result plot of the track(s) or swath(s).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.make_preview_plots.html#visiontoolkit.make_preview_plots" title="visiontoolkit.make_preview_plots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_preview_plots</span></code></a>(obs_field, ...[, index])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.make_preview_plots.html#visiontoolkit.make_preview_plots" title="visiontoolkit.make_preview_plots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_preview_plots</span></code></a>(obs_field, plot_mode, ...)</p></td>
 <td><p>Generate plots of the flight track for a pre-colocation preview.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.make_output_plots.html#visiontoolkit.make_output_plots" title="visiontoolkit.make_output_plots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_output_plots</span></code></a>(output, obs_t_identifier, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.make_output_plots.html#visiontoolkit.make_output_plots" title="visiontoolkit.make_output_plots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_output_plots</span></code></a>(output, ...[, ...])</p></td>
 <td><p>Generate a post-colocation result plot of the track(s) or swath(s).</p></td>
 </tr>
 </tbody>
@@ -433,7 +437,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.satellite_plugin.html#visiontoolkit.satellite_plugin" title="visiontoolkit.satellite_plugin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">satellite_plugin</span></code></a>(fieldlist[, config])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.satellite_plugin.html#visiontoolkit.satellite_plugin" title="visiontoolkit.satellite_plugin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">satellite_plugin</span></code></a>(fieldlist, chosen_field[, ...])</p></td>
 <td><p>Pre-processing of a field from a satellite swath.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.plugins.satellite_compliance_converter.satellite_compliance_plugin.html#visiontoolkit.plugins.satellite_compliance_converter.satellite_compliance_plugin" title="visiontoolkit.plugins.satellite_compliance_converter.satellite_compliance_plugin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plugins.satellite_compliance_converter.satellite_compliance_plugin</span></code></a>(...)</p></td>

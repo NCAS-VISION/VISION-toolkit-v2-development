@@ -59,7 +59,17 @@ data-aria-dark="Switch to auto color mode">
 <ul class="current">
 <li class="toctree-l1 _expand"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-toolkit">Running the toolkit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#via-the-command-line-the-visiontoolkit-command">Via the command line: the <code class="docutils literal notranslate"><span class="pre">visiontoolkit</span></code> command</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#via-the-python-api">Via the Python API</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="gallery.html">Gallery</a></li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="cli_reference.html">Command-line Interface (CLI) Reference</a></li>
@@ -75,7 +85,17 @@ data-aria-dark="Switch to auto color mode">
     <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
       <i class="i-lucide close"></i>
     </button>
-    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#running-the-toolkit">Running the toolkit</a><ul>
+<li><a class="reference internal" href="#via-the-command-line-the-visiontoolkit-command">Via the command line: the <code class="docutils literal notranslate"><span class="pre">visiontoolkit</span></code> command</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#via-the-python-api">Via the Python API</a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
   <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
   <main class="sy-main w-full max-sm:max-w-full print:pt-6"><div class="sy-breadcrumbs" role="navigation">
@@ -104,8 +124,58 @@ data-aria-dark="Switch to auto color mode">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
           <section id="quickstart">
-<h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">¶</a></h1>
-<p>TODO</p>
+<span id="id1"></span><h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">¶</a></h1>
+<section id="running-the-toolkit">
+<h2>Running the toolkit<a class="headerlink" href="#running-the-toolkit" title="Link to this heading">¶</a></h2>
+<section id="via-the-command-line-the-visiontoolkit-command">
+<h3>Via the command line: the <code class="docutils literal notranslate"><span class="pre">visiontoolkit</span></code> command<a class="headerlink" href="#via-the-command-line-the-visiontoolkit-command" title="Link to this heading">¶</a></h3>
+<p>Install the toolkit as covered in the <a class="reference internal" href="installation.html#installation"><span class="std std-ref">installation guide</span></a>.
+You will then have access to the <code class="docutils literal notranslate"><span class="pre">visiontoolkit</span></code> command which is the means to
+run and configure the toolkit. To understand the available options
+for configuration, run with the <code class="docutils literal notranslate"><span class="pre">--help</span></code> option for a summary of the
+available command-line interface:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">$ </span>visiontoolkit<span class="w"> </span>--help
+</span></pre></div>
+</div>
+<p>Note that configuration can be made either by:</p>
+<ul class="simple">
+<li><p>specifying valid keywords the command line, or</p></li>
+<li><p>through use of a configuration file in YAML format specified using the
+<code class="docutils literal notranslate"><span class="pre">--config-file</span></code> (equivalently <code class="docutils literal notranslate"><span class="pre">-c</span></code>) option followed by a valid path to
+the configuration file provided on the command line.</p></li>
+</ul>
+<section id="examples">
+<h4>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h4>
+<p>For example, this repository contains example configuration files for running
+with both UM and WRF model inputs, though note both assume pre-processing
+has been done on the input data to ensure correct form and CF Compliance
+(more information will be added about this here soon):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>visiontoolkit
+</span><span data-line="2"><span class="gp">$ </span>visiontoolkit<span class="w"> </span>--config-file<span class="o">=</span><span class="s2">&quot;configurations/um-faam-stanco-1.json&quot;</span>
+</span></pre></div>
+</div>
+<p>or using WRF model input:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>visiontoolkit
+</span><span data-line="2"><span class="gp">$ </span>visiontoolkit<span class="w"> </span>--config-file<span class="o">=</span><span class="s2">&quot;configurations/wrf-faam-stanco-1.json&quot;</span>
+</span></pre></div>
+</div>
+<p>The above examples are of flight trajectories. A satellite observation case example is:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>visiontoolkit
+</span><span data-line="2"><span class="gp">$ </span>visiontoolkit<span class="w"> </span>--config-file<span class="o">=</span><span class="s2">&quot;configurations/um-satellite-1.json&quot;</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="via-the-python-api">
+<h3>Via the Python API<a class="headerlink" href="#via-the-python-api" title="Link to this heading">¶</a></h3>
+<p>You can also use the toolkit through the Python API which is documented
+<a class="reference internal" href="api_reference.html#pythonapi"><span class="std std-ref">here</span></a>: import <code class="docutils literal notranslate"><span class="pre">visiontoolkit</span></code> and make use of any
+applicable objects such as functions and exceptions.</p>
+<p>A good place to start might be the <code class="docutils literal notranslate"><span class="pre">colocate</span></code> function, which accepts a
+model field and an observational field and colocates the former onto
+the latter.</p>
+</section>
+</section>
 </section>
 
         </article><button class="back-to-top" type="button">

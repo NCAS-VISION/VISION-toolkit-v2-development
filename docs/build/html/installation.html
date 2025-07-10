@@ -58,7 +58,11 @@ data-aria-dark="Switch to auto color mode">
         <div class="globaltoc" data-expand-depth="1"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 _expand"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#commands-to-install">Commands to install</a></li>
+</ul>
+</li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="gallery.html">Gallery</a></li>
@@ -75,7 +79,11 @@ data-aria-dark="Switch to auto color mode">
     <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
       <i class="i-lucide close"></i>
     </button>
-    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#commands-to-install">Commands to install</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
   <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
   <main class="sy-main w-full max-sm:max-w-full print:pt-6"><div class="sy-breadcrumbs" role="navigation">
@@ -104,8 +112,57 @@ data-aria-dark="Switch to auto color mode">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
           <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
-<p>TODO</p>
+<span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">¶</a></h2>
+<p>The <strong>environment</strong> needed to install and run VISION v2 toolkit requires the following:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Python version <code class="docutils literal notranslate"><span class="pre">3.10</span></code> or later;</p></li>
+<li><p>cf-python at a version of minimum of <code class="docutils literal notranslate"><span class="pre">3.17.0</span></code>,
+see <a class="reference external" href="https://ncas-cms.github.io/cf-python/installation.html">https://ncas-cms.github.io/cf-python/installation.html</a> for guidance;</p></li>
+<li><p>ESMPy at version of minimum <code class="docutils literal notranslate"><span class="pre">8.7.0</span></code>, see the ‘Optional -&gt; Regridding’ sub-section in the installation
+guidance for cf-python linked above for means to install this (conda/mamba makes it simplest);</p></li>
+</ol>
+</div></blockquote>
+<p>and if you want to do any plotting with the toolkit you will also need:</p>
+<blockquote>
+<div><ol class="arabic simple" start="4">
+<li><p>cf-plot at a version of minimum <code class="docutils literal notranslate"><span class="pre">3.4.0</span></code>, see <a class="reference external" href="https://ncas-cms.github.io/cf-plot/installation.html">https://ncas-cms.github.io/cf-plot/installation.html</a>
+for guidance.</p></li>
+</ol>
+</div></blockquote>
+</section>
+<section id="commands-to-install">
+<h2>Commands to install<a class="headerlink" href="#commands-to-install" title="Link to this heading">¶</a></h2>
+<p><strong>Install</strong> the toolkit by following these steps:</p>
+<p>Note: soon the library will be added to PyPI and will be installable with <code class="docutils literal notranslate"><span class="pre">pip</span></code>. Until then,
+follow these steps.</p>
+<ol class="arabic">
+<li><p>Clone the code repository. Use
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">&lt;toolkit</span> <span class="pre">path&gt;</span></code> as below, or you can clone via SSH or the GitHub CLI
+(for help if required see
+<a class="reference external" href="https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository">https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository</a>):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/NCAS-VISION/VISION-toolkit-v2-development.git
+</span></pre></div>
+</div>
+</li>
+<li><p>Install locally by changing into the root directory of the repo and running an ‘editable’ <code class="docutils literal notranslate"><span class="pre">pip</span></code> command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>VISION-toolkit-v2-development
+</span><span data-line="2"><span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</span></pre></div>
+</div>
+</li>
+</ol>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you don’t use the <code class="docutils literal notranslate"><span class="pre">pip</span></code> install command above and instead try to run the toolkit with
+the Python interpreter like a Python script using <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">visiontoolkit/visiontoolkit.py</span></code> or similar,
+there will be errors due to relative imports using <code class="docutils literal notranslate"><span class="pre">.&lt;module&gt;</span></code> syntax. With the <code class="docutils literal notranslate"><span class="pre">pip</span></code> command above
+applied successfully, you will be able to call <code class="docutils literal notranslate"><span class="pre">visiontoolkit</span></code> as a command and therefore run VISION v2
+as a proper CLI (or alternatively use the VISION v2 Python API).</p>
+</div>
+</section>
 </section>
 
         </article><button class="back-to-top" type="button">

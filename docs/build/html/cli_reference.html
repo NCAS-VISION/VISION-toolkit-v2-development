@@ -139,26 +139,28 @@ automatically here. For default values, consult the dictionary of
 defaults used as the canonical source of these, namely:
 <a class="reference internal" href="generated/visiontoolkit.constants.CONFIG_DEFAULTS.html#visiontoolkit.constants.CONFIG_DEFAULTS" title="visiontoolkit.constants.CONFIG_DEFAULTS"><code class="xref py py-mod docutils literal notranslate"><span class="pre">visiontoolkit.constants.CONFIG_DEFAULTS</span></code></a>.</p>
 </div>
-<p><p>Virtual Integration of Satellite and In-Situ Observation Networks (VISION) toolkit flight simulator</p>
+<p><p>Virtual Integration of Satellite and In-Situ Observation Networks (VISION) Toolkit Version 2</p>
 </p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">usage</span><span class="p">:</span> <span class="n">visiontoolkit</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">CONFIG_FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">PREPROCESS_MODE_OBS</span><span class="p">]</span>
-</span><span data-line="2">                     <span class="p">[</span><span class="o">--</span><span class="n">preprocess</span><span class="o">-</span><span class="n">mode</span><span class="o">-</span><span class="n">model</span> <span class="n">PREPROCESS_MODE_MODEL</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">orography</span> <span class="n">OROGRAPHY</span><span class="p">]</span>
-</span><span data-line="3">                     <span class="p">[</span><span class="o">-</span><span class="n">s</span> <span class="n">START_TIME_OVERRIDE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OBS_DATA_PATH</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">MODEL_DATA_PATH</span><span class="p">]</span>
-</span><span data-line="4">                     <span class="p">[</span><span class="o">--</span><span class="n">chosen</span><span class="o">-</span><span class="n">obs</span><span class="o">-</span><span class="n">field</span> <span class="n">CHOSEN_OBS_FIELD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">chosen</span><span class="o">-</span><span class="n">model</span><span class="o">-</span><span class="n">field</span> <span class="n">CHOSEN_MODEL_FIELD</span><span class="p">]</span>
-</span><span data-line="5">                     <span class="p">[</span><span class="o">--</span><span class="n">skip</span><span class="o">-</span><span class="nb">all</span><span class="o">-</span><span class="n">plotting</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span> <span class="n">OUTPUTS_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span> <span class="n">OUTPUT_FILE_NAME</span><span class="p">]</span>
-</span><span data-line="6">                     <span class="p">[</span><span class="o">--</span><span class="n">history</span><span class="o">-</span><span class="n">message</span> <span class="n">HISTORY_MESSAGE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">halo</span><span class="o">-</span><span class="n">size</span> <span class="n">HALO_SIZE</span><span class="p">]</span>
-</span><span data-line="7">                     <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="n">SPATIAL_COLOCATION_METHOD</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">z</span> <span class="n">VERTICAL_COLOCATION_COORD</span><span class="p">]</span>
-</span><span data-line="8">                     <span class="p">[</span><span class="o">--</span><span class="n">source</span><span class="o">-</span><span class="n">axes</span> <span class="n">SOURCE_AXES</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">plotname</span><span class="o">-</span><span class="n">start</span> <span class="n">PLOTNAME_START</span><span class="p">]</span>
-</span><span data-line="9">                     <span class="p">[</span><span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">plot</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">obs</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">t</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="n">cscale</span> <span class="n">CFP_CSCALE</span><span class="p">]</span>
-</span><span data-line="10">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="n">mapset</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_MAPSET_CONFIG</span><span class="p">]</span>
+</span><span data-line="2">                     <span class="p">[</span><span class="o">--</span><span class="n">preprocess</span><span class="o">-</span><span class="n">mode</span><span class="o">-</span><span class="n">model</span> <span class="n">PREPROCESS_MODE_MODEL</span><span class="p">]</span>
+</span><span data-line="3">                     <span class="p">[</span><span class="o">--</span><span class="n">orography</span> <span class="n">OROGRAPHY</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span> <span class="n">START_TIME_OVERRIDE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OBS_DATA_PATH</span><span class="p">]</span>
+</span><span data-line="4">                     <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">MODEL_DATA_PATH</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">chosen</span><span class="o">-</span><span class="n">obs</span><span class="o">-</span><span class="n">field</span> <span class="n">CHOSEN_OBS_FIELD</span><span class="p">]</span>
+</span><span data-line="5">                     <span class="p">[</span><span class="o">--</span><span class="n">chosen</span><span class="o">-</span><span class="n">model</span><span class="o">-</span><span class="n">field</span> <span class="n">CHOSEN_MODEL_FIELD</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span> <span class="n">OUTPUTS_DIR</span><span class="p">]</span>
+</span><span data-line="6">                     <span class="p">[</span><span class="o">-</span><span class="n">f</span> <span class="n">OUTPUT_FILE_NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">history</span><span class="o">-</span><span class="n">message</span> <span class="n">HISTORY_MESSAGE</span><span class="p">]</span>
+</span><span data-line="7">                     <span class="p">[</span><span class="o">--</span><span class="n">halo</span><span class="o">-</span><span class="n">size</span> <span class="n">HALO_SIZE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="n">SPATIAL_COLOCATION_METHOD</span><span class="p">]</span>
+</span><span data-line="8">                     <span class="p">[</span><span class="o">-</span><span class="n">z</span> <span class="n">VERTICAL_COLOCATION_COORD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">source</span><span class="o">-</span><span class="n">axes</span> <span class="n">SOURCE_AXES</span><span class="p">]</span>
+</span><span data-line="9">                     <span class="p">[</span><span class="o">--</span><span class="n">plotname</span><span class="o">-</span><span class="n">start</span> <span class="n">PLOTNAME_START</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">plot</span><span class="o">-</span><span class="n">mode</span> <span class="n">PLOT_MODE</span><span class="p">]</span>
+</span><span data-line="10">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="n">cscale</span> <span class="n">CFP_CSCALE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="n">mapset</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_MAPSET_CONFIG</span><span class="p">]</span>
 </span><span data-line="11">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">levs</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_INPUT_LEVS_CONFIG</span><span class="p">]</span>
 </span><span data-line="12">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">general</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_INPUT_GENERAL_CONFIG</span><span class="p">]</span>
 </span><span data-line="13">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">track</span><span class="o">-</span><span class="n">only</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_INPUT_TRACK_ONLY_CONFIG</span><span class="p">]</span>
 </span><span data-line="14">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="n">output</span><span class="o">-</span><span class="n">levs</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_OUTPUT_LEVS_CONFIG</span><span class="p">]</span>
 </span><span data-line="15">                     <span class="p">[</span><span class="o">--</span><span class="n">cfp</span><span class="o">-</span><span class="n">output</span><span class="o">-</span><span class="n">general</span><span class="o">-</span><span class="n">config</span> <span class="n">CFP_OUTPUT_GENERAL_CONFIG</span><span class="p">]</span>
-</span><span data-line="16">                     <span class="p">[</span><span class="o">--</span><span class="n">satellite</span><span class="o">-</span><span class="n">plugin</span><span class="o">-</span><span class="n">config</span> <span class="n">SATELLITE_PLUGIN_CONFIG</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">regrid</span><span class="o">-</span><span class="n">z</span><span class="o">-</span><span class="n">coord</span> <span class="n">REGRID_Z_COORD</span><span class="p">]</span>
-</span><span data-line="17">                     <span class="p">[</span><span class="o">-</span><span class="n">r</span> <span class="n">REGRID_METHOD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">chosen</span><span class="o">-</span><span class="n">obs</span><span class="o">-</span><span class="n">fields</span> <span class="n">CHOSEN_OBS_FIELDS</span><span class="p">]</span>
-</span><span data-line="18">                     <span class="p">[</span><span class="o">--</span><span class="n">chosen</span><span class="o">-</span><span class="n">model</span><span class="o">-</span><span class="n">fields</span> <span class="n">CHOSEN_MODEL_FIELDS</span><span class="p">]</span>
+</span><span data-line="16">                     <span class="p">[</span><span class="o">--</span><span class="n">satellite</span><span class="o">-</span><span class="n">plugin</span><span class="o">-</span><span class="n">config</span> <span class="n">SATELLITE_PLUGIN_CONFIG</span><span class="p">]</span>
+</span><span data-line="17">                     <span class="p">[</span><span class="o">--</span><span class="n">regrid</span><span class="o">-</span><span class="n">z</span><span class="o">-</span><span class="n">coord</span> <span class="n">REGRID_Z_COORD</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">r</span> <span class="n">REGRID_METHOD</span><span class="p">]</span>
+</span><span data-line="18">                     <span class="p">[</span><span class="o">--</span><span class="n">chosen</span><span class="o">-</span><span class="n">obs</span><span class="o">-</span><span class="n">fields</span> <span class="n">CHOSEN_OBS_FIELDS</span><span class="p">]</span>
+</span><span data-line="19">                     <span class="p">[</span><span class="o">--</span><span class="n">chosen</span><span class="o">-</span><span class="n">model</span><span class="o">-</span><span class="n">fields</span> <span class="n">CHOSEN_MODEL_FIELDS</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">t</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">skip</span><span class="o">-</span><span class="nb">all</span><span class="o">-</span><span class="n">plotting</span><span class="p">]</span>
+</span><span data-line="20">                     <span class="p">[</span><span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">plot</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">obs</span><span class="p">]</span>
 </span></pre></div>
 </div>
 <section id="visiontoolkit-cli_parser-named-arguments">
@@ -169,7 +171,7 @@ defaults used as the canonical source of these, namely:
 <p>Default: <code class="docutils literal notranslate"><span class="pre">0</span></code></p>
 </dd>
 <dt><kbd>-c, --config-file</kbd></dt>
-<dd><p>configuration file in JSON format to supply configuration, which overrides any configuration provided by other command-line options, if duplication of input occurs</p>
+<dd><p>configuration file in JSON format to supply configuration, where any configuration provided by other command–line options will take precendence over the config. file input, if duplication occurs</p>
 </dd>
 <dt><kbd>-p, --preprocess-mode-obs</kbd></dt>
 <dd><p>specify a pre-processing mode so a set plugin is applied to pre-process the observational data in an apprpriate way, current options being ‘flight’ and ‘satellite’ where by default we apply no pre-processing</p>
@@ -195,10 +197,6 @@ defaults used as the canonical source of these, namely:
 <dt><kbd>--chosen-model-field</kbd></dt>
 <dd><p>string corresponding to a valid ‘select_field’ argument to select a unique field from the FieldList of the read-in model data, else if not specified the FieldList is assumed to be of size one and the single field is extracted.</p>
 </dd>
-<dt><kbd>--skip-all-plotting</kbd></dt>
-<dd><p>Do not generate plots to preview the input or show the output fields</p>
-<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
 <dt><kbd>-d, --outputs-dir</kbd></dt>
 <dd><p>path location of the top-level directory to create outputs in</p>
 </dd>
@@ -223,13 +221,8 @@ defaults used as the canonical source of these, namely:
 <dt><kbd>--plotname-start</kbd></dt>
 <dd><p>initial text to use in the names of all plots generated</p>
 </dd>
-<dt><kbd>--show-plot-of-input-obs</kbd></dt>
-<dd><p>flag to indicate whether to show plots of the input observational data before the colocation logic begins, as a preview</p>
-<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt><kbd>-t, --plot-of-input-obs-track-only</kbd></dt>
-<dd><p>flag to indicate whether only the track/trajectory of the observational data is shown, as opposed to the data on the track, for the input observational data preview plots</p>
-<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+<dt><kbd>--plot-mode</kbd></dt>
+<dd><p>what to plot with cf-plot, where integer inputs represent the supported modes, which are: 0 to not plot anything, 1 to plot both the outputs and, before starting colocation, as a means of verification and/or quick inpection, the observational input (with its data), 2 to plot only the outputs (the default mode, if plot-mode is not specified) and 3 to plot both the outputs and observational input but only show the track/swath of the inputs without the data on it to indicate the track/swath which the model field will then be colocated onto (the most relevant part of the observational input for VISION purposes)</p>
 </dd>
 <dt><kbd>--cfp-cscale</kbd></dt>
 <dd><p>cf-plot plotting configuration as a string to set the colour scale for the (input preview and) output plots, ee: <a class="reference external" href="https://ncas-cms.github.io/cf-plot/build/cscale.html#cscale">https://ncas-cms.github.io/cf-plot/build/cscale.html#cscale</a></p>
@@ -259,13 +252,25 @@ defaults used as the canonical source of these, namely:
 <dd><p>NOW DEPRECATED: use ‘–vertical-colocation-coord’ instead. [vertical (z) coordinate to use as the vertical component in the spatial interpolation step]</p>
 </dd>
 <dt><kbd>-r, --regrid-method</kbd></dt>
-<dd><p>NOW DEPRECATED: use ‘–spatial-colocation-method’ instead. regridding interpolation method to apply, see ‘method’ parameter to ‘cf.regrids’ method for options: <a class="reference external" href="https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html">https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html</a></p>
+<dd><p>NOW DEPRECATED: use ‘–spatial-colocation-method’ instead. [regridding interpolation method to apply, see ‘method’ parameter to ‘cf.regrids’ method for options: <a class="reference external" href="https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html">https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html</a>]</p>
 </dd>
 <dt><kbd>--chosen-obs-fields</kbd></dt>
 <dd><p>NOW DEPRECATED: use ‘–chosen-obs-field’ (non-plural) instead. Note that we no longer accept an integer corresponding to a FieldList index to take a field from like this keyword permitted, now we require a valid ‘select_field’ string argument.</p>
 </dd>
 <dt><kbd>--chosen-model-fields</kbd></dt>
 <dd><p>NOW DEPRECATED: use ‘–chosen-model-field’ (non-plural) instead. Note that we no longer accept an integer corresponding to a FieldList index to take a field from like this keyword permitted, now we require a valid ‘select_field’ string argument.</p>
+</dd>
+<dt><kbd>-t, --plot-of-input-obs-track-only</kbd></dt>
+<dd><p>NOW DEPRECATED: use ‘–plot-mode’ instead. [flag to indicate whether only the track/trajectory of the observational data is shown, as opposed to the data on the track, for the input observational data preview plots]</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+<dt><kbd>--skip-all-plotting</kbd></dt>
+<dd><p>NOW DEPRECATED: use ‘–plot-mode’ instead. [Do not generate plots to preview the input or show the output fields]</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+<dt><kbd>--show-plot-of-input-obs</kbd></dt>
+<dd><p>NOW DEPRECATED: use ‘–plot-mode’ instead. [flag to indicate whether to show plots of the input observational data before the colocation logic begins, as a preview]</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
