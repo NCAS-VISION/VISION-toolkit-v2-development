@@ -109,7 +109,7 @@ class TestFlightObservationsUMModelConstantPressure:
             "min": 5e-08,
             "step": 2.5e-09,
         },
-        "plot-of-input-obs-track-only": 2,
+        "plot-mode": 2,
     }
 
     def test_config_c1_flight_um(self, capsys, tmp_path):
@@ -118,7 +118,7 @@ class TestFlightObservationsUMModelConstantPressure:
             **self.base_config_constant_vert_levs,
             **{
                 # Changes relative to base configuration choice, if any
-                "plot-of-input-obs-track-only": 2,
+                "plot-mode": 3,
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_faam_stanco_1_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-1",
@@ -168,7 +168,7 @@ class TestFlightObservationsUMModelConstantPressure:
                 # Changes relative to base configuration choice, if any
                 "obs-data-path": f"{self.obs_data_root}core_faam_20170703_c016_STANCO_CF-two-point-1.nc",
                 "chosen-obs-field": "mole_fraction_of_ozone_in_air",
-                "plot-of-input-obs-track-only": 2,
+                "plot-mode": 3,
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_faam_stanco_4_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-4",
@@ -186,6 +186,7 @@ class TestFlightObservationsUMModelConstantPressure:
                 "chosen-obs-field": "mole_fraction_of_ozone_in_air",
                 "halo-size": 0,
                 "plot-of-input-obs-track-only": 2,
+                "plot-mode": 3,
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_faam_stanco_5_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-faam-stanco-5",
@@ -236,7 +237,7 @@ class TestFlightObservationsUMModelHybridHeight:
         #     "min": 4.5e-08,
         #     "step": 0.5e-08,
         # },
-        "skip-all-plotting": True,
+        "plot-mode": 0,
         # Other
         "start-time-override": "1998-02-21 11:50:00",
     }
@@ -306,6 +307,7 @@ class TestFlightObservationsWRFModel:
         "chosen-model-field": "ncvar%T",
         "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
         "vertical-colocation-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
+        "plot-mode": 2,
         "cfp-mapset-config": {
             "latmax": 54,
             "latmin": 50,
@@ -324,8 +326,7 @@ class TestFlightObservationsWRFModel:
             **{
                 # Changes relative to base configuration choice, if any
                 "start-time-override": "2023-07-10 12:00:00",
-                "plot-of-input-obs-track-only": 2,
-                "skip-all-plotting": True,
+                "plot-mode": 0,
                 # Not relevant to testing: names outputs
                 "output-file-name": "wrf_faam_stanco_1_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/wrf-faam-stanco-1",
@@ -340,8 +341,6 @@ class TestFlightObservationsWRFModel:
             **{
                 # Changes relative to base configuration choice, if any
                 "start-time-override": "2023-07-11 18:00:00",
-                "plot-of-input-obs-track-only": 0,
-                "show-plot-of-input-obs": False,
                 # Not relevant to testing: names outputs
                 "output-file-name": "wrf_faam_stanco_2_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/wrf-faam-stanco-2",
@@ -356,7 +355,6 @@ class TestFlightObservationsWRFModel:
             **{
                 # Changes relative to base configuration choice, if any
                 "start-time-override": "2023-07-11 03:14:15",
-                "show-plot-of-input-obs": False,
                 # Not relevant to testing: names outputs
                 "output-file-name": "wrf_faam_stanco_3_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/wrf-faam-stanco-3",
@@ -371,7 +369,6 @@ class TestFlightObservationsWRFModel:
             **{
                 # Changes relative to base configuration choice, if any
                 "start-time-override": "2023-07-12 03:14:15",
-                "show-plot-of-input-obs": False,
                 # Not relevant to testing: names outputs
                 "output-file-name": "wrf_faam_stanco_4_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/wrf-faam-stanco-4",
@@ -395,8 +392,7 @@ class TestFlightObservationsWRFModel:
                 "obs-data-path": "../data/2025-laurents-twopoint-flight/field.nc",
                 "chosen-obs-field": "ncvar%tc",
                 "start-time-override": "2023-07-10 12:00:00",
-                "plot-of-input-obs-track-only": False,
-                "skip-all-plotting": True,
+                "plot-mode": 0,
                 # Not relevant to testing: names outputs
                 "output-file-name": "wrf_faam_stanco_5_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/wrf-faam-stanco-5",
@@ -421,7 +417,7 @@ class TestSatelliteObservationsUMModel:
         "model-data-path": "../data/main-workwith-test-ISO-simulator/Model_Input",
         "preprocess-mode-obs": "satellite",
         "chosen-model-field": "id%UM_m01s51i010_vn1105",
-        "skip-all-plotting": False,
+        "plot-mode": 3,
     }
 
     def test_config_c1_satellite_um(self, capsys, tmp_path):
@@ -435,7 +431,7 @@ class TestSatelliteObservationsUMModel:
                 "obs-data-path": f"{self.obs_data_root}-20170703201158z_20170703215054z_350_399-v1000.nc",
                 "start-time-override": "2017-07-17 03:14:15",
                 "cfp-cscale": "inferno",
-                "show-plot-of-input-obs": False,
+                "plot-mode": 2,
                 "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
                 "cfp-mapset-config": {
                     "boundinglat": -60,
@@ -657,7 +653,7 @@ class TestSatelliteObservationsUMModel:
                 ),
                 "obs-data-path": f"{self.obs_data_root}-201707032*",
                 "start-time-override": "2017-07-21 00:00:00",
-                "show-plot-of-input-obs": False,
+                "plot-mode": 2,
                 "cfp-cscale": "plasma",
                 "cfp-input-levs-config": {"max": 55, "min": -5, "step": 5},
                 "cfp-mapset-config": {"proj": "robin", "resolution": "10m"},
@@ -675,6 +671,7 @@ class TestSatelliteObservationsUMModel:
 
     def test_config_c10_satellite_um(self, capsys, tmp_path):
         """TODO c10: TODO describe main reasons for config."""
+        # Note tests default plot mode as no / skip all plotting
         c10_satellite_um = {
             **self.base_config_satellite_um,
             **{
@@ -685,7 +682,6 @@ class TestSatelliteObservationsUMModel:
                 ),
                 "obs-data-path": f"{self.obs_data_dir}/*",
                 "start-time-override": "2017-07-21 00:00:00",
-                "skip-all-plotting": True,
                 # Not relevant to testing: names outputs
                 "output-file-name": "um_satellite_10_vision_result.nc",
                 "outputs-dir": "toolkit-outputs/um-satellite-10",
