@@ -7,7 +7,6 @@ CONFIG_DEFAULTS = {
     # TODO: Get ESMF logging via cf incoporated into Python logging system,
     # see Issue #286.
     "verbose": 0,  # corresponds to a count of 0 (-v would be 1, -vv 2, etc.)
-    "skip-all-plotting": False,
     # *** Run mode with time override(s) ***
     # Specify the mode on which to run the E2E, where valid choices are:
     # 1. a mode to take data as-is assuming the model input data spans the
@@ -59,22 +58,14 @@ CONFIG_DEFAULTS = {
     "vertical-colocation-coord": "air_pressure",
     "source-axes": False,
     # *** Plotting: what to plot and how to minimally configure it ***
+    "plot-mode": 0,  # NEW DEFAULT, SLB ENSURE BACK COMPAT.
     "plotname-start": "vision_toolkit",
-    # Optionally, display plots of the input observational data, or its track
-    # only in one colour (if 'plot-of-input-obs-track-only' is set to True).
-    # This could be useful for previewing the track to be colocated
-    # onto, to fail early if the user isn't happy with the track,
-    # or for demo'ing the code to compare the original observational data
-    # to the co-located data to see the differences.
-    "show-plot-of-input-obs": True,
-    # Bool but for dev. purposes, if set to 2 then it shows both plots:
-    "plot-of-input-obs-track-only": True,
     # "parula" also works well, as alternative for dev. work:
     "cfp-cscale": "plasma",
     "cfp-mapset-config": {},
     "cfp-input-levs-config": {},
     "cfp-input-track-only-config": {
-        "legend": True,  # TODO sepaarte into setvars config and plot opts
+        "legend": True,  # TODO separate into setvars config and plot opts
         "colorbar": False,
         "markersize": 0.5,
         "linewidth": 0.0,  # turn off line plotting to only have markers
@@ -99,6 +90,18 @@ CONFIG_DEFAULTS = {
         "linewidth": 0.0,
         "title": "Result: model co-located onto observational path",
     },
+    # Note, deprecations:
+    # Bool but for dev. purposes, if set to 2 then it shows both plots:
+    #"plot-of-input-obs-track-only": True,
+    #
+    # Optionally, display plots of the input observational data, or its track
+    # only in one colour (if 'plot-of-input-obs-track-only' is set to True).
+    # This could be useful for previewing the track to be colocated
+    # onto, to fail early if the user isn't happy with the track,
+    # or for demo'ing the code to compare the original observational data
+    # to the co-located data to see the differences.
+    #"show-plot-of-input-obs": True,
+    #"skip-all-plotting": False,
 }
 
 

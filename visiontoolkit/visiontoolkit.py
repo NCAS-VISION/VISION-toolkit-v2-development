@@ -8,10 +8,14 @@ from itertools import pairwise  # requires Python 3.10+
 from pprint import pformat
 from time import time
 
+
 # Import cfplot here even though not explicitly used to avoid
 # plotting module seg faults - cfplot needs overall to be imported first.
 # Will need to bypass 'isort' movement of this.
-import cfplot as cfp  # noqa: F401
+try:
+    import cfplot as cfp  # noqa: F401
+except ImportError:
+    pass
 import cf
 
 import numpy as np
@@ -30,11 +34,6 @@ from .plugins.wrf_data_compliance_fixes import (
     wrf_further_compliance_fixes,
 )
 
-
-SUPPORTED_PARAMETRIC_CONVERSIONS = (
-    "atmosphere_hybrid_height_coordinate",
-    "atmosphere_hybrid_sigma_pressure_coordinate",
-)
 
 # ----------------------------------------------------------------------------
 # Set up timing and logging
@@ -352,8 +351,7 @@ def vertical_parametric_computation_ahspc(model_field):
 @timeit
 def make_preview_plots(
     obs_field,
-    show_plot_of_input_obs,
-    plot_of_input_obs_track_only,
+    plot_mode,
     outputs_dir,
     plotname_start,
     cfp_mapset_config,
@@ -376,8 +374,7 @@ def make_preview_plots(
     """
     preview_plots(
         obs_field,
-        show_plot_of_input_obs,
-        plot_of_input_obs_track_only,
+        plot_mode,
         outputs_dir,
         plotname_start,
         cfp_mapset_config,
@@ -1268,7 +1265,6 @@ def time_interpolation(
     spatially_colocated_field,
     history_message,
     is_satellite_case=False,
-    split_segments=False,
 ):
     """Interpolate the flight path temporally (in time T).
 
@@ -1281,8 +1277,6 @@ def time_interpolation(
     TODO: DETAILED DOCS
     """
     logger.info("Starting time interpolation step.")
-    if split_segments:
-        logger.info("Using split segments.\n")
 
     # Setup ready for iteration...
     m = spatially_colocated_field.copy()
@@ -1588,7 +1582,6 @@ def write_output_data(final_result_field, output_path_name):
 @timeit
 def make_output_plots(
     output,
-    obs_t_identifier,
     cfp_output_levs_config,
     outputs_dir,
     plotname_start,
@@ -1621,17 +1614,28 @@ def make_output_plots(
 @timeit
 def colocate_single_file(
     file_to_colocate,
-    index,
-    args,
+    chosen_obs_field,
+    model_field,
     preprocess_obs,
-    skip_all_plotting,
-    outputs_dir,
-    plotname_start,
-    verbose,
-    model_field,  # TODO pull this out of loop
-    halo_size,  # TODO use args instead of names since pass args in
+    satellite_plugin_config,  # needed?
+    index,
+    start_time_override,
+    halo_size,
     interpolation_method,
     colocation_z_coord,
+    source_axes,
+    history_message,
+    outputs_dir,
+    # --- Plotting only - consolidate to remove if no plotting
+    plot_mode,
+    plotname_start,
+    cfp_mapset_config,
+    cfp_cscale,
+    cfp_input_levs_config,
+    cfp_input_track_only_config,
+    cfp_input_general_config,
+    # --- End of plotting inputs
+    verbose,
     orog_field=None,
 ):
     """Perform model-to-observational colocation using a single file source."""
@@ -1639,7 +1643,6 @@ def colocate_single_file(
         f"\n_____ Start of colocation iteration with file number {index + 1}: "
         f"{file_to_colocate} _____\n"
     )
-
     # Process and validate inputs, including optional preview plot
     obs_data = read_obs_input_data(file_to_colocate)
     if obs_data is None:
@@ -1649,53 +1652,67 @@ def colocate_single_file(
     # input may be a FieldList which gets reduced to less fields or to one
     reduced = False  # whether pre-processing reduces to one field
     if preprocess_obs:
-        # SLB
         obs_field, reduced = ensure_cf_compliance(
             obs_data,
             preprocess_obs,
-            args.chosen_obs_field,
-            args.satellite_plugin_config,
+            chosen_obs_field,
+            satellite_plugin_config,
         )
 
     if not reduced:
         obs_field = get_input_fields_of_interest(
-            obs_data, args.chosen_obs_field, is_model=False
+            obs_data, chosen_obs_field, is_model=False
         )
 
-    # Persist obs field - do this as early as possible, but after
-    # the pre-processing
-    persist_all_metadata(obs_field)
-
     # TODO: this has too many parameters for one function, separate out
-    if not skip_all_plotting:
+    if plot_mode != 0:
         make_preview_plots(
             obs_field,
-            args.show_plot_of_input_obs,
-            args.plot_of_input_obs_track_only,
+            plot_mode,
             outputs_dir,
             plotname_start,
-            args.cfp_mapset_config,
-            args.cfp_cscale,
-            args.cfp_input_levs_config,
-            args.cfp_input_track_only_config,
-            args.cfp_input_general_config,
+            cfp_mapset_config,
+            cfp_cscale,
+            cfp_input_levs_config,
+            cfp_input_track_only_config,
+            cfp_input_general_config,
             verbose,
             index,
         )
+
+    final_result_field, obs_t_identifier = colocate(
+        model_field, obs_field, halo_size, verbose,
+        interpolation_method, colocation_z_coord,
+        source_axes=source_axes, history_message=history_message,
+        override_obs_start_time=start_time_override,
+        preprocess_obs=preprocess_obs,
+    )
+
+    logger.info(f"End of colocation iteration with file: {file_to_colocate}")
+    return final_result_field, obs_t_identifier  # TODO remove obs_t from ret
+
+
+def colocate(
+        model_field, obs_field, halo_size, verbose, interpolation_method,
+        colocation_z_coord, source_axes, history_message,
+        override_obs_start_time=False,
+        preprocess_obs=False,
+    ):
+    """TODO."""
+    # Persist obs field as early as possible, but after any pre-processing
+    persist_all_metadata(obs_field)
 
     # Time coordinate considerations, pre-colocation
     times, time_identifiers = get_time_coords(obs_field, model_field)
     obs_times, model_times = times
     obs_t_identifier, model_t_identifier = time_identifiers
 
-    new_obs_starttime = args.start_time_override
-    if new_obs_starttime:
+    if override_obs_start_time:
         # TODO can just do in-place rather than re-assign, might be best?
         obs_times = set_start_datetime(
-            obs_times, obs_t_identifier, new_obs_starttime
+            obs_times, obs_t_identifier, override_obs_start_time
         )
 
-    # TODO apply obs_t_identifier, model_t_identifier in further logic
     ensure_unit_calendar_consistency(obs_field, model_field)
 
     # Ensure the model time axes covers the entire time axes span of the
@@ -1705,21 +1722,21 @@ def colocate_single_file(
     # For the satellite swath cases, ignore vertical height since it is
     # dealt with by the averaging kernel.
     # TODO how do we account for the averging kernel work in this case?
-    no_vertical = False
-    if preprocess_obs == "satellite":
-        no_vertical = True
+    no_vertical = preprocess_obs == "satellite"
 
-    # Where this is False, is taken as the SN of the "Z" coordinate by default
-    vertical_key = "Z"  # TODO rename, Z is not a SN
+    # Where this is False, is taken as the key of the "Z" coordinate by default
+    vertical_key = "Z"
 
     # Handle parametric vertical coordinates:
-    # TODO, replace this check on coord refs with a check on the requested
+    # Currently supported parametric conversions are:
+    #   "atmosphere_hybrid_height_coordinate"
+    #   "atmosphere_hybrid_sigma_pressure_coordinate"
+
+    # TODO, check on coord refs with a check on the requested
     # "vertical-colocation-coord", if doesn't have one try computing from a
     # coord ref, if not fail with elegant message.
     coord_refs = model_field.coordinate_references(default=False)
     if coord_refs:
-        # Keep SUPPORTED_PARAMETRIC_CONVERSIONS list updated with cases use
-        # so can ensure support wat needed from CF Conventions Appendix D
         if model_field.coordinate_reference(
             "standard_name:atmosphere_hybrid_sigma_pressure_coordinate",
             default=False,
@@ -1756,18 +1773,15 @@ def colocate_single_file(
         vertical_key=vertical_key,
     )
 
-    extra_compliance_proc_for_wrf = False
-    if preprocess_obs == "wrf":
-        extra_compliance_proc_for_wrf = True
+    extra_compliance_proc_for_wrf = preprocess_obs == "wrf"
 
-    # SADIE HERE ISSUE
     # Perform spatial and then temporal interpolation to colocate
     spatially_colocated_field = spatial_interpolation(
         obs_field,
         model_field_bb,
         interpolation_method,
         colocation_z_coord,
-        args.source_axes,
+        source_axes,
         model_t_identifier,
         no_vertical,
         vertical_key=vertical_key,
@@ -1777,11 +1791,7 @@ def colocate_single_file(
     # For such cases as satellite swaths, the times can straddle model points
     # so we need to chop these up into ones on each side of a model time
     # segment as per our approach below.
-    is_satellite_case = False
-    split_segments = False
-    if preprocess_obs == "satellite":
-        is_satellite_case = True
-        split_segments = True
+    is_satellite_case = preprocess_obs == "satellite"
 
     final_result_field = time_interpolation(
         obs_times,
@@ -1792,13 +1802,11 @@ def colocate_single_file(
         model_field,
         halo_size,
         spatially_colocated_field,
-        args.history_message,
+        history_message,
         is_satellite_case=is_satellite_case,
-        split_segments=split_segments,
     )
 
-    logger.info(f"End of colocation iteration with file: {file_to_colocate}")
-    return final_result_field, obs_t_identifier  # TODO remove obs_t from ret
+    return final_result_field, obs_t_identifier
 
 
 # ----------------------------------------------------------------------------
@@ -1827,16 +1835,64 @@ def main():
     plotname_start = args.plotname_start
     verbose = args.verbose
     halo_size = args.halo_size
-    skip_all_plotting = args.skip_all_plotting
     preprocess_obs = args.preprocess_mode_obs
     preprocess_model = args.preprocess_mode_model
     orog_data_path = args.orography
+    chosen_obs_field = args.chosen_obs_field
+    satellite_plugin_config = args.satellite_plugin_config
+    source_axes = args.source_axes
+    history_message = args.history_message
+    start_time_override = args.start_time_override
+    # Plotting-only config
+    plot_mode = args.plot_mode
+    cfp_mapset_config = args.cfp_mapset_config
+    cfp_cscale = args.cfp_cscale
+    cfp_input_levs_config = args.cfp_input_levs_config
+    cfp_input_track_only_config = args.cfp_input_track_only_config
+    cfp_input_general_config = args.cfp_input_general_config
+
+    # *Deprcated alternatives processing*
     # TODO: eventually remove the deprecated alternatives, but for now
     # accept both (see cli.py end of process_cli_arguments for the listing
     # of any deprecated options)
     # Note that e.g. "A" or "B" evaluates to "A"
     colocation_z_coord = args.vertical_colocation_coord or args.regrid_z_coord
     interpolation_method = args.spatial_colocation_method or args.regrid_method
+    # 'Plot mode' config. option has condensed down 3 flags, so needs a bit
+    # more processing to convert into the new option. Also warn of
+    # deprecation
+    if (
+            args.skip_all_plotting or
+            args.show_plot_of_input_obs or
+            args.plot_of_input_obs_track_only
+    ):
+        if plot_mode is None:  # to distinguish from plot mode 0 (equiv. False)
+            logger.warning(
+                "Note the arguments 'skip-all-plotting', "
+                "'show-plot-of-input-obs' and 'plot-of-input-obs-track-only' "
+                "are deprecated and though they remain supported for now, "
+                "soon they will not be recognised. Instead please use "
+                "'plot-mode' which replaces all three with a mode integer "
+                "input."
+            )
+        else:
+            raise ConfigurationIssue(
+                "Can't set both 'plot-mode' and any of the deprecated "
+                "arguments 'skip-all-plotting', 'show-plot-of-input-obs' and "
+                "'plot-of-input-obs-track-only'. Please remove use of any of "
+                "those deprecated arguments."
+            )
+
+    # Now convert old trio of flags to plot-mode equivalent integer
+    if args.skip_all_plotting:
+        plot_mode == 0  # no plots
+    elif args.show_plot_of_input_obs:
+        if args.plot_of_input_obs_track_only:
+            plot_mode == 3  # plot outputs plus inputs on track only
+        else:
+            plot_mode == 1  # plot outputs plus normal (data on track) inputs 
+    else:
+        plot_mode == 2  # plot only outputs
 
     # Need to do this again here to pick up on this module's logger
     setup_logging(verbose)
@@ -1881,7 +1937,7 @@ def main():
             orog_field = orog_fl[0]
             logger.info(f"Orography field set to use is:\n{orog_field}")
 
-            # TODO also check suitability of orog field - might be bad
+            # TODO also check suitability of orog field - might be invalid
         else:
             pass  # TODO in this case is netCDF with attached orog, handle this
 
@@ -1907,17 +1963,28 @@ def main():
     for index, file_to_colocate in enumerate(read_file_list):
         file_fl_result, obs_t_identifier = colocate_single_file(
             file_to_colocate,
-            index,
-            args,
+            chosen_obs_field,
+            model_field,
             preprocess_obs,
-            skip_all_plotting,
-            outputs_dir,
-            plotname_start,
-            verbose,
-            model_field,  # TODO pull this out of loop
-            halo_size,  # TODO use args instead of names since pass args in
+            satellite_plugin_config,  # needed?
+            index,
+            start_time_override,
+            halo_size,
             interpolation_method,
             colocation_z_coord,
+            source_axes,
+            history_message,
+            outputs_dir,
+            # --- Plotting only - consolidate to remove if no plotting
+            plot_mode,
+            plotname_start,
+            cfp_mapset_config,
+            cfp_cscale,
+            cfp_input_levs_config,
+            cfp_input_track_only_config,
+            cfp_input_general_config,
+            # --- End of plotting inputs
+            verbose,
             orog_field,
         )
         if file_fl_result is None:
@@ -1983,14 +2050,13 @@ def main():
         # Write field to disk, but not as CRA in this case
         write_output_data(output, output_path_name)
 
-    # WRF ONLY
-    # TODO do we even need this? Is kinda odgy metadata thing to do anyway...
+    # TODO do we even need this? Is kinda dodgy metadata thing to do anyway...
     if preprocess_model == "WRF":
         aux_coor_t = output.auxiliary_coordinate(obs_t_identifier)
         dim_coor_t = cf.DimensionCoordinate(source=aux_coor_t)
         output.set_construct(dim_coor_t, axes="ncdim%obs")
 
-    if not skip_all_plotting:
+    if plot_mode:  # i.e. plot_mode is any one but 0
         # Plot the output
         make_output_plots(
             output,

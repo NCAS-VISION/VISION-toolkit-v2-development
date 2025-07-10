@@ -7,5 +7,5 @@
     "chosen-model-field":"id%UM_m01s34i104_vn1105",
     "outputs-dir":"toolkit-outputs/um-hybrid-height-faam-stanco-2",
     "output-file-name":"um_hh_faam_stanco_2_vision_result.nc",
-    "skip-all-plotting":true
+    "plot-mode":0
 }

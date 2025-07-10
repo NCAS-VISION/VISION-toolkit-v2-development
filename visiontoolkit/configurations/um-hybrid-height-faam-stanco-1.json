@@ -7,5 +7,5 @@
     "chosen-model-field":"air_temperature",
     "outputs-dir":"toolkit-outputs/um-hybrid-height-faam-stanco-1",
     "output-file-name":"um_hh_faam_stanco_1_vision_result.nc",
-    "skip-all-plotting":true
+    "plot-mode":0
 }

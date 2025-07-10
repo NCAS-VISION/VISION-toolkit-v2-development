@@ -151,14 +151,6 @@ def process_cli_arguments(parser):
         ),
     )
     parser.add_argument(
-        "--skip-all-plotting",
-        action="store_true",
-        help=(
-            "Do not generate plots to preview the input or show the output "
-            "fields"
-        ),
-    )
-    parser.add_argument(
         "-d",
         "--outputs-dir",
         action="store",
@@ -225,22 +217,19 @@ def process_cli_arguments(parser):
         help="initial text to use in the names of all plots generated",
     )
     parser.add_argument(
-        "--show-plot-of-input-obs",
-        action="store_true",
+        "--plot-mode",
+        action="store",
         help=(
-            "flag to indicate whether to show plots of the input "
-            "observational data before the colocation logic begins, as "
-            "a preview"
-        ),
-    )
-    parser.add_argument(
-        "-t",
-        "--plot-of-input-obs-track-only",
-        action="store_true",
-        help=(
-            "flag to indicate whether only the track/trajectory "
-            "of the observational data is shown, as opposed to the data "
-            "on the track, for the input observational data preview plots"
+            "what to plot with cf-plot, where integer inputs represent the "
+            "supported modes, which are: 0 to not plot anything, 1 to plot "
+            "both the outputs and, before starting colocation, as a "
+            "means of verification and/or quick inpection, the observational "
+            "input (with its data), 2 to plot only the outputs (the default "
+            "mode, if plot-mode is not specified) and 3 to plot both the "
+            "outputs and observational input but only show the track/swath "
+            "of the inputs without the data on it to indicate the track/swath "
+            "which the model field will then be colocated onto (the most "
+            "relevant part of the observational input for VISION purposes)"
         ),
     )
     parser.add_argument(
@@ -349,9 +338,9 @@ def process_cli_arguments(parser):
         action="store",
         help=(
             "NOW DEPRECATED: use '--spatial-colocation-method' instead. "
-            "regridding interpolation method to apply, see 'method' "
+            "[regridding interpolation method to apply, see 'method' "
             "parameter to 'cf.regrids' method for options: "
-            "https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html"
+            "https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html]"
         ),
     )
     parser.add_argument(
@@ -372,6 +361,37 @@ def process_cli_arguments(parser):
             "Note that we no longer accept an integer corresponding to a "
             "FieldList index to take a field from like this keyword "
             "permitted, now we require a valid 'select_field' string argument."
+        ),
+    )
+    # All three below replaced by plot-mode:
+    parser.add_argument(
+        "-t",
+        "--plot-of-input-obs-track-only",
+        action="store_true",
+        help=(
+            "NOW DEPRECATED: use '--plot-mode' instead. "
+            "[flag to indicate whether only the track/trajectory "
+            "of the observational data is shown, as opposed to the data "
+            "on the track, for the input observational data preview plots]"
+        ),
+    )
+    parser.add_argument(
+        "--skip-all-plotting",
+        action="store_true",
+        help=(
+            "NOW DEPRECATED: use '--plot-mode' instead. "
+            "[Do not generate plots to preview the input or show the output "
+            "fields]"
+        ),
+    )
+    parser.add_argument(
+        "--show-plot-of-input-obs",
+        action="store_true",
+        help=(
+            "NOW DEPRECATED: use '--plot-mode' instead. "
+            "[flag to indicate whether to show plots of the input "
+            "observational data before the colocation logic begins, as "
+            "a preview]"
         ),
     )
 

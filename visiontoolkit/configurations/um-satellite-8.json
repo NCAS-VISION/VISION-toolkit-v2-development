@@ -7,7 +7,7 @@
     "chosen-model-field":"id%UM_m01s51i010_vn1105",
     "outputs-dir":"toolkit-outputs/um-satellite-8",
     "output-file-name":"um_satellite_8_vision_result.nc",
-    "skip-all-plotting":false,
+    "plot-mode":3,
     "cfp-mapset-config":{
         "resolution":"10m"
     },

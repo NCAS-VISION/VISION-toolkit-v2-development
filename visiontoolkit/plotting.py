@@ -3,7 +3,12 @@
 import logging
 
 # NOTE: keep this order (cfp then cf imported) to avoid Seg Fault issues
-import cfplot as cfp
+cfplot_imported = False
+try:
+    import cfplot as cfp  # noqa: F401
+    cfplot_imported = True
+except ImportError:
+    pass
 import cf
 
 import numpy as np
@@ -14,8 +19,7 @@ logger = logging.getLogger(__name__)
 
 def preview_plots(
     obs_field,
-    show_plot_of_input_obs,
-    plot_of_input_obs_track_only,
+    plot_mode,
     outputs_dir,
     plotname_start,
     cfp_mapset_config,
@@ -33,6 +37,11 @@ def preview_plots(
 
     TODO: DETAILED DOCS
     """
+    if not cfplot_imported:
+        raise ValueError(
+            "Unable to plot: must have suitable version of cf-plot installed "
+            "for VISION toolkit plotting functionality."
+        )
     # First configure general settings for plot
     # Change the viewpoint to be over the UK only, with high-res map outline
     cfp.mapset(**cfp_mapset_config)
@@ -42,48 +51,60 @@ def preview_plots(
     else:
         index = f"_{index}"
 
-    if show_plot_of_input_obs:
-        # Plot *input* observational data for a preview, before doing anything
-        # Min, max as determined using final_result_field.min(), .max():
-        if cfp_input_levs_config:
-            cfp.levs(**cfp_input_levs_config)
-        if plot_of_input_obs_track_only in (1, 2):
-            # Use the same field but set all data to zero so can plot the whole
-            # track in the same colour to just display the path, not orig. data
-            equal_data_obs_field = obs_field.copy()
-            new_data = np.zeros(
-                len(equal_data_obs_field.data)
-            )  # 0 -> force red with colour scheme set later
-            equal_data_obs_field.set_data(new_data, inplace=True)
+    # Determine plotting mode, default is 2 (plot only outputs):
+    #   0 i.e. False. Don't plot anything (skip all)
+    #   1 i.e. standard True: plot both inputs (data on tracks) and outputs
+    #   2 meaning true in that we plot, but we only plot the outputs
+    #   3 meaning true in that we plot both inputs and outputs, but inputs
+    #     are shown track-only i.e. with no data shown on them
+    #
+    # Could do e.g. 4 and 5 for inputs only (data on track or just track),
+    # but doubt there's motivation/application for that unless asked and
+    # if we have 5+ modes it is better to change to use two plus flags
 
-            # Not configurable, always use since it gives red for zero values
-            # therefore whole track will be red to make it clear it is a block
-            # colour without meaning attached
-            cfp.cscale("scale28")
-            cfp.gopen(
-                file=(
-                    f"{outputs_dir}/"
-                    f"{plotname_start}_obs_track_only{index}.png"
-                )
+    if cfp_input_levs_config:
+        cfp.levs(**cfp_input_levs_config)
+
+    # Plot *input* observational data for a preview, before doing anything
+    # Min, max as determined using final_result_field.min(), .max():
+    if plot_mode == 1:  # i.e. plot inputs with data on tracks
+        ### plot_of_input_obs_track_only in (0, 2):
+        cfp.gopen(
+            file=(
+                f"{outputs_dir}/"
+                f"{plotname_start}_obs_track_with_data_{index}.png"
             )
-            cfp_input_track_only_config.update(verbose=verbose)
-            cfp.traj(
-                equal_data_obs_field, **cfp_input_track_only_config
+        )
+        cfp_input_general_config.update(verbose=verbose)
+        cfp.traj(obs_field, **cfp_input_general_config)
+        cfp.gclose()
+    elif plot_mode == 3:  # i.e. plot inputs as tracks only, without data on
+        # Use the same field but set all data to zero so can plot the whole
+        # track in the same colour to just display the path, not orig. data
+        equal_data_obs_field = obs_field.copy()
+        new_data = np.zeros(
+            len(equal_data_obs_field.data)
+        )  # 0 -> force red with colour scheme set later
+        equal_data_obs_field.set_data(new_data, inplace=True)
+
+        # Not configurable, always use since it gives red for zero values
+        # therefore whole track will be red to make it clear it is a block
+        # colour without meaning attached
+        cfp.cscale("scale28")
+        cfp.gopen(
+            file=(
+                f"{outputs_dir}/"
+                f"{plotname_start}_obs_track_only{index}.png"
             )
-            cfp.gclose()
-            cfp.cscale(
-                cfp_cscale
-            )  # reset for normal (default-style) plots after
-        if plot_of_input_obs_track_only in (0, 2):
-            cfp.gopen(
-                file=(
-                    f"{outputs_dir}/"
-                    f"{plotname_start}_obs_track_with_data_{index}.png"
-                )
-            )
-            cfp_input_general_config.update(verbose=verbose)
-            cfp.traj(obs_field, **cfp_input_general_config)
-            cfp.gclose()
+        )
+        cfp_input_track_only_config.update(verbose=verbose)
+        cfp.traj(
+            equal_data_obs_field, **cfp_input_track_only_config
+        )
+        cfp.gclose()
+        cfp.cscale(
+            cfp_cscale
+        )  # reset for normal (default-style) plots after
 
 
 def output_plots(
@@ -102,6 +123,12 @@ def output_plots(
 
     TODO: DETAILED DOCS
     """
+    if not cfplot_imported:
+        raise ValueError(
+            "Unable to plot: must have suitable version of cf-plot installed "
+            "for VISION toolkit plotting functionality."
+        )
+
     cfp_output_general_config.update(verbose=verbose)
 
     # Make and open the final plot

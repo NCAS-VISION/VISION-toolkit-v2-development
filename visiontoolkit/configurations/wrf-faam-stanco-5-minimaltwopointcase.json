@@ -8,8 +8,7 @@
     "output-file-name": "wrf_faam_stanco_5_vision_result.nc",
     "vertical-colocation-coord": "atmosphere_hybrid_sigma_pressure_coordinate",
     "source-axes": {"X": "ncdim%west_east", "Y": "ncdim%south_north"},
-    "plot-of-input-obs-track-only": false,
-    "skip-all-plotting":true,
+    "plot-mode":0,
     "cfp-mapset-config": {
         "lonmin": -2,
         "lonmax": 2,
