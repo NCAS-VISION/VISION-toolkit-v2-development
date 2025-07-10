@@ -6,13 +6,13 @@ Quickstart
 Running the toolkit
 -------------------
 
-Via the command line: the `visiontoolkit` command
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Via the command line: the ``visiontoolkit`` command
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Install the toolkit as covered in the :ref:`installation guide <Installation>`.
-You will then have access to the `visiontoolkit` command which is the means to
+You will then have access to the ``visiontoolkit`` command which is the means to
 run and configure the toolkit. To understand the available options
-for configuration, run with the `--help` option for a summary of the
+for configuration, run with the ``--help`` option for a summary of the
 available command-line interface:
 
 .. code-block:: console
@@ -23,7 +23,7 @@ Note that configuration can be made either by:
 
 * specifying valid keywords the command line, or
 * through use of a configuration file in YAML format specified using the
-  `--config-file` (equivalently `-c`) option followed by a valid path to
+  ``--config-file`` (equivalently ``-c``) option followed by a valid path to
   the configuration file provided on the command line.
 
 
@@ -59,9 +59,9 @@ Via the Python API
 ^^^^^^^^^^^^^^^^^^
 
 You can also use the toolkit through the Python API which is documented
-:ref:`here <PythonAPI>`: import `visiontoolkit` and make use of any
+:ref:`here <PythonAPI>`: import ``visiontoolkit`` and make use of any
 applicable objects such as functions and exceptions.
 
-A good place to start might be the `colocate` function, which accepts a
+A good place to start might be the ``colocate`` function, which accepts a
 model field and an observational field and colocates the former onto
 the latter.
