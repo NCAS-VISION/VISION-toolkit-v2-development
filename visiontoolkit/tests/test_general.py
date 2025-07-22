@@ -689,6 +689,27 @@ class TestSatelliteObservationsUMModel:
         }
         run_toolkit_with_config(c10_satellite_um, capsys, tmp_path)
 
+    def test_config_c11_satellite_um(self, capsys, tmp_path):
+        """The same as c10 except specifying the path to a full directory
+        via '/' rather than with a full-directory glob, '/*'.
+        """
+        c11_satellite_um = {
+            **self.base_config_satellite_um,
+            **{
+                # Changes relative to base configuration choice, if any
+                "chosen-obs-field": (
+                    "long_name=State vector for atmospheric temperature in "
+                    "terms of principal component weights."
+                ),
+                "obs-data-path": f"{self.obs_data_dir}/",
+                "start-time-override": "2017-07-21 00:00:00",
+                # Not relevant to testing: names outputs
+                "output-file-name": "um_satellite_10_vision_result.nc",
+                "outputs-dir": "toolkit-outputs/um-satellite-10",
+            },
+        }
+        run_toolkit_with_config(c11_satellite_um, capsys, tmp_path)
+
 
 class TestSatelliteObservationsWRFModel:
     """Test toolkit for case of satellite observations and WRF model input."""

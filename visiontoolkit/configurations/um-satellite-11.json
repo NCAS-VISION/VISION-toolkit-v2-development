@@ -1,6 +1,6 @@
 {
     "start-time-override": "2017-07-21 00:00:00",
-    "obs-data-path":"../data/marias-satellite-example-data/satellite-data/*",
+    "obs-data-path":"../data/marias-satellite-example-data/satellite-data/",
     "model-data-path":"../data/main-workwith-test-ISO-simulator/Model_Input",
     "preprocess-mode-obs":"satellite",
     "chosen-obs-field":"long_name=State vector for atmospheric temperature in terms of principal component weights.",
