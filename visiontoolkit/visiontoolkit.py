@@ -126,18 +126,23 @@ def get_files_to_individually_colocate(path):
         "Reading in all files. Note if there are a lot of files to read "
         "this may take a little time."
     )
+
+    # Work with glob pattern input so for plain dir path add wildcard
+    if os.path.isdir(path):
+        path = os.path.join(path, '*')
+
     # Basically copying logic here from cf-python read globbing,
     # because we need to get a list of files to separately loop through
     # to do colocation on, but once a globbed read is done the fields are
     # all put into one fieldlist so we can't do a globbed read and go from
     # there. But we do need to check the list of files to read are valid
     # up-front, so use the same logic as cf-python (I have taken the liberty
-    # of improving the variable names and adding some commenting.)
+    # of improving the variable names and adding some commenting).
     files = glob(path)
     for filesystem_item in files:
         if os.path.isdir(filesystem_item):
-            # Keep as ptint until address TODO
-            # TODO deal with sub-directories under read glob
+            # TODO deal with sub-directories under read glob - else document
+            # that they won't be processed
             logger.info(
                 "Warning, read directory includes a sub-directory. "
                 "Ignoring sub-directory cases for now."
@@ -1938,8 +1943,8 @@ def main():
             logger.info(f"Orography field set to use is:\n{orog_field}")
 
             # TODO also check suitability of orog field - might be invalid
-        else:
-            pass  # TODO in this case is netCDF with attached orog, handle this
+        #else:
+        #    # TODO in this case is netCDF with attached orog, handle this
 
     # Persist model fields outside of loop
     persist_all_metadata(model_field)
