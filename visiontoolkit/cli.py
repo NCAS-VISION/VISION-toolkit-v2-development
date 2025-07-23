@@ -12,7 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 def setup_logging(verbosity):
-    """Configure the package log level assuming CLI counted '-v' flag input."""
+    """Configure the package log level assuming CLI counted '-v' flag input.
+
+    TODO: DETAILED DOCS
+    """
     # Maximum of 3 (-vvv i.e. -v -v -v) calls to have an effect, use min()
     # to ensure the log level never goes below DEBUG value (10), with a
     # minimum of ERROR (40)
@@ -405,9 +408,12 @@ def process_cli_arguments(parser):
 
 
 def cli_parser():
-    """TODO DOCS."""
+    """Return a configured argument parser object for the VISION Toolkit.
+
+    TODO: DETAILED DOCS
+    """
     parser = argparse.ArgumentParser(
-        prog="VISION TOOLKIT",
+        prog="VISION Toolkit",
         description=(
             "Virtual Integration of Satellite and In-Situ Observation "
             "Networks (VISION) Toolkit Version 2"
@@ -434,6 +440,7 @@ def process_config():
     '"halo-size": 1' set and a CLI option of 'halo-size=2', the value 2
     will be taken and used.
 
+    TODO: DETAILED DOCS
     """
     # 0. Set up parser and get args
     parser = cli_parser()
@@ -489,8 +496,12 @@ def process_config():
 
 
 def validate_config(final_config_namespace):
-    """TODO"""
-    # TODO add validation in incrementally to cover all input options & args
+    """Perform validations on the configuration input by the user.
+
+    TODO: DETAILED DOCS
+    """
+    # TODO add validation in incrementally to cover all input options & args!
+
     print("final_config_namespace is", final_config_namespace)
 
     # outputs_dir: create if does not exist

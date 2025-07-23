@@ -1,5 +1,7 @@
-"""TODO DOCUMENT FOR DOCS"""
+"""Configuration default values, applied if the user does not set otherwise.
 
+TODO: DETAILED DOCS
+"""
 CONFIG_DEFAULTS = {
     # *** Script running options ***
     # Configure messaging to STDOUT, which is very verbose if INFO=True, else

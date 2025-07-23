@@ -120,7 +120,10 @@ def get_env_and_diagnostics_report():
 
 @timeit
 def get_files_to_individually_colocate(path, context="data"):
-    """TODO."""
+    """Return list of files to read with `cf.read` from a path name/pattern.
+
+    TODO: DETAILED DOCS
+    """
 
     logger.info(
         "Reading in all files. Note if there are a lot of files to read "
@@ -398,6 +401,8 @@ def satellite_plugin(fieldlist, chosen_field, config=None):
     """Pre-processing of a field from a satellite swath.
 
     Define this is own function so we can apply the timing decorator.
+
+    TODO: DETAILED DOCS
     """
     return (
         satellite_compliance_plugin(fieldlist, chosen_field, config=config),
@@ -476,7 +481,10 @@ def set_start_datetime(obs_times, obs_t_identifier, new_obs_starttime):
 
 @timeit
 def check_time_coverage(obs_times, model_times):
-    """TODO"""
+    """Ensure observational data datetime range lies inside that of the model.
+
+    TODO: DETAILED DOCS
+    """
 
     msg_start = (
         "Model data datetimes must cover the whole of the datetime range "
@@ -633,7 +641,10 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
 
 @timeit
 def persist_all_metadata(field):
-    """Persist all of the metadata for a field."""
+    """Persist all of the metadata for a field.
+
+    TODO: DETAILED DOCS
+    """
     logger.warning(f"Persisting data for all metadata constructs of field.")
     for construct_name, construct_obj in field.constructs.filter_by_data(
         todict=True
@@ -658,6 +669,7 @@ def bounding_box_query(
     can't solve this with a halo because the subspace
     doesn't know what point to 'halo' around.
 
+    TODO: DETAILED DOCS
     """
     logger.info(
         f"Starting a bounding box query for {coord_tight_bounds} on "
@@ -1182,7 +1194,10 @@ def time_subspace_per_segment(
     model_time_key,
     model_t_identifier,
 ):
-    """TODO."""
+    """Return the calculation-appropriate weighting for a given time segment.
+
+    TODO: DETAILED DOCS
+    """
     # Define the pairwise segment datetime endpoints
     logger.info(f"Datetime endpoints for this segment are: {t1}, {t2}.\n")
 
@@ -1255,8 +1270,7 @@ def time_subspace_per_segment(
         f"{(weights_0 + weights_1).array[0]}\n"
     )
 
-    values_weighted = weights_0 * values_0 + weights_1 * values_1
-    return values_weighted
+    return weights_0 * values_0 + weights_1 * values_1
 
 
 @timeit
@@ -1359,7 +1373,7 @@ def time_interpolation(
                 v_w.append(values_weighted)
             except IndexError:
                 logger.debug(
-                    f"Null-return subspce for segment with: {t1}, {t2}.\n"
+                    f"Null-return subspace for segment with: {t1}, {t2}.\n"
                     "This is a result of the halo_size set, so not a cause "
                     "for concern!"
                 )
@@ -1644,7 +1658,10 @@ def colocate_single_file(
     verbose,
     orog_field=None,
 ):
-    """Perform model-to-observational colocation using a single file source."""
+    """Perform model-to-observational colocation using a single file source.
+
+    TODO: DETAILED DOCS
+    """
     logger.info(
         f"\n_____ Start of colocation iteration with file number {index + 1}: "
         f"{file_to_colocate} _____\n"
@@ -1704,7 +1721,10 @@ def colocate(
         override_obs_start_time=False,
         preprocess_obs=False,
     ):
-    """TODO."""
+    """Co-locate a model field's data onto an observational field's domain.
+
+    TODO: DETAILED DOCS
+    """
     # Persist obs field as early as possible, but after any pre-processing
     persist_all_metadata(obs_field)
 
@@ -1759,10 +1779,10 @@ def colocate(
                         model_field, orog_field
                     )
                 )
-            else:
-                # TODO handle netCDF attached orography case, should just need
-                # a validation check if anything
-                pass
+            #else:
+            #    # TODO handle netCDF attached orography case, should just need
+            #    # a validation check if anything
+            #    pass
 
         # Do another persist to cover the inclusion of the computed
         # vertical coords
@@ -1822,7 +1842,8 @@ def colocate(
 
 @timeit
 def main():
-    """Perform end-to-end model-to-observational co-location."""
+    """Perform end-to-end co-location of model data onto observations.
+    """
 
     # Print the ASCII VISION banner - this must come before any logging!
     print(toolkit_banner())
