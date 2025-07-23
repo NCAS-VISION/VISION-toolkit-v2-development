@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def setup_logging(verbosity):
     """Configure the package log level assuming CLI counted '-v' flag input."""
     # Maximum of 3 (-vvv i.e. -v -v -v) calls to have an effect, use min()
-    # to ensure the log level nevers goes below DEBUG value (10), with a
+    # to ensure the log level never goes below DEBUG value (10), with a
     # minimum of ERROR (40)
     numeric_log_level = 40 - (min(verbosity, 3) * 10)
 
@@ -52,9 +52,9 @@ def process_cli_arguments(parser):
         action="count",
         help=(
             "provide more detailed output, where multiple calls will "
-            "increase the verbosity yet further to a maximum at -vvv "
-            "correpsonding to logging level DEBUG, where no usage "
-            "gives a default of logging level WARNING"
+            "increase the verbosity yet further to a maximum at -vvv (3 v)"
+            "corresponding to logging level 'DEBUG', where no specification "
+            "gives a default of logging level 'WARNING' (0 v)"
         ),
     )
     parser.add_argument(
@@ -63,9 +63,9 @@ def process_cli_arguments(parser):
         action="store",
         help=(
             "configuration file in JSON format to supply configuration, "
-            "where any configuration provided by other command-"
-            "-line options will take precendence over the config. file "
-            "input, if duplication occurs"
+            "where any configuration provided by other command-line options "
+            "will take precedence over the configuration file "
+            "input, if duplication should occur"
         ),
     )
     parser.add_argument(
@@ -74,9 +74,9 @@ def process_cli_arguments(parser):
         action="store",
         help=(
             "specify a pre-processing mode so a set plugin is applied "
-            "to pre-process the observational data in an apprpriate way, "
+            "to pre-process the observational data in an appropriate way, "
             "current options being 'flight' and 'satellite' where by default "
-            "we apply no pre-processing"
+            "no pre-processing is applied"
         ),
     )
     parser.add_argument(
@@ -84,19 +84,19 @@ def process_cli_arguments(parser):
         action="store",
         help=(
             "specify a pre-processing mode so a set plugin is applied "
-            "to pre-process the model data in an apprpriate way, current "
-            "options being 'UM' and 'WRF' where by default we apply no "
-            "pre-processing"
+            "to pre-process the model data in an appropriate way, current "
+            "options being 'UM' and 'WRF' where by default no "
+            "pre-processing is applied"
         ),
     )
     parser.add_argument(
         "--orography",
         action="store",
         help=(
-            "if the model data input is PP and has vertical coordinates in "
-            "terms of atmosphere hybrid height then specify the path to "
-            "the external orography applicable to the model data requred "
-            "for calculation of the vertical coordinates"
+            "if the model data input is in PP format and has vertical "
+            "coordinates in terms of atmosphere hybrid height then specify "
+            "the path to the external orography data applicable to the model "
+            "data required for calculation of the vertical coordinates"
         ),
     )
     parser.add_argument(
@@ -104,10 +104,11 @@ def process_cli_arguments(parser):
         "--start-time-override",
         action="store",
         help=(
-            "if given, a datetime in UTC timezone with which to override "
-            "the observational datetimes so that the colocation is conducted "
-            "with the spatial components of the observational path but "
-            "assuming the given start time and not the actual one"
+            "if given, a datetime in the UTC timezone with which to override "
+            "the observational datetimes so that the co-location is conducted "
+            "with the same spatial components of the observational path but "
+            "assuming the given start time instead of the actual timestamped "
+            "one when the data was collected/sampled"
         ),
     )
     parser.add_argument(
@@ -137,7 +138,7 @@ def process_cli_arguments(parser):
             "string corresponding to a valid 'select_field' argument to "
             "select a unique field from the FieldList of the read-in "
             "observational data, else if not specified the FieldList is "
-            "assumed to be of size one and the single field is extracted."
+            "assumed to be of size one and the single field extracted"
         ),
     )
     parser.add_argument(
@@ -147,36 +148,39 @@ def process_cli_arguments(parser):
             "string corresponding to a valid 'select_field' argument to "
             "select a unique field from the FieldList of the read-in "
             "model data, else if not specified the FieldList is "
-            "assumed to be of size one and the single field is extracted."
+            "assumed to be of size one and the single field extracted"
         ),
     )
     parser.add_argument(
         "-d",
         "--outputs-dir",
         action="store",
-        help="path location of the top-level directory to create outputs in",
+        help=(
+            "path location of the top-level directory in which to put the "
+            "toolkit output(s)"
+        ),
     )
     parser.add_argument(
         "-f",
         "--output-file-name",
         action="store",
-        help="name including extension to give the result output file",
+        help="name including extension to call the toolkit result output file",
     )
     parser.add_argument(
         "--history-message",
         action="store",
         help=(
-            "message that gets added to the 'history' property on the "
-            "output file"
+            "message that is added to the 'history' property on the "
+            "toolkit result output file"
         ),
     )
     parser.add_argument(
         "--halo-size",
         action="store",
         help=(
-            "size of the halo to apply for subspacing, see the section 'Halos' "
-            "under 'https://ncas-cms.github.io/cf-python/method/"
-            "cf.Domain.subspace.html?highlight=halo' for details."
+            "size of the halo to apply for subspacing, see the section "
+            "'Halos' under 'https://ncas-cms.github.io/cf-python/method/"
+            "cf.Domain.subspace.html?highlight=halos' for context"
         ),
     )
     parser.add_argument(
@@ -186,8 +190,8 @@ def process_cli_arguments(parser):
         # Note: the temporal colocation is always linear, even if the spatial
         # colocation isn't, so there is no equivalent option for temporal case
         help=(
-            "interpolation method to apply for the spatial colocation, see "
-            "'method' parameter to "
+            "interpolation method to apply for the spatial co-location, see "
+            "the 'method' parameter to "
             "'cf.regrids' method used under-the-hood to do this for options: "
             "https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html"
         ),
@@ -197,8 +201,8 @@ def process_cli_arguments(parser):
         "--vertical-colocation-coord",
         action="store",
         help=(
-            "vertical (z) coordinate to use as the vertical component in "
-            "the spatial interpolation step of colocation, where either "
+            "vertical (Z) coordinate to use as the vertical component in "
+            "the spatial interpolation step of co-location, where either "
             "a pressure or an altitude CF standard name is expected"
         ),
     )
@@ -206,29 +210,33 @@ def process_cli_arguments(parser):
         "--source-axes",
         action="store",
         help=(
-            "identifies the source grid’s X and Y dimensions if they "
-            "cannot be inferred from the existence of 1D dimension "
-            "coordinates"
+            "a dictionary to identify the source grid’s X and Y "
+            "dimensions if they cannot be inferred from the existence of "
+            "1D dimension coordinates, for context see: "
+            "https://ncas-cms.github.io/cf-python/method/cf.Field.regrids."
+            "html?highlight=src_axes"
         ),
     )
     parser.add_argument(
         "--plotname-start",
         action="store",
-        help="initial text to use in the names of all plots generated",
+        help="initial text to preface the names of all plots generated",
     )
     parser.add_argument(
         "--plot-mode",
         action="store",
         help=(
-            "what to plot with cf-plot, where integer inputs represent the "
-            "supported modes, which are: 0 to not plot anything, 1 to plot "
-            "both the outputs and, before starting colocation, as a "
-            "means of verification and/or quick inpection, the observational "
-            "input (with its data), 2 to plot only the outputs (the default "
-            "mode, if plot-mode is not specified) and 3 to plot both the "
+            "what if anything to plot with the toolkit (note this requires "
+            "cf-plot to be installed at suitable version), where integer "
+            "inputs represent the supported modes, which are: "
+            "[0] to not plot anything (the default); [1] to plot "
+            "both the outputs and, before starting co-location, as a "
+            "means of verification and/or quick inspection, the observational "
+            "input (with its data); [2] to plot only the outputs (the default "
+            "mode, if plot-mode is not specified); and [3] to plot both the "
             "outputs and observational input but only show the track/swath "
             "of the inputs without the data on it to indicate the track/swath "
-            "which the model field will then be colocated onto (the most "
+            "which the model field will then be co-located onto (the most "
             "relevant part of the observational input for VISION purposes)"
         ),
     )
@@ -238,7 +246,7 @@ def process_cli_arguments(parser):
         help=(
             "cf-plot plotting configuration as a string to set the "
             "colour scale for the (input preview and) output plots, "
-            "ee: https://ncas-cms.github.io/cf-plot/build/cscale.html#cscale"
+            "see: https://ncas-cms.github.io/cf-plot/build/cscale.html#cscale"
         ),
     )
     parser.add_argument(
@@ -265,11 +273,11 @@ def process_cli_arguments(parser):
         "--cfp-input-general-config",
         type=json.loads,
         action="store",
+        # TODO clarify/separate setvars and plot call config.
         help=(
             "cf-plot plotting configuration as a dictionary to set the "
             "general plotting variables for the input preview full plot, see:"
             "https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars"
-            "[TODO CLARIFY/SEPARATE SETVARS AND PLOT CALL CONFIG.]"
         ),
     )
     parser.add_argument(
@@ -296,11 +304,11 @@ def process_cli_arguments(parser):
         "--cfp-output-general-config",
         type=json.loads,
         action="store",
+        # TODO clarify/separate setvars and plot call config.
         help=(
             "cf-plot plotting configuration as a dictionary to set the "
             "general plotting variables for the output plots, see:"
             "https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars"
-            "[TODO CLARIFY/SEPARATE SETVARS AND PLOT CALL CONFIG.]"
         ),
     ),
     # Plugin specific config. items - each has no effect if not applying
@@ -327,7 +335,7 @@ def process_cli_arguments(parser):
         "--regrid-z-coord",
         action="store",
         help=(
-            "NOW DEPRECATED: use '--vertical-colocation-coord' instead. "
+            "DEPRECATED: use '--vertical-colocation-coord' instead "
             "[vertical (z) coordinate to use as the vertical component in "
             "the spatial interpolation step]"
         ),
@@ -337,7 +345,7 @@ def process_cli_arguments(parser):
         "--regrid-method",
         action="store",
         help=(
-            "NOW DEPRECATED: use '--spatial-colocation-method' instead. "
+            "DEPRECATED: use '--spatial-colocation-method' instead "
             "[regridding interpolation method to apply, see 'method' "
             "parameter to 'cf.regrids' method for options: "
             "https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html]"
@@ -347,8 +355,8 @@ def process_cli_arguments(parser):
         "--chosen-obs-fields",
         action="store",
         help=(
-            "NOW DEPRECATED: use '--chosen-obs-field' (non-plural) instead. "
-            "Note that we no longer accept an integer corresponding to a "
+            "DEPRECATED: use '--chosen-obs-field' (non-plural) instead "
+            "and note that we no longer accept an integer corresponding to a "
             "FieldList index to take a field from like this keyword "
             "permitted, now we require a valid 'select_field' string argument."
         ),
@@ -357,10 +365,10 @@ def process_cli_arguments(parser):
         "--chosen-model-fields",
         action="store",
         help=(
-            "NOW DEPRECATED: use '--chosen-model-field' (non-plural) instead. "
-            "Note that we no longer accept an integer corresponding to a "
+            "DEPRECATED: use '--chosen-model-field' (non-plural) instead "
+            "and note that we no longer accept an integer corresponding to a "
             "FieldList index to take a field from like this keyword "
-            "permitted, now we require a valid 'select_field' string argument."
+            "permitted, now we require a valid 'select_field' string argument"
         ),
     )
     # All three below replaced by plot-mode:
@@ -369,7 +377,7 @@ def process_cli_arguments(parser):
         "--plot-of-input-obs-track-only",
         action="store_true",
         help=(
-            "NOW DEPRECATED: use '--plot-mode' instead. "
+            "DEPRECATED: use '--plot-mode' instead "
             "[flag to indicate whether only the track/trajectory "
             "of the observational data is shown, as opposed to the data "
             "on the track, for the input observational data preview plots]"
@@ -379,7 +387,7 @@ def process_cli_arguments(parser):
         "--skip-all-plotting",
         action="store_true",
         help=(
-            "NOW DEPRECATED: use '--plot-mode' instead. "
+            "DEPRECATED: use '--plot-mode' instead "
             "[Do not generate plots to preview the input or show the output "
             "fields]"
         ),
@@ -388,9 +396,9 @@ def process_cli_arguments(parser):
         "--show-plot-of-input-obs",
         action="store_true",
         help=(
-            "NOW DEPRECATED: use '--plot-mode' instead. "
+            "DEPRECATED: use '--plot-mode' instead "
             "[flag to indicate whether to show plots of the input "
-            "observational data before the colocation logic begins, as "
+            "observational data before the co-location logic begins, as "
             "a preview]"
         ),
     )
