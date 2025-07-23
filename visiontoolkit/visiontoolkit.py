@@ -119,7 +119,7 @@ def get_env_and_diagnostics_report():
 
 
 @timeit
-def get_files_to_individually_colocate(path):
+def get_files_to_individually_colocate(path, context="data"):
     """TODO."""
 
     logger.info(
@@ -139,13 +139,14 @@ def get_files_to_individually_colocate(path):
     # up-front, so use the same logic as cf-python (I have taken the liberty
     # of improving the variable names and adding some commenting).
     files = glob(path)
-    for filesystem_item in files:
-        if os.path.isdir(filesystem_item):
-            # TODO deal with sub-directories under read glob - else document
-            # that they won't be processed
-            logger.info(
-                "Warning, read directory includes a sub-directory. "
-                "Ignoring sub-directory cases for now."
+    for item in files:
+        if os.path.isdir(item):
+            logger.warning(
+                f"Warning: '{context}' input is a directory that includes at "
+                f"least one sub-directory (e.g. found '{item}'), but all "
+                "sub-directories are ignored. If you would like to include "
+                "files inside sub-directories, move those files directly into "
+                f"the immediate directory path specified: '{path.rstrip('*')}'"
             )
 
     logger.info(
@@ -1951,7 +1952,8 @@ def main():
 
     # Start colocating the indivdual files to read (which may just be one
     # file in many cases)
-    read_file_list = get_files_to_individually_colocate(args.obs_data_path)
+    read_file_list = get_files_to_individually_colocate(
+        args.obs_data_path, context="obs-data-path")
     length_read_file_list = len(read_file_list)
     logger.info(f"Read file list has length: {length_read_file_list}")
     if not read_file_list:
