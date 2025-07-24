@@ -9,8 +9,8 @@ from pprint import pformat
 from time import time
 
 
-# Import cfplot here even though not explicitly used to avoid
-# plotting module seg faults - cfplot needs overall to be imported first.
+# Import cf-plot here even though not explicitly used to avoid
+# plotting module seg faults - cf-plot needs overall to be imported first.
 # Will need to bypass 'isort' movement of this.
 try:
     import cfplot as cfp  # noqa: F401
@@ -96,7 +96,7 @@ class InternalsIssue(Exception):
     """Raised for cases of the toolkit behaviour emerging wrong.
 
     This shouldn't ever get raised, and eventually could be replaced
-    by asssertions or ValueError - or ideally all removed by release time.
+    by assertions or ValueError - or ideally all removed by release time.
     """
 
     pass
@@ -200,7 +200,7 @@ def get_input_fields_of_interest(fl, chosen_field, is_model=True):
 
     TODO: DETAILED DOCS
     """
-    # Context flag for a more targeted reponse in the error messages
+    # Context flag for a more targeted response in the error messages
     if is_model:
         msg_context = "model"
     else:
@@ -376,7 +376,7 @@ def make_preview_plots(
     If index is provided, it is assumed there will be multiple preview plots
     and therefore each should be labelled with the index in the name.
 
-    Note we wrap method from plotting module here so we can use the timeit
+    Note we wrap method from plotting module here so we can use the 'timeit'
     decorator.
 
     TODO: DETAILED DOCS
@@ -421,7 +421,7 @@ def ensure_cf_compliance(
     # INCLUDES FOR 'CORRECT FORMAT': E.G.:
     # * SEE LATER TODO OF: are we assuming the model and obs data are strictly
     # monotonically increasing, as we might be assuming for some of this ->
-    # since trajectories should be inc'ing this way, by definition.
+    # since trajectories should be increasing in this way, by definition.
     if plugin == "satellite":
         logger.info("Starting satellite pre-processing plugin.")
 
@@ -463,7 +463,8 @@ def set_start_datetime(obs_times, obs_t_identifier, new_obs_starttime):
         )
 
     # 1. If it is, change the observational time data to have the same
-    #    spacings but starting from the specified start datetime
+    #    relative datetime spacing but starting from the specified
+    #    start datetime
     # 1a) Find difference from original starttime to new starttime
     shift_to_startime = obs_times[0] - new_dt_start
     # 1b) Apply this shift to all time data
@@ -574,7 +575,7 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
     model_times_units = model_times.get_property("units", None)
     logger.info(f"Units on model time coordinate are: {model_times_units}")
 
-    # Overall note: need to sotr calendars first, before looking at unit
+    # Overall note: need to sort calendars first, before looking at unit
     # consistency, else unit setting to get consistent can fail
     # on inconsistent calendars.
 
@@ -631,11 +632,12 @@ def ensure_unit_calendar_consistency(obs_field, model_field):
             # fewer data points on those, meaning less converting work.
             # Will raise its own error here if units are not equivalent.
             model_times.Units = obs_times.Units
-            logger.info(f"Unit-conformed model time coord. is: {model_times}")
+            logger.info(
+                f"Unit-conformed model time coordinate is: {model_times}")
 
         logger.debug(
-            f"Units on observational and model time coords. are the same: "
-            f"{same}\n"
+            "Units on observational and model time coordinates "
+            f"are the same: {same}\n"
         )
 
 
@@ -701,8 +703,8 @@ def bounding_box_query(
     # instead of argmin/max but that will be less efficient(?)
 
     # Note: the coordinate may be descending, but this logic assumes
-    # asceding when using argmin for the lower index. So, without
-    # adaptation it will always give 0, 0 indices for a desc.
+    # ascending when using argmin for the lower index. So, without
+    # adaptation it will always give 0, 0 indices for a descending
     # coordinate and therefore the wrong result there. So, to deal with
     # descending coordinates e.g. vertical ones, set ascending=False and the
     # argmin/max calls get swapped to produce the right result.
@@ -756,7 +758,7 @@ def subspace_to_spatiotemporal_bounding_box(
     field reduced to a 'bounding box' in space and in time, such that data
     outside the scope of the observational data track, with an extra
     index-space 'halo' added to include points of relevance to the outer-most
-    points, is removed, because it is not relevant to the colocation.
+    points, is removed, because it is not relevant to the co-location.
 
     TODO: DETAILED DOCS
     """
@@ -805,9 +807,9 @@ def subspace_to_spatiotemporal_bounding_box(
 
     # Note: this requires a 'halo' plugin_config. feature introduced in
     #       cf-python 3.16.2.
-    # TODO SLB: need to think about possible compications of cyclicity, etc.,
+    # TODO SLB: need to think about possible complications of cyclicity, etc.,
     #           and account for those.
-    # Note: getting some dask arrays out instead of slices, due to Dask
+    # Note: getting some Dask arrays out instead of slices, due to Dask
     # laziness. DH to look into.
     x_coord_tight_bounds = obs_X.data.minimum(), obs_X.data.maximum()
     y_coord_tight_bounds = obs_Y.data.minimum(), obs_Y.data.maximum()
@@ -867,10 +869,10 @@ def subspace_to_spatiotemporal_bounding_box(
         )
 
         vertical_key = None
-        # Note: can do the spatial and the temporal subspacing separately, and if
-        # want to do this make the call twice for each coordinate arg. Reasons we
-        # may want to do this include having separate halo sizes for each
-        # coordinate, etc.
+        # Note: can do the spatial and the temporal subspacing separately,
+        # and if want to do this make the call twice for each coordinate
+        # argument. Reasons we may want to do this include having separate halo
+        # sizes for each coordinate, etc.
         model_field_bb = model_field.subspace(
             "envelope", halo_size, **bb_kwargs
         )
@@ -912,7 +914,7 @@ def subspace_to_spatiotemporal_bounding_box(
         # We should be safe to do the horizontal subspacing as one
 
         # TODO do we need to ensure cyclicity set correctly, or should that
-        # be guaranteed by pre-proc or compliance reqs?
+        # be guaranteed by pre-proc or compliance requlations?
 
         try:
             model_field = model_field.subspace(
@@ -934,8 +936,8 @@ def subspace_to_spatiotemporal_bounding_box(
             # slices which act on cyclic axes which have near-full coverage
             # of the possible axes values, such as cf.wi(-179, 179) for the
             # longitude will fail. In the latter case, nothing (much) would be
-            # subspaced out anyway, so it is safe and alomost equivalent to
-            # not perform the subpace along that axes anyway.
+            # subspaced out anyway, so it is safe and almost equivalent to
+            # not perform the subspace along that axes anyway.
             #
             # To distinguish these two cases, for now until the latter/bug is
             # fixed, check the extent of outside of the query.
@@ -991,7 +993,7 @@ def subspace_to_spatiotemporal_bounding_box(
                 # doesn't know what point to 'halo' around. So we need to
                 # be more clever.
                 # TODO we decided to write this into this module then
-                # move it out as a new query to cf eventally.
+                # move it out as a new query to cf eventually.
                 model_field.dump()
                 model_field_bb = bounding_box_query(
                     model_field,
@@ -1139,7 +1141,8 @@ def spatial_interpolation(
 
             # SLB note LM issue was here, now fixed but check logic
             # TODO: UGRID grids might need some extra steps/work for this.
-            # Determine obs vertical key for same coord as in model as vertical_key
+            # Determine obs vertical key for same coord as in model as
+            # vertical_key
             m_vertical_id = model_field_bb.coordinate(vertical_key).identity()
             o_vertical_key = obs_field.coordinate(m_vertical_id, key=True)
 
@@ -1171,12 +1174,12 @@ def spatial_interpolation(
             axis=time_da_index,  # old: was model_t_identifier,
         )
         logger.info(
-            f"Final concatenated field (from 3D Z colocated fields) is "
+            f"Final concatenated field (from 3D Z co-located fields) is "
             f"{spatially_colocated_field} "
         )
 
-    # TODO: consider whether or not to persist the regridded / spatial interp
-    # before the next stage, or to do in a fully lazy way.
+    # TODO: consider whether or not to persist the regridded / spatial
+    # interpolation before the next stage, or to do in a fully lazy way.
 
     logger.info("\nSpatial interpolation (regridding) complete.\n")
     logger.info(f"XYZ-colocated data is:\n {spatially_colocated_field}")
@@ -1249,7 +1252,7 @@ def time_subspace_per_segment(
         s1.dimension_coordinate(model_t_identifier)
         - s0.dimension_coordinate(model_t_identifier)
     ).data
-    # SLB TODO: note this [index] casues WRF issues as reported by
+    # SLB TODO: note this [index] causes WRF issues as reported by
     # LM - work out for what cases required, if any
     distances_0 = (
         s0.auxiliary_coordinate(model_t_identifier)[index]
@@ -1291,7 +1294,7 @@ def time_interpolation(
     This co-locates between model data time points to match the time
     coordinate sampling of the flight path and is done using a method that
     performs a convolution-based merge of relevant segments of the
-    (bouding box subspaced) model field already interpolated spatially onto
+    (bounding box subspaced) model field already interpolated spatially onto
     the flight path.
 
     TODO: DETAILED DOCS
@@ -1303,7 +1306,7 @@ def time_interpolation(
 
     # In our field after spatial interpolation, the Dimension Coord has the
     # model time data and the Aux Coord has the observational time data
-    # NOTE: keep these calls in, desite earlier ones probably in-place.
+    # NOTE: keep these calls in, despite earlier ones probably in-place.
     # Model data time must always be a dimension coordinate.
     model_time_key, model_times = m.dimension_coordinate(
         model_t_identifier, item=True
@@ -1322,7 +1325,8 @@ def time_interpolation(
     logger.info(f"Observational (aux) coord. time key is: {obs_time_key}")
     logger.info(f"Model (dim) time key is: {model_time_key}\n")
 
-    # Empty objects ready to populate - TODO make these FieldLists if approp.?
+    # Empty objects ready to populate - TODO make these FieldLists if
+    # more appropriate?
     v_w = []
 
     # Iterate over pairs of adjacent model datetimes, defining 'segments'.
@@ -1412,7 +1416,7 @@ def time_interpolation(
             f"{len(concatenated_weighted_values)}\n"
         )
     else:
-        # TEMPORARY SOLUTION until satellite averging kernel work is done.
+        # TEMPORARY SOLUTION until satellite averaging kernel work is done.
         # Getting all 19 air pressure values for now, take first one as
         # case whilst get working generally
         concatenated_weighted_values = v_w[0]
@@ -1446,7 +1450,7 @@ def time_interpolation(
         )
 
     # Finally, re-set the properties on the final result field so it has model
-    # data properties not obs preoprties.
+    # data properties not obs properties.
     # * General properties
     final_result_field.clear_properties()
     final_result_field.set_properties(model_field.properties())
@@ -1534,7 +1538,7 @@ def set_cf_role(obs_field):
 def create_contiguous_ragged_array_output(unproc_output):
     """Create a compressed contiguous ragged array DSG output.
 
-    Aggregates the colocated flight path results across all
+    Aggregates the co-located flight path results across all
     of the relevant days specified, creating a discrete sampling
     geometry (DSG) of a contiguous ragged array, to encompass all
     of these. This is compressed and returned.
@@ -1588,7 +1592,7 @@ def create_contiguous_ragged_array_output(unproc_output):
 
 @timeit
 def write_output_data(final_result_field, output_path_name):
-    """Write out the 4D (XYZT) colocated result as output data.
+    """Write out the 4D (X-Y-Z-T) colocated result as output data.
 
     TODO: DETAILED DOCS
     """
@@ -1615,7 +1619,7 @@ def make_output_plots(
     The plot may optionally be displayed during script execution, else
     saved to disk.
 
-    Note we wrap method from plotting module here so we can use the timeit
+    Note we wrap method from plotting module here so we can use the 'timeit'
     decorator.
 
     TODO: DETAILED DOCS
@@ -1637,7 +1641,7 @@ def colocate_single_file(
     chosen_obs_field,
     model_field,
     preprocess_obs,
-    satellite_plugin_config,  # needed?
+    satellite_plugin_config,  # needed here?
     index,
     start_time_override,
     halo_size,
@@ -1747,7 +1751,7 @@ def colocate(
 
     # For the satellite swath cases, ignore vertical height since it is
     # dealt with by the averaging kernel.
-    # TODO how do we account for the averging kernel work in this case?
+    # TODO how do we account for the averaging kernel work in this case?
     no_vertical = preprocess_obs == "satellite"
 
     # Where this is False, is taken as the key of the "Z" coordinate by default
@@ -1788,7 +1792,7 @@ def colocate(
         # vertical coords
         persist_all_metadata(model_field)
 
-    # Subspacing to remove irrelavant information, pre-colocation
+    # Subspacing to remove irrelevant information, pre-colocation
     # TODO tidy passing through of computed vertical coord identifier
     model_field_bb, vertical_key = subspace_to_spatiotemporal_bounding_box(
         obs_field,
@@ -1848,7 +1852,7 @@ def main():
     # Print the ASCII VISION banner - this must come before any logging!
     print(toolkit_banner())
 
-    # Env print
+    # Environment print-out
     get_env_and_diagnostics_report()
 
     # Prepare inputs and config. ready for possibly-iterative co-location
@@ -1878,7 +1882,7 @@ def main():
     cfp_input_track_only_config = args.cfp_input_track_only_config
     cfp_input_general_config = args.cfp_input_general_config
 
-    # *Deprcated alternatives processing*
+    # *Deprecated alternatives processing*
     # TODO: eventually remove the deprecated alternatives, but for now
     # accept both (see cli.py end of process_cli_arguments for the listing
     # of any deprecated options)
@@ -1957,7 +1961,7 @@ def main():
             if len(orog_fl) > 1:
                 logger.warning(
                     "Orography data read-in has more than one field. Taking "
-                    "the first field in the corrsponding FieldList. If "
+                    "the first field in the corresponding FieldList. If "
                     "another field is required, ensure it is the only field "
                     f"read-in for the dataset at path '{orog_data_path}'."
                 )
@@ -1971,7 +1975,7 @@ def main():
     # Persist model fields outside of loop
     persist_all_metadata(model_field)
 
-    # Start colocating the indivdual files to read (which may just be one
+    # Start co-locating the individual files to read (which may just be one
     # file in many cases)
     read_file_list = get_files_to_individually_colocate(
         args.obs_data_path, context="obs-data-path")

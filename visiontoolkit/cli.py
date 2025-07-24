@@ -430,7 +430,7 @@ def process_config():
     Order values are set in:
       1. Defaults set first, to ensure everything has a valid value, then...
       2. Overidden by any config. file specifications, which are in turn...
-      3. Overidden by any CLI options provided, which are aways applied over
+      3. Overidden by any CLI options provided, which are always applied over
          the former.
 
     Overwrite any config. specified in the config. file given with the CLI
@@ -451,7 +451,7 @@ def process_config():
     # to fill in whatever is not provided from the command.
     parsed_args = parser.parse_args()
 
-    # Configure logging - do this now since otherwise folowing log messages
+    # Configure logging - do this now since otherwise following log messages
     # get missed!
     setup_logging(parsed_args.verbose)
 
@@ -500,7 +500,7 @@ def validate_config(final_config_namespace):
 
     TODO: DETAILED DOCS
     """
-    # TODO add validation in incrementally to cover all input options & args!
+    # TODO add validation in incrementally to cover all input options & args
 
     print("final_config_namespace is", final_config_namespace)
 
@@ -522,8 +522,11 @@ def process_config_file(config_file):
         try:
             j = json.load(f)
         except (json.decoder.JSONDecodeError, AttributeError):
-            raise ValueError("Bad JSON configuration file.")  # TODO better msg
+            raise ValueError(
+                "The configuration file specified is not valid JSON: "
+                f"{config_file}"
+            )
 
-    logger.info(f"Succesfully read-in JSON config. file at: {config_file}")
+    logger.info(f"Successfully read-in JSON config. file at: {config_file}")
 
     return j

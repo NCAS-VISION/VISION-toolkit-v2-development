@@ -6,7 +6,7 @@ CONFIG_DEFAULTS = {
     # *** Script running options ***
     # Configure messaging to STDOUT, which is very verbose if INFO=True, else
     # as minimal as allows without log control in cf-plot (at present).
-    # TODO: Get ESMF logging via cf incoporated into Python logging system,
+    # TODO: Get ESMF logging via cf incorporated into Python logging system,
     # see Issue #286.
     "verbose": 0,  # corresponds to a count of 0 (-v would be 1, -vv 2, etc.)
     # *** Run mode with time override(s) ***
@@ -15,7 +15,7 @@ CONFIG_DEFAULTS = {
     #    datetimes of the observational input data (set "False"),
     # 2. where the times on the observations are ignored so that they are
     #    set and assumed to take a given start time, as specified as one
-    #    datetime string. Datetimes are assuemd to be UTC and should be
+    #    datetime string. Datetimes are assumed to be UTC and should be
     #    pre-converted from another timezones before input if applicable.
     #
     #    TODO: could have a shortcut if want to assume start time of model?
@@ -43,7 +43,7 @@ CONFIG_DEFAULTS = {
     "output-file-name": "vision_toolkit_result_field.nc",
     "history-message": (
         "Processed using the NCAS VISION Toolkit to "
-        "colocate from model data to the observational data "
+        "co-locate from model data to the observational data "
         "spatio-temporal location."
     ),
     # *** Subspacing options ***
@@ -53,7 +53,7 @@ CONFIG_DEFAULTS = {
     # Note this option except in rare cases won't be required, as should almost
     # always be able to determine what z-coordinate want given it must be
     # present in both the model and the observational data, so match those.
-    # Only if both data have more than one of identical z-coord do we need
+    # Only if both data have more than one of identical z-coordinate do we need
     # to ask for this info.
     # Pressure will always be the ideal case, so that is our default and if
     # it can't be found, we look for other ways forward for the vertical.

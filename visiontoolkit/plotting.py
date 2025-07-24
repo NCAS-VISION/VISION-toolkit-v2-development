@@ -138,7 +138,7 @@ def output_plots(
         file=f"{outputs_dir}/{plotname_start}_final_colocated_field.png",
     )
 
-    # Set levels for plotting of data in a colourmap
+    # Set levels for plotting of data in a colour map
     # Min, max as determined using output.min(), .max():
     if cfp_output_levs_config:
         cfp.levs(**cfp_output_levs_config)
