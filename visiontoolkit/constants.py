@@ -1,7 +1,5 @@
-"""Configuration default values, applied if the user does not set otherwise.
-
-TODO: DETAILED DOCS
-"""
+# Note: Sphinx autodoc requires dict object docstring to go *after* the
+# dict itself, so see below for the docs!
 CONFIG_DEFAULTS = {
     # *** Script running options ***
     # Configure messaging to STDOUT, which is very verbose if INFO=True, else
@@ -105,6 +103,59 @@ CONFIG_DEFAULTS = {
     #"show-plot-of-input-obs": True,
     #"skip-all-plotting": False,
 }
+"""Configuration default values, applied if the user does not set otherwise.
+
+This is a constant, in the form of a dictionary defining the configuration
+names as keys and their default values as the corresponding value for each.
+
+**Output in pretty-printed format**
+
+>>> from pprint import pprint
+>>> pprint(visiontoolkit.constants.CONFIG_DEFAULTS)
+{'cfp-cscale': 'plasma',
+ 'cfp-input-general-config': {'legend': True,
+                              'linewidth': 0.0,
+                              'markersize': 5,
+                              'title': 'Input: observational field (path, to '
+                                       'be used for co-location, with its '
+                                       'corresponding data, to be ignored)'},
+ 'cfp-input-levs-config': {},
+ 'cfp-input-track-only-config': {'colorbar': False,
+                                 'legend': True,
+                                 'linewidth': 0.0,
+                                 'markersize': 0.5,
+                                 'title': 'Input: flight track from '
+                                          'observational field to co-locate '
+                                          'model field onto'},
+ 'cfp-mapset-config': {},
+ 'cfp-output-general-config': {'legend': True,
+                               'linewidth': 0.0,
+                               'markersize': 5,
+                               'title': 'Result: model co-located onto '
+                                        'observational path'},
+ 'cfp-output-levs-config': {},
+ 'chosen-model-field': False,
+ 'chosen-obs-field': False,
+ 'halo-size': 1,
+ 'history-message': 'Processed using the NCAS VISION Toolkit to co-locate from '
+                    'model data to the observational data spatio-temporal '
+                    'location.',
+ 'model-data-path': '.',
+ 'obs-data-path': '.',
+ 'orography': None,
+ 'output-file-name': 'vision_toolkit_result_field.nc',
+ 'outputs-dir': '.',
+ 'plot-mode': 0,
+ 'plotname-start': 'vision_toolkit',
+ 'preprocess-mode-model': None,
+ 'preprocess-mode-obs': None,
+ 'source-axes': False,
+ 'spatial-colocation-method': 'linear',
+ 'start-time-override': False,
+ 'verbose': 0,
+ 'vertical-colocation-coord': 'air_pressure'}
+
+"""
 
 
 def toolkit_banner():
