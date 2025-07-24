@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def setup_logging(verbosity):
-    """Configure the package log level assuming CLI counted '-v' flag input.
+    """Configure the package log level assuming CLI counted `-v` flag input.
 
     TODO: DETAILED DOCS
     """

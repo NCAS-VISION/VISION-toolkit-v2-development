@@ -220,7 +220,7 @@ data-aria-dark="Switch to auto color mode">
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.main.html#visiontoolkit.main" title="visiontoolkit.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
-<td><p>Perform end-to-end model-to-observational co-location.</p></td>
+<td><p>Perform end-to-end co-location of model data onto observations.</p></td>
 </tr>
 </tbody>
 </table>
@@ -233,8 +233,8 @@ data-aria-dark="Switch to auto color mode">
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.get_files_to_individually_colocate.html#visiontoolkit.get_files_to_individually_colocate" title="visiontoolkit.get_files_to_individually_colocate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_files_to_individually_colocate</span></code></a>(path)</p></td>
-<td><p>TODO.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.get_files_to_individually_colocate.html#visiontoolkit.get_files_to_individually_colocate" title="visiontoolkit.get_files_to_individually_colocate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_files_to_individually_colocate</span></code></a>(path[, ...])</p></td>
+<td><p>Return list of files to read with <code class="xref py py-obj docutils literal notranslate"><span class="pre">cf.read</span></code> from a path name/pattern.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.read_obs_input_data.html#visiontoolkit.read_obs_input_data" title="visiontoolkit.read_obs_input_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_obs_input_data</span></code></a>(obs_data_path)</p></td>
 <td><p>Read in all observational input data.</p></td>
@@ -258,7 +258,7 @@ data-aria-dark="Switch to auto color mode">
 <td><p>Ensure the chosen field is CF compliant with the correct format.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.check_time_coverage.html#visiontoolkit.check_time_coverage" title="visiontoolkit.check_time_coverage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_time_coverage</span></code></a>(obs_times, model_times)</p></td>
-<td><p>TODO</p></td>
+<td><p>Ensure observational data datetime range lies inside that of the model.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.ensure_unit_calendar_consistency.html#visiontoolkit.ensure_unit_calendar_consistency" title="visiontoolkit.ensure_unit_calendar_consistency"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ensure_unit_calendar_consistency</span></code></a>(obs_field, ...)</p></td>
 <td><p>Ensure the chosen fields have consistent units and calendars.</p></td>
@@ -279,7 +279,7 @@ data-aria-dark="Switch to auto color mode">
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.colocate.html#visiontoolkit.colocate" title="visiontoolkit.colocate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">colocate</span></code></a>(model_field, obs_field, halo_size, ...)</p></td>
-<td><p>TODO.</p></td>
+<td><p>Co-locate a model field's data onto an observational field's domain.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.colocate_single_file.html#visiontoolkit.colocate_single_file" title="visiontoolkit.colocate_single_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">colocate_single_file</span></code></a>(file_to_colocate, ...)</p></td>
 <td><p>Perform model-to-observational colocation using a single file source.</p></td>
@@ -294,7 +294,7 @@ data-aria-dark="Switch to auto color mode">
 <td><p>Interpolate the flight path spatially (3D for X-Y and vertical Z).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.time_subspace_per_segment.html#visiontoolkit.time_subspace_per_segment" title="visiontoolkit.time_subspace_per_segment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">time_subspace_per_segment</span></code></a>(index, ...)</p></td>
-<td><p>TODO.</p></td>
+<td><p>Return the calculation-appropriate weighting for a given time segment.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.time_interpolation.html#visiontoolkit.time_interpolation" title="visiontoolkit.time_interpolation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">time_interpolation</span></code></a>(obs_times, model_times, ...)</p></td>
 <td><p>Interpolate the flight path temporally (in time T).</p></td>
@@ -312,7 +312,7 @@ data-aria-dark="Switch to auto color mode">
 <td><p>Create a compressed contiguous ragged array DSG output.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.write_output_data.html#visiontoolkit.write_output_data" title="visiontoolkit.write_output_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_output_data</span></code></a>(final_result_field, ...)</p></td>
-<td><p>Write out the 4D (XYZT) colocated result as output data.</p></td>
+<td><p>Write out the 4D (X-Y-Z-T) colocated result as output data.</p></td>
 </tr>
 </tbody>
 </table>
@@ -400,7 +400,7 @@ data-aria-dark="Switch to auto color mode">
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.cli.setup_logging.html#visiontoolkit.cli.setup_logging" title="visiontoolkit.cli.setup_logging"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cli.setup_logging</span></code></a>(verbosity)</p></td>
-<td><p>Configure the package log level assuming CLI counted '-v' flag input.</p></td>
+<td><p>Configure the package log level assuming CLI counted <code class="xref py py-obj docutils literal notranslate"><span class="pre">-v</span></code> flag input.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.cli.process_cli_arguments.html#visiontoolkit.cli.process_cli_arguments" title="visiontoolkit.cli.process_cli_arguments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cli.process_cli_arguments</span></code></a>(parser)</p></td>
 <td><p>Parse and process all command-line arguments.</p></td>
@@ -409,7 +409,7 @@ data-aria-dark="Switch to auto color mode">
 <td><p>Process all configuration, from CLI, file or a default if neither set.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/visiontoolkit.cli.validate_config.html#visiontoolkit.cli.validate_config" title="visiontoolkit.cli.validate_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cli.validate_config</span></code></a>(final_config_namespace)</p></td>
-<td><p>TODO</p></td>
+<td><p>Perform validations on the configuration input by the user.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.cli.process_config_file.html#visiontoolkit.cli.process_config_file" title="visiontoolkit.cli.process_config_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cli.process_config_file</span></code></a>(config_file)</p></td>
 <td><p>Process a configuration file.</p></td>
@@ -424,7 +424,7 @@ data-aria-dark="Switch to auto color mode">
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/visiontoolkit.constants.CONFIG_DEFAULTS.html#visiontoolkit.constants.CONFIG_DEFAULTS" title="visiontoolkit.constants.CONFIG_DEFAULTS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">constants.CONFIG_DEFAULTS</span></code></a></p></td>
-<td><p>dict() -&gt; new empty dictionary dict(mapping) -&gt; new dictionary initialized from a mapping object's     (key, value) pairs dict(iterable) -&gt; new dictionary initialized as if via:     d = {}     for k, v in iterable:         d[k] = v dict(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs) -&gt; new dictionary initialized with the name=value pairs     in the keyword argument list. For example:  dict(one=1, two=2).</p></td>
+<td><p>Configuration default values, applied if the user does not set otherwise.</p></td>
 </tr>
 </tbody>
 </table>

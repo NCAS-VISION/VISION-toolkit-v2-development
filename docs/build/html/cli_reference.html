@@ -167,23 +167,23 @@ defaults used as the canonical source of these, namely:
 <h2>Named Arguments<a class="headerlink" href="#visiontoolkit-cli_parser-named-arguments" title="Link to this heading">¶</a></h2>
 <dl class="option-list">
 <dt><kbd>-v, --verbose</kbd></dt>
-<dd><p>provide more detailed output, where multiple calls will increase the verbosity yet further to a maximum at -vvv correpsonding to logging level DEBUG, where no usage gives a default of logging level WARNING</p>
+<dd><p>provide more detailed output, where multiple calls will increase the verbosity yet further to a maximum at -vvv (3 v)corresponding to logging level ‘DEBUG’, where no specification gives a default of logging level ‘WARNING’ (0 v)</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">0</span></code></p>
 </dd>
 <dt><kbd>-c, --config-file</kbd></dt>
-<dd><p>configuration file in JSON format to supply configuration, where any configuration provided by other command–line options will take precendence over the config. file input, if duplication occurs</p>
+<dd><p>configuration file in JSON format to supply configuration, where any configuration provided by other command-line options will take precedence over the configuration file input, if duplication should occur</p>
 </dd>
 <dt><kbd>-p, --preprocess-mode-obs</kbd></dt>
-<dd><p>specify a pre-processing mode so a set plugin is applied to pre-process the observational data in an apprpriate way, current options being ‘flight’ and ‘satellite’ where by default we apply no pre-processing</p>
+<dd><p>specify a pre-processing mode so a set plugin is applied to pre-process the observational data in an appropriate way, current options being ‘flight’ and ‘satellite’ where by default no pre-processing is applied</p>
 </dd>
 <dt><kbd>--preprocess-mode-model</kbd></dt>
-<dd><p>specify a pre-processing mode so a set plugin is applied to pre-process the model data in an apprpriate way, current options being ‘UM’ and ‘WRF’ where by default we apply no pre-processing</p>
+<dd><p>specify a pre-processing mode so a set plugin is applied to pre-process the model data in an appropriate way, current options being ‘UM’ and ‘WRF’ where by default no pre-processing is applied</p>
 </dd>
 <dt><kbd>--orography</kbd></dt>
-<dd><p>if the model data input is PP and has vertical coordinates in terms of atmosphere hybrid height then specify the path to the external orography applicable to the model data requred for calculation of the vertical coordinates</p>
+<dd><p>if the model data input is in PP format and has vertical coordinates in terms of atmosphere hybrid height then specify the path to the external orography data applicable to the model data required for calculation of the vertical coordinates</p>
 </dd>
 <dt><kbd>-s, --start-time-override</kbd></dt>
-<dd><p>if given, a datetime in UTC timezone with which to override the observational datetimes so that the colocation is conducted with the spatial components of the observational path but assuming the given start time and not the actual one</p>
+<dd><p>if given, a datetime in the UTC timezone with which to override the observational datetimes so that the co-location is conducted with the same spatial components of the observational path but assuming the given start time instead of the actual timestamped one when the data was collected/sampled</p>
 </dd>
 <dt><kbd>-o, --obs-data-path</kbd></dt>
 <dd><p>path location of the observational data, which can be provided in any form accepted by the ‘cf.read’ files argument, see: <a class="reference external" href="https://ncas-cms.github.io/cf-python/function/cf.read.html">https://ncas-cms.github.io/cf-python/function/cf.read.html</a></p>
@@ -192,40 +192,40 @@ defaults used as the canonical source of these, namely:
 <dd><p>path location of the model data, which can be provided in any form accepted by the ‘cf.read’ files argument, see: <a class="reference external" href="https://ncas-cms.github.io/cf-python/function/cf.read.html">https://ncas-cms.github.io/cf-python/function/cf.read.html</a></p>
 </dd>
 <dt><kbd>--chosen-obs-field</kbd></dt>
-<dd><p>string corresponding to a valid ‘select_field’ argument to select a unique field from the FieldList of the read-in observational data, else if not specified the FieldList is assumed to be of size one and the single field is extracted.</p>
+<dd><p>string corresponding to a valid ‘select_field’ argument to select a unique field from the FieldList of the read-in observational data, else if not specified the FieldList is assumed to be of size one and the single field extracted</p>
 </dd>
 <dt><kbd>--chosen-model-field</kbd></dt>
-<dd><p>string corresponding to a valid ‘select_field’ argument to select a unique field from the FieldList of the read-in model data, else if not specified the FieldList is assumed to be of size one and the single field is extracted.</p>
+<dd><p>string corresponding to a valid ‘select_field’ argument to select a unique field from the FieldList of the read-in model data, else if not specified the FieldList is assumed to be of size one and the single field extracted</p>
 </dd>
 <dt><kbd>-d, --outputs-dir</kbd></dt>
-<dd><p>path location of the top-level directory to create outputs in</p>
+<dd><p>path location of the top-level directory in which to put the toolkit output(s)</p>
 </dd>
 <dt><kbd>-f, --output-file-name</kbd></dt>
-<dd><p>name including extension to give the result output file</p>
+<dd><p>name including extension to call the toolkit result output file</p>
 </dd>
 <dt><kbd>--history-message</kbd></dt>
-<dd><p>message that gets added to the ‘history’ property on the output file</p>
+<dd><p>message that is added to the ‘history’ property on the toolkit result output file</p>
 </dd>
 <dt><kbd>--halo-size</kbd></dt>
-<dd><p>size of the halo to apply for subspacing, see the section ‘Halos’ under ‘<a class="reference external" href="https://ncas-cms.github.io/cf-python/method/cf.Domain.subspace.html?highlight=halo">https://ncas-cms.github.io/cf-python/method/cf.Domain.subspace.html?highlight=halo</a>’ for details.</p>
+<dd><p>size of the halo to apply for subspacing, see the section ‘Halos’ under ‘<a class="reference external" href="https://ncas-cms.github.io/cf-python/method/cf.Domain.subspace.html?highlight=halos">https://ncas-cms.github.io/cf-python/method/cf.Domain.subspace.html?highlight=halos</a>’ for context</p>
 </dd>
 <dt><kbd>-i, --spatial-colocation-method</kbd></dt>
-<dd><p>interpolation method to apply for the spatial colocation, see ‘method’ parameter to ‘cf.regrids’ method used under-the-hood to do this for options: <a class="reference external" href="https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html">https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html</a></p>
+<dd><p>interpolation method to apply for the spatial co-location, see the ‘method’ parameter to ‘cf.regrids’ method used under-the-hood to do this for options: <a class="reference external" href="https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html">https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html</a></p>
 </dd>
 <dt><kbd>-z, --vertical-colocation-coord</kbd></dt>
-<dd><p>vertical (z) coordinate to use as the vertical component in the spatial interpolation step of colocation, where either a pressure or an altitude CF standard name is expected</p>
+<dd><p>vertical (Z) coordinate to use as the vertical component in the spatial interpolation step of co-location, where either a pressure or an altitude CF standard name is expected</p>
 </dd>
 <dt><kbd>--source-axes</kbd></dt>
-<dd><p>identifies the source grid’s X and Y dimensions if they cannot be inferred from the existence of 1D dimension coordinates</p>
+<dd><p>a dictionary to identify the source grid’s X and Y dimensions if they cannot be inferred from the existence of 1D dimension coordinates, for context see: <a class="reference external" href="https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html?highlight=src_axes">https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html?highlight=src_axes</a></p>
 </dd>
 <dt><kbd>--plotname-start</kbd></dt>
-<dd><p>initial text to use in the names of all plots generated</p>
+<dd><p>initial text to preface the names of all plots generated</p>
 </dd>
 <dt><kbd>--plot-mode</kbd></dt>
-<dd><p>what to plot with cf-plot, where integer inputs represent the supported modes, which are: 0 to not plot anything, 1 to plot both the outputs and, before starting colocation, as a means of verification and/or quick inpection, the observational input (with its data), 2 to plot only the outputs (the default mode, if plot-mode is not specified) and 3 to plot both the outputs and observational input but only show the track/swath of the inputs without the data on it to indicate the track/swath which the model field will then be colocated onto (the most relevant part of the observational input for VISION purposes)</p>
+<dd><p>what if anything to plot with the toolkit (note this requires cf-plot to be installed at suitable version), where integer inputs represent the supported modes, which are: [0] to not plot anything (the default); [1] to plot both the outputs and, before starting co-location, as a means of verification and/or quick inspection, the observational input (with its data); [2] to plot only the outputs (the default mode, if plot-mode is not specified); and [3] to plot both the outputs and observational input but only show the track/swath of the inputs without the data on it to indicate the track/swath which the model field will then be co-located onto (the most relevant part of the observational input for VISION purposes)</p>
 </dd>
 <dt><kbd>--cfp-cscale</kbd></dt>
-<dd><p>cf-plot plotting configuration as a string to set the colour scale for the (input preview and) output plots, ee: <a class="reference external" href="https://ncas-cms.github.io/cf-plot/build/cscale.html#cscale">https://ncas-cms.github.io/cf-plot/build/cscale.html#cscale</a></p>
+<dd><p>cf-plot plotting configuration as a string to set the colour scale for the (input preview and) output plots, see: <a class="reference external" href="https://ncas-cms.github.io/cf-plot/build/cscale.html#cscale">https://ncas-cms.github.io/cf-plot/build/cscale.html#cscale</a></p>
 </dd>
 <dt><kbd>--cfp-mapset-config</kbd></dt>
 <dd><p>cf-plot plotting configuration as a dictionary to set the mapping parameters for the (input preview and) output plots, see: <a class="reference external" href="https://ncas-cms.github.io/cf-plot/build/mapset.html#mapset">https://ncas-cms.github.io/cf-plot/build/mapset.html#mapset</a></p>
@@ -234,7 +234,7 @@ defaults used as the canonical source of these, namely:
 <dd><p>cf-plot plotting configuration as a dictionary to set the contour levels for the input preview plots, see: <a class="reference external" href="https://ncas-cms.github.io/cf-plot/build/levs.html#levs">https://ncas-cms.github.io/cf-plot/build/levs.html#levs</a></p>
 </dd>
 <dt><kbd>--cfp-input-general-config</kbd></dt>
-<dd><p>cf-plot plotting configuration as a dictionary to set the general plotting variables for the input preview full plot, see:https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars[TODO CLARIFY/SEPARATE SETVARS AND PLOT CALL CONFIG.]</p>
+<dd><p>cf-plot plotting configuration as a dictionary to set the general plotting variables for the input preview full plot, see:https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars</p>
 </dd>
 <dt><kbd>--cfp-input-track-only-config</kbd></dt>
 <dd><p>cf-plot plotting configuration as a dictionary to set the general plotting variables for track-only input preview plot, see:https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars</p>
@@ -243,33 +243,33 @@ defaults used as the canonical source of these, namely:
 <dd><p>cf-plot plotting configuration as a dictionary to set the contour levels for the output plots, see: <a class="reference external" href="https://ncas-cms.github.io/cf-plot/build/levs.html#levs">https://ncas-cms.github.io/cf-plot/build/levs.html#levs</a></p>
 </dd>
 <dt><kbd>--cfp-output-general-config</kbd></dt>
-<dd><p>cf-plot plotting configuration as a dictionary to set the general plotting variables for the output plots, see:https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars[TODO CLARIFY/SEPARATE SETVARS AND PLOT CALL CONFIG.]</p>
+<dd><p>cf-plot plotting configuration as a dictionary to set the general plotting variables for the output plots, see:https://ncas-cms.github.io/cf-plot/build/setvars.html#setvars</p>
 </dd>
 <dt><kbd>--satellite-plugin-config</kbd></dt>
 <dd><p>dictionary to set the configuration values for the satellite plugin, where valid keys to set are ‘latitude’, ‘longitude’, ‘sensingtime’, ‘do_retrieval’, ‘sensingtime_msec’, ‘sensingtime_day’, ‘npres’ and ‘npi’.</p>
 </dd>
 <dt><kbd>--regrid-z-coord</kbd></dt>
-<dd><p>NOW DEPRECATED: use ‘–vertical-colocation-coord’ instead. [vertical (z) coordinate to use as the vertical component in the spatial interpolation step]</p>
+<dd><p>DEPRECATED: use ‘–vertical-colocation-coord’ instead [vertical (z) coordinate to use as the vertical component in the spatial interpolation step]</p>
 </dd>
 <dt><kbd>-r, --regrid-method</kbd></dt>
-<dd><p>NOW DEPRECATED: use ‘–spatial-colocation-method’ instead. [regridding interpolation method to apply, see ‘method’ parameter to ‘cf.regrids’ method for options: <a class="reference external" href="https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html">https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html</a>]</p>
+<dd><p>DEPRECATED: use ‘–spatial-colocation-method’ instead [regridding interpolation method to apply, see ‘method’ parameter to ‘cf.regrids’ method for options: <a class="reference external" href="https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html">https://ncas-cms.github.io/cf-python/method/cf.Field.regrids.html</a>]</p>
 </dd>
 <dt><kbd>--chosen-obs-fields</kbd></dt>
-<dd><p>NOW DEPRECATED: use ‘–chosen-obs-field’ (non-plural) instead. Note that we no longer accept an integer corresponding to a FieldList index to take a field from like this keyword permitted, now we require a valid ‘select_field’ string argument.</p>
+<dd><p>DEPRECATED: use ‘–chosen-obs-field’ (non-plural) instead and note that we no longer accept an integer corresponding to a FieldList index to take a field from like this keyword permitted, now we require a valid ‘select_field’ string argument.</p>
 </dd>
 <dt><kbd>--chosen-model-fields</kbd></dt>
-<dd><p>NOW DEPRECATED: use ‘–chosen-model-field’ (non-plural) instead. Note that we no longer accept an integer corresponding to a FieldList index to take a field from like this keyword permitted, now we require a valid ‘select_field’ string argument.</p>
+<dd><p>DEPRECATED: use ‘–chosen-model-field’ (non-plural) instead and note that we no longer accept an integer corresponding to a FieldList index to take a field from like this keyword permitted, now we require a valid ‘select_field’ string argument</p>
 </dd>
 <dt><kbd>-t, --plot-of-input-obs-track-only</kbd></dt>
-<dd><p>NOW DEPRECATED: use ‘–plot-mode’ instead. [flag to indicate whether only the track/trajectory of the observational data is shown, as opposed to the data on the track, for the input observational data preview plots]</p>
+<dd><p>DEPRECATED: use ‘–plot-mode’ instead [flag to indicate whether only the track/trajectory of the observational data is shown, as opposed to the data on the track, for the input observational data preview plots]</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--skip-all-plotting</kbd></dt>
-<dd><p>NOW DEPRECATED: use ‘–plot-mode’ instead. [Do not generate plots to preview the input or show the output fields]</p>
+<dd><p>DEPRECATED: use ‘–plot-mode’ instead [Do not generate plots to preview the input or show the output fields]</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--show-plot-of-input-obs</kbd></dt>
-<dd><p>NOW DEPRECATED: use ‘–plot-mode’ instead. [flag to indicate whether to show plots of the input observational data before the colocation logic begins, as a preview]</p>
+<dd><p>DEPRECATED: use ‘–plot-mode’ instead [flag to indicate whether to show plots of the input observational data before the co-location logic begins, as a preview]</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
