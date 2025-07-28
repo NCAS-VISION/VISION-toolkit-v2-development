@@ -48,19 +48,28 @@ Checklist for validity of input data
 .. note::
 
    These rules for validity apply whether the data in question is model or
-   observational data.
+   observational data, unless indicated otherwise.
 
-#. TODO
+Input data must be:
+   
+#. CF Compliant, that is abiding by the
+   `CF Metadata Conventions <https://cfconventions.org/>`_. Ideally the
+   data should abide by the latest version of the CF Conventions (as per the
+   document listed against 'latest released version' on the
+   `official website 'Conventions' page <https://cfconventions.org/conventions.html>`_),
+   though earlier versions are generally sufficient.
 
-   #. TODO
+#. In a form whereby, when aggregated during reading by ``cf.read`` or otherwise,
+   there is precisely one field per physical variable, which could be either
+   from:
 
-   #. TODO
+   * the data already being in a form with one field per physical variable; or
 
-#. TODO
-
-   #. TODO
-
-   #. TODO
+   * the data being aggregatable to that form (see for reference the
+     `cf-python aggregate function <https://ncas-cms.github.io/cf-python/function/cf.aggregate.html>`_
+     (``cf.aggregate``) which is run during the ``cf.read`` operation
+     which the VISION Toolkit uses to read-in datasets, and corresponding
+     `aggregation rules outlined here <https://ncas-cms.github.io/cf-python/aggregation_rules.html>`_).
 
 #. TODO
 
