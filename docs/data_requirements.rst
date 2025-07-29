@@ -9,22 +9,22 @@ Data Requirements
 Context
 -------
 
-To work, the VISION Toolkit requires the input data for the
+To work, the VISION Toolkit requires the input dataset for the
 model and for the observations to be *sufficiently standard with respect
 to its metadata and structure*. Specifically, it must be
 compliant with the CF Conventions metadata standard (see the official
 `CF Conventions website <CFConventions_>`_ for further information) and
 have particular CF-compliant coordinates of suitable form
 present. They must also be *compatible for co-location with each other*,
-notably the extent of the observational data must lie within the
-extent of the model data.
+notably the extent of the observational dataset must lie within the
+extent of the model dataset.
 
 Details are provided below in a numbered checklist which should be
 consulted to ensure validity.
 
 .. note::
 
-   For selected cases, we have data pre-processing built into the toolkit
+   For selected cases, we have dataset pre-processing built into the toolkit
    as plugins which will conduct some processing of specific datasets of
    standard format from a given project or model to
    enable them to conform to the requirements where they don't quite
@@ -38,31 +38,31 @@ consulted to ensure validity.
 .. warning::
 
    If you attempt to use the VISION Toolkit with model and/or observational
-   data which does not abide by the requirements documented here, it cannot
-   be guaranteed to work. (However, if you believe your data does in fact
+   dataset which does not abide by the requirements documented here, it cannot
+   be guaranteed to work. (However, if you believe your dataset does in fact
    meet these requirements and the toolkit is erroring or not seeming to
    work correctly some way, please :ref:`contact us <IntroContact>`
-   so we can verify whether the data or the toolkit is
+   so we can verify whether the dataset or the toolkit is
    at issue).
 
 
-Checklist for validity of input data
-------------------------------------
+Checklist for validity of input datasets
+----------------------------------------
 
 Input datasets separately
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
 
-   These rules for validity apply whether the data in question is model or
-   observational data, unless indicated otherwise.
+   These rules for validity apply whether the dataset in question is a model or
+   observational dataset, unless indicated otherwise.
 
-To work with the VISION toolkit, input data must satisfy the following.
+To work with the VISION toolkit, input datasets must satisfy the following.
    
 1. Be CF Compliant, that is abiding by the
    `CF Metadata Conventions <https://cfconventions.org/>`_.
 
-   * Ideally the data should abide by the latest version of the CF Conventions
+   * Ideally the dataset should abide by the latest version of the CF Conventions
      (as per the document listed against 'latest released version' on the
      `official website 'Conventions' page <https://cfconventions.org/conventions.html>`_),
      but earlier versions are generally sufficient.
@@ -71,31 +71,31 @@ To work with the VISION toolkit, input data must satisfy the following.
    there is precisely one field per physical variable (e.g. one field only for
    a temperature variable), which could be either from:
 
-   * The data already being in a form with one field per physical variable (preferred); OR
+   * The dataset already being in a form with one field per physical variable (preferred); OR
 
-   * The data being immediately aggregatable to that form (see for reference the
+   * The dataset being immediately aggregatable to that form (see for reference the
      `cf-python aggregate function <https://ncas-cms.github.io/cf-python/function/cf.aggregate.html>`_
      (``cf.aggregate``) which is run during the ``cf.read`` operation
      which the VISION Toolkit uses to read-in datasets, and corresponding
      `aggregation rules outlined here <https://ncas-cms.github.io/cf-python/aggregation_rules.html>`_); OR
 
    * (Least desirable, but acceptable/supported) configuration being provided
-     to support a more relaxed aggregation of the data into that form, which
+     to support a more relaxed aggregation of the dataset into that form, which
      requires altering the aggregtion rule logic to be less strict to
      reduce down the read-in fields more than the default aggregation rules
      would, based upon provision of a dictionary of extra
      keywords to provide to the `cf.aggregate` operation ran by the `cf.read`
-     used by the toolkit to read the data, see ``[[TODO NEW CONFIG INPUT]]``.
+     used by the toolkit to read the dataset, see ``[[TODO NEW CONFIG INPUT]]``.
 
 3. Each such field representing a physical variable having suitable coordinates
-   (for the model data these must be in the form of *dimension* coordinates),
+   (for the model datasets these must be in the form of *dimension* coordinates),
    defined to cover the context in spatiotemporal space, notably:
 
-   * Model data should be gridded in at least 4D (3D spatially plus time,
+   * Model datasets should be gridded in at least 4D (3D spatially plus time,
      X-Y-Z-T);
 
-   * Whereas observational data may be lower dimensional to account
-     for constant levels, for example ship data may be defined without
+   * Whereas observational datasets may be lower dimensional to account
+     for constant levels, for example ship datasets may be defined without
      vertical (Z) levels (i.e. on X-Y-T).
 
 4. Vertical (Z) coordinates, where required as covered above, should be defined
@@ -117,7 +117,7 @@ To work with the VISION toolkit, input data must satisfy the following.
      coordinate OR a parametric form which
      would become an auxiliary 4D coordinate.
 
-   * If the model data input is in PP format and has vertical coordinates
+   * If the model dataset input is in PP format and has vertical coordinates
      defined parametrically in terms of an atmosphere hybrid height
      coordinate, the orography
      `needs to be known <https://cfconventions.org/cf-conventions/cf-conventions.html#atmosphere-hybrid-height-coordinate>`_
@@ -131,7 +131,7 @@ To work with the VISION toolkit, input data must satisfy the following.
 
 
 5. (As specified by the CF Conventions, but for clarity emphasised here)
-   for observational data defined as discrete sampling geometries, which
+   for observational datasets defined as discrete sampling geometries, which
    should be the form for example for trajectories e.g. flight paths,
    the time coordinate must have values in strict monotonically
    increasing order (i.e. always increasing).
@@ -150,7 +150,7 @@ To work with the VISION toolkit, input data must satisfy the following.
    rather than at some angle) and due to the processing of the vertical coordinates
    through averaging kernel the distinction may be important. Therefore at
    present it isn't clear whether the toolkit works accurately for satellite
-   data from those that are not nadir-viewing.
+   datasets from those that are not nadir-viewing.
       
 
 Model and observational datasets compatibility
@@ -160,27 +160,27 @@ Furthermore, to work with the VISION toolkit, any given input combination of
 model and observational datasets together should be *compatible* with each
 other for the purposes of co-location, in the sense that:
 
-6. The observational data spatial domain must lie fully inside the model
-   data spatial domain for all shared coordinates, for the full datetime range
+6. The observational dataset spatial domain must lie fully inside the model
+   dataset spatial domain for all shared coordinates, for the full datetime range
    on which both are defined. For example, for an observational input
-   of ship or buoy data in X-Y-T, for all points across the time
-   coordinate T, the ship/buoy data X and Y points must lie within
-   the X range and Y range of the model data.
+   of ship or buoy dataset in X-Y-T, for all points across the time
+   coordinate T, the ship/buoy dataset X and Y points must lie within
+   the X range and Y range of the model dataset.
 
    .. SLB: does halo influence this? If so, clarify in a note.
 
-7. The observational data datetime range must lie inside the datetime range
+7. The observational dataset datetime range must lie inside the datetime range
    of the model, unless a ``start-time-override`` (see the corresponding
    :ref:`Command-line Interface <cli>` option) is applied to override the
    observational datetime range, in which case the observational range with
    the override set must then lie within the model's datetime range
    (so, the ``start-time-override`` must lie inside the model datetime range
    and the datetime corresponding to the duration difference from the
-   earliest to latest timepoints in the original observational data, added
+   earliest to latest timepoints in the original observational dataset, added
    to the ``start-time-override`` datetime, must also).
 
-8. For trajectory observational data, for example flight, ship and buoy
+8. For trajectory observational datasets, for example flight, ship and buoy
    paths, consecutive points in the path (those one after the other in
-   time) must not span more than one grid cell in the model data i.e.
+   time) must not span more than one grid cell in the model dataset i.e.
    must always lie in adjacent grid cells. (Otherwise, the operation of
    co-location is deemed too nonsensical to perform.)
