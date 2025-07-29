@@ -64,6 +64,8 @@ toolkit. For Version 1 of the toolkit, see the repository
 `here <vision-v1-repo_>`_.
 
 
+.. _IntroContact:
+
 Contact
 -------
 

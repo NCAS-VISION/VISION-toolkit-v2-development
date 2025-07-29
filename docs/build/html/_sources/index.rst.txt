@@ -58,6 +58,7 @@ toolkit.
    introduction
    installation
    quickstart
+   data_requirements
    examples
    gallery
    cli_reference
