@@ -9,6 +9,13 @@ use the tool provided in the
 and consult the documentation there. (When this code is ready it will be copied to that
 repository as its canonical home and marked as Version 2.0 of the toolkit.) :warning:
 
+## Documentation
+
+Canonical documentation for the v2 toolkit lives at:
+https://ncas-vision.github.io/VISION-toolkit-v2-development/build/html/index.html.
+Please consult this as a first point of reference, else questions or comments can be
+sent to sadie.bartholomew@ncas.ac.uk.
+
 ## Context
 
 For context on this toolkit and its scientific and technical background, please consult
