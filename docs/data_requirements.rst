@@ -22,18 +22,6 @@ extent of the model dataset.
 Details are provided below in a numbered checklist which should be
 consulted to ensure validity.
 
-.. note::
-
-   For selected cases, we have dataset pre-processing built into the toolkit
-   as plugins which will conduct some processing of specific datasets of
-   standard format from a given project or model to
-   enable them to conform to the requirements where they don't quite
-   satisfy them (for historical reasons or to abide by other/internal
-   data standards etc.). You can choose to enable these plugins via the
-   configuration. For more details, see the ``preprocess-mode-obs`` and
-   ``preprocess-mode-model`` configuration options as covered in the
-   :ref:`CLI <Command-line Interface (CLI) Reference>`.
-
 
 .. warning::
 
@@ -141,7 +129,6 @@ To work with the VISION toolkit, input datasets must satisfy the following.
    in DSG form for paths, given that the CF compliance should ensure this
    anyway.
 
-
 .. note::
 
    **Specifically regarding satellite datasets:** the VISION Toolkit has
@@ -151,7 +138,19 @@ To work with the VISION toolkit, input datasets must satisfy the following.
    through averaging kernel the distinction may be important. Therefore at
    present it isn't clear whether the toolkit works accurately for satellite
    datasets from those that are not nadir-viewing.
-      
+
+.. note::
+
+   For selected cases, we have dataset pre-processing built into the toolkit
+   as plugins which will conduct some processing of specific datasets of
+   standard format from a given project or model to
+   enable them to conform to the requirements where they don't quite
+   satisfy them (for historical reasons or to abide by other/internal
+   data standards etc.). You can choose to enable these plugins via the
+   configuration. For more details, see the ``preprocess-mode-obs`` and
+   ``preprocess-mode-model`` configuration options as covered in the
+   :ref:`CLI <Command-line Interface (CLI) Reference>`.
+
 
 Model and observational datasets compatibility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
