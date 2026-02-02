@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="jade" data-content_root="./">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Data Requirements - VISION Toolkit 2.0.0-alpha documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Examples" href="examples.html" /><link rel="prev" title="Quickstart" href="quickstart.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=397bb51e" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=5d6d21aa" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="Data Requirements"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="index.html">
+      
+      
+      <strong>VISION Toolkit</strong>
+    </a>
+    <div class="sy-head-nav" id="HeadNav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="HeadNav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2 -translate-x-2"></span>
+          <span class="hamburger_3 -translate-x-1"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="1"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 _expand"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data Requirements</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#context">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#checklist-for-validity-of-input-datasets">Checklist for validity of input datasets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#input-datasets-separately">Input datasets separately</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#model-and-observational-datasets-compatibility">Model and observational datasets compatibility</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="cli_reference.html">Command-line Interface (CLI) Reference</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="api_reference.html">Application Programming Interface (API) Reference</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#context">Context</a></li>
+<li><a class="reference internal" href="#checklist-for-validity-of-input-datasets">Checklist for validity of input datasets</a><ul>
+<li><a class="reference internal" href="#input-datasets-separately">Input datasets separately</a></li>
+<li><a class="reference internal" href="#model-and-observational-datasets-compatibility">Model and observational datasets compatibility</a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6"><div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">VISION Toolkit</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Data Requirements</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="data-requirements">
+<span id="datarequirements"></span><h1>Data Requirements<a class="headerlink" href="#data-requirements" title="Link to this heading">¶</a></h1>
+<section id="context">
+<h2>Context<a class="headerlink" href="#context" title="Link to this heading">¶</a></h2>
+<p>To work, the VISION Toolkit requires the input dataset for the
+model and for the observations to be <em>sufficiently standard with respect
+to its metadata and structure</em>. Specifically, it must be
+compliant with the CF Conventions metadata standard (see the official
+<a class="reference external" href="https://cfconventions.org/">CF Conventions website</a> for further information) and
+have particular CF-compliant coordinates of suitable form
+present. They must also be <em>compatible for co-location with each other</em>,
+notably the extent of the observational dataset must lie within the
+extent of the model dataset.</p>
+<p>Details are provided below in a numbered checklist which should be
+consulted to ensure validity.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For selected cases, we have dataset pre-processing built into the toolkit
+as plugins which will conduct some processing of specific datasets of
+standard format from a given project or model to
+enable them to conform to the requirements where they don’t quite
+satisfy them (for historical reasons or to abide by other/internal
+data standards etc.). You can choose to enable these plugins via the
+configuration. For more details, see the <code class="docutils literal notranslate"><span class="pre">preprocess-mode-obs</span></code> and
+<code class="docutils literal notranslate"><span class="pre">preprocess-mode-model</span></code> configuration options as covered in the
+<a class="reference internal" href="cli_reference.html#command-line-interface-cli-reference"><span class="std std-ref">CLI</span></a>.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you attempt to use the VISION Toolkit with model and/or observational
+dataset which does not abide by the requirements documented here, it cannot
+be guaranteed to work. (However, if you believe your dataset does in fact
+meet these requirements and the toolkit is erroring or not seeming to
+work correctly some way, please <a class="reference internal" href="introduction.html#introcontact"><span class="std std-ref">contact us</span></a>
+so we can verify whether the dataset or the toolkit is
+at issue).</p>
+</div>
+</section>
+<section id="checklist-for-validity-of-input-datasets">
+<h2>Checklist for validity of input datasets<a class="headerlink" href="#checklist-for-validity-of-input-datasets" title="Link to this heading">¶</a></h2>
+<section id="input-datasets-separately">
+<h3>Input datasets separately<a class="headerlink" href="#input-datasets-separately" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These rules for validity apply whether the dataset in question is a model or
+observational dataset, unless indicated otherwise.</p>
+</div>
+<p>To work with the VISION toolkit, input datasets must satisfy the following.</p>
+<ol class="arabic simple">
+<li><p>Be CF Compliant, that is abiding by the
+<a class="reference external" href="https://cfconventions.org/">CF Metadata Conventions</a>.</p>
+<ul class="simple">
+<li><p>Ideally the dataset should abide by the latest version of the CF Conventions
+(as per the document listed against ‘latest released version’ on the
+<a class="reference external" href="https://cfconventions.org/conventions.html">official website ‘Conventions’ page</a>),
+but earlier versions are generally sufficient.</p></li>
+</ul>
+</li>
+<li><p>Be in a form whereby, when aggregated during reading by <code class="docutils literal notranslate"><span class="pre">cf.read</span></code> or otherwise,
+there is precisely one field per physical variable (e.g. one field only for
+a temperature variable), which could be either from:</p>
+<ul class="simple">
+<li><p>The dataset already being in a form with one field per physical variable (preferred); OR</p></li>
+<li><p>The dataset being immediately aggregatable to that form (see for reference the
+<a class="reference external" href="https://ncas-cms.github.io/cf-python/function/cf.aggregate.html">cf-python aggregate function</a>
+(<code class="docutils literal notranslate"><span class="pre">cf.aggregate</span></code>) which is run during the <code class="docutils literal notranslate"><span class="pre">cf.read</span></code> operation
+which the VISION Toolkit uses to read-in datasets, and corresponding
+<a class="reference external" href="https://ncas-cms.github.io/cf-python/aggregation_rules.html">aggregation rules outlined here</a>); OR</p></li>
+<li><p>(Least desirable, but acceptable/supported) configuration being provided
+to support a more relaxed aggregation of the dataset into that form, which
+requires altering the aggregtion rule logic to be less strict to
+reduce down the read-in fields more than the default aggregation rules
+would, based upon provision of a dictionary of extra
+keywords to provide to the <cite>cf.aggregate</cite> operation ran by the <cite>cf.read</cite>
+used by the toolkit to read the dataset, see <code class="docutils literal notranslate"><span class="pre">[[TODO</span> <span class="pre">NEW</span> <span class="pre">CONFIG</span> <span class="pre">INPUT]]</span></code>.</p></li>
+</ul>
+</li>
+<li><p>Each such field representing a physical variable having suitable coordinates
+(for the model datasets these must be in the form of <em>dimension</em> coordinates),
+defined to cover the context in spatiotemporal space, notably:</p>
+<ul class="simple">
+<li><p>Model datasets should be gridded in at least 4D (3D spatially plus time,
+X-Y-Z-T);</p></li>
+<li><p>Whereas observational datasets may be lower dimensional to account
+for constant levels, for example ship datasets may be defined without
+vertical (Z) levels (i.e. on X-Y-T).</p></li>
+</ul>
+</li>
+<li><p>Vertical (Z) coordinates, where required as covered above, should be defined
+either directly or as parametric vertical coordinates, and should have the
+appropriate dimensionality.</p>
+<ul class="simple">
+<li><p>The vertical (Z) coordinate must be in the form of either an
+altitude/height/depth or a pressure coordinate, with appropriate CF Standard
+Name assigned, taken to be <cite>air_pressure</cite> by default but this should be
+adapted for another such standard name using the
+<code class="docutils literal notranslate"><span class="pre">vertical-colocation-coord</span></code> (see the corresponding
+<a class="reference internal" href="cli_reference.html#cli"><span class="std std-ref">Command-line Interface</span></a> option).</p></li>
+<li><p>If an altitude/height/depth, it will need to be either a 1D dimension
+coordinate OR a 3D auxiliary coordinate OR a parametric form which
+would become an auxiliary 4D coordinate).</p></li>
+<li><p>Otherwise, if a form of pressure, it will need to be either a 1D dimension
+coordinate OR a parametric form which
+would become an auxiliary 4D coordinate.</p></li>
+<li><p>If the model dataset input is in PP format and has vertical coordinates
+defined parametrically in terms of an atmosphere hybrid height
+coordinate, the orography
+<a class="reference external" href="https://cfconventions.org/cf-conventions/cf-conventions.html#atmosphere-hybrid-height-coordinate">needs to be known</a>
+so a suitable orography
+dataset must be supplied via specifying the path to it using the <code class="docutils literal notranslate"><span class="pre">orography</span></code>
+configuration option
+(see the <a class="reference internal" href="cli_reference.html#cli"><span class="std std-ref">Command-line Interface</span></a>).</p></li>
+<li><p>Otherwise, parametric vertical coordinates are handled by the toolkit
+logic without need for further input.</p></li>
+</ul>
+</li>
+<li><p>(As specified by the CF Conventions, but for clarity emphasised here)
+for observational datasets defined as discrete sampling geometries, which
+should be the form for example for trajectories e.g. flight paths,
+the time coordinate must have values in strict monotonically
+increasing order (i.e. always increasing).</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Specifically regarding satellite datasets:</strong> the VISION Toolkit has
+only been tested so far on <em>nadir-viewing</em> satellites
+(those that observe the Earth directly beneath them, in a downward direction,
+rather than at some angle) and due to the processing of the vertical coordinates
+through averaging kernel the distinction may be important. Therefore at
+present it isn’t clear whether the toolkit works accurately for satellite
+datasets from those that are not nadir-viewing.</p>
+</div>
+</section>
+<section id="model-and-observational-datasets-compatibility">
+<h3>Model and observational datasets compatibility<a class="headerlink" href="#model-and-observational-datasets-compatibility" title="Link to this heading">¶</a></h3>
+<p>Furthermore, to work with the VISION toolkit, any given input combination of
+model and observational datasets together should be <em>compatible</em> with each
+other for the purposes of co-location, in the sense that:</p>
+<ol class="arabic simple" start="6">
+<li><p>The observational dataset spatial domain must lie fully inside the model
+dataset spatial domain for all shared coordinates, for the full datetime range
+on which both are defined. For example, for an observational input
+of ship or buoy dataset in X-Y-T, for all points across the time
+coordinate T, the ship/buoy dataset X and Y points must lie within
+the X range and Y range of the model dataset.</p>
+</li>
+<li><p>The observational dataset datetime range must lie inside the datetime range
+of the model, unless a <code class="docutils literal notranslate"><span class="pre">start-time-override</span></code> (see the corresponding
+<a class="reference internal" href="cli_reference.html#cli"><span class="std std-ref">Command-line Interface</span></a> option) is applied to override the
+observational datetime range, in which case the observational range with
+the override set must then lie within the model’s datetime range
+(so, the <code class="docutils literal notranslate"><span class="pre">start-time-override</span></code> must lie inside the model datetime range
+and the datetime corresponding to the duration difference from the
+earliest to latest timepoints in the original observational dataset, added
+to the <code class="docutils literal notranslate"><span class="pre">start-time-override</span></code> datetime, must also).</p></li>
+<li><p>For trajectory observational datasets, for example flight, ship and buoy
+paths, consecutive points in the path (those one after the other in
+time) must not span more than one grid cell in the model dataset i.e.
+must always lie in adjacent grid cells. (Otherwise, the operation of
+co-location is deemed too nonsensical to perform.)</p></li>
+</ol>
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="quickstart.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Quickstart</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="examples.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Examples</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, National Centre for Atmospheric Science (NCAS)</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=d690e255"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/design-tabs.js?v=f930bc37"></script>
+      <script src="_static/shibuya.js?v=55e26b35"></script></body>
+</html>
