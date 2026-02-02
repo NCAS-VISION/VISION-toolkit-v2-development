@@ -1,4 +1,4 @@
-
+.. _CLI:
 
 Command-line Interface (CLI) Reference
 ======================================
