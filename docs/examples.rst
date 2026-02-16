@@ -28,39 +28,57 @@ section.
 Examples using the UM
 ---------------------
 
+.. _UMFlightExamples:
+
 Examples using the UM and flight paths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* [UF1]: UM model data co-located onto FAAM STANCO campaign flight path
-* [UF2]: UM model data co-located onto FAAM STANCO campaign flight path (overriding start time)
-* [UF3]: UM model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
-* [UF4]: FAAM STANCO campaign flight track (from observational input) preview only (no data)
+* ``[UF1]``: UM model data co-located onto FAAM STANCO campaign flight path
 
+  * Configuration file:
+    `um-faam-stanco-1.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/um-faam-stanco-1.json>`_
+  * Input datasets available from: TODO
+
+* ``[UF2]``: UM model data co-located onto FAAM STANCO campaign flight path (overriding start time)
+
+  * Configuration file:
+    `um-faam-stanco-2.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/um-faam-stanco-2.json>`_
+  * Input datasets available from: TODO
+
+* ``[UF3]``: UM model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
+
+  * Configuration file:
+    `um-faam-stanco-3.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/um-faam-stanco-3.json>`_
+  * Input datasets available from: TODO
+
+
+.. _UMSatelliteExamples:
 
 Examples using the UM and satellite swaths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* [US1]: UM model data co-located onto a satellite swath
-* [US2]: UM model data co-located onto a (different) satellite swath
-* [US3]: UM model data co-located onto a (different) satellite swath
-* [US4]: UM model data co-located onto a (different) satellite swath
-* [US5]: UM model data co-located onto a full satellite orbit of swaths
-* [US6]: UM model data co-located onto three consecutive full satellite orbits of swaths
-* [US7]: UM model data co-located onto a full revolution of consecutive full satellite orbits of swaths
-* [US8]: Particular satellite swath (from observational input) discrete sampling geometry preview only (no data)
-* [US9]: Particular satellite swath (from observational input) discrete sampling geometry preview only (no data)
+* ``[US1]``: UM model data co-located onto a satellite swath
+* ``[US2]``: UM model data co-located onto a (different) satellite swath
+* ``[US3]``: UM model data co-located onto a (different) satellite swath
+* ``[US4]``: UM model data co-located onto a (different) satellite swath
+* ``[US5]``: UM model data co-located onto a full satellite orbit of swaths
+* ``[US6]``: UM model data co-located onto three consecutive full satellite orbits of swaths
+* ``[US7]``: UM model data co-located onto a full revolution of consecutive full satellite orbits of swaths
+* ``[US8]``: Particular satellite swath (from observational input) discrete sampling geometry preview only (no data)
+* ``[US9]``: Particular satellite swath (from observational input) discrete sampling geometry preview only (no data)
 
 
 Examples using the WRF Model
 ----------------------------
 
+.. _WRFFlightExamples:
+
 Examples using WRF and flight paths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* [WF1]: WRF model data co-located onto FAAM STANCO campaign flight path
-* [WF2]: WRF model data co-located onto FAAM STANCO campaign flight path (overriding start time)
-* [WF3]: WRF model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
-* [WF4]: WRF model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
-* [WF5]: WRF model data co-located onto a minimal two-point flight test case
-
+* ``[WF1]``: WRF model data co-located onto FAAM STANCO campaign flight path
+* ``[WF2]``: WRF model data co-located onto FAAM STANCO campaign flight path (overriding start time)
+* ``[WF3]``: WRF model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
+* ``[WF4]``: WRF model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
+* ``[WF5]``: WRF model data co-located onto a minimal two-point flight test case
 

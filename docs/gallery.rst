@@ -27,9 +27,9 @@ Flight path examples
     .. grid-item-card:: FAAM STANCO campaign flight track (from observational input) preview only (no data), example 4
        :img-bottom: ../visiontoolkit/toolkit-outputs/gallery_for_posters_etc/vision_toolkit_obs_track_only.png
 
-       See example ``[UF4]`` (from :ref:`UMFlightExamples`).
+       See e.g. example ``[UF1]`` (from :ref:`UMFlightExamples`).
 
-        
+
 Satellite swath examples
 ------------------------
 
