@@ -28,20 +28,39 @@ section.
 Examples using the UM
 ---------------------
 
-TODO
+Examples using the UM and flight paths
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* [UF1]: UM model data co-located onto FAAM STANCO campaign flight path
+* [UF2]: UM model data co-located onto FAAM STANCO campaign flight path (overriding start time)
+* [UF3]: UM model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
+* [UF4]: FAAM STANCO campaign flight track (from observational input) preview only (no data)
+
+
+Examples using the UM and satellite swaths
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* [US1]: UM model data co-located onto a satellite swath
+* [US2]: UM model data co-located onto a (different) satellite swath
+* [US3]: UM model data co-located onto a (different) satellite swath
+* [US4]: UM model data co-located onto a (different) satellite swath
+* [US5]: UM model data co-located onto a full satellite orbit of swaths
+* [US6]: UM model data co-located onto three consecutive full satellite orbits of swaths
+* [US7]: UM model data co-located onto a full revolution of consecutive full satellite orbits of swaths
+* [US8]: Particular satellite swath (from observational input) discrete sampling geometry preview only (no data)
+* [US9]: Particular satellite swath (from observational input) discrete sampling geometry preview only (no data)
+
 
 Examples using the WRF Model
 ----------------------------
 
-TODO
+Examples using WRF and flight paths
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Examples using flight paths
----------------------------
+* [WF1]: WRF model data co-located onto FAAM STANCO campaign flight path
+* [WF2]: WRF model data co-located onto FAAM STANCO campaign flight path (overriding start time)
+* [WF3]: WRF model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
+* [WF4]: WRF model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
+* [WF5]: WRF model data co-located onto a minimal two-point flight test case
 
-TODO
-
-Examples using satellite swaths
--------------------------------
-
-TODO
 
