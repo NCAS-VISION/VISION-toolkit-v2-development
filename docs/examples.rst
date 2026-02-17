@@ -58,14 +58,58 @@ Examples using the UM and satellite swaths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * ``[US1]``: UM model data co-located onto a satellite swath
+
+  * Configuration file:
+    `um-satellite-1.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/um-satellite-1.json>`_
+  * Input datasets available from: TODO
+
 * ``[US2]``: UM model data co-located onto a (different) satellite swath
+
+  * Configuration file:
+    `um-satellite-2.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/um-satellite-2.json>`_
+  * Input datasets available from: TODO
+
 * ``[US3]``: UM model data co-located onto a (different) satellite swath
+
+  * Configuration file:
+    `um-satellite-3.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/um-satellite-3.json>`_
+  * Input datasets available from: TODO
+
 * ``[US4]``: UM model data co-located onto a (different) satellite swath
+
+  * Configuration file:
+    `um-satellite-4.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/um-satellite-4.json>`_
+  * Input datasets available from: TODO
+
 * ``[US5]``: UM model data co-located onto a full satellite orbit of swaths
+
+  * Configuration file:
+    `um-satellite-5.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/um-satellite-5.json>`_
+  * Input datasets available from: TODO
+
 * ``[US6]``: UM model data co-located onto three consecutive full satellite orbits of swaths
+
+  * Configuration file:
+    `um-satellite-6.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/um-satellite-6.json>`_
+  * Input datasets available from: TODO
+
 * ``[US7]``: UM model data co-located onto a full revolution of consecutive full satellite orbits of swaths
+
+  * Configuration file:
+    `um-satellite-7.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/um-satellite-7.json>`_
+  * Input datasets available from: TODO
+
 * ``[US8]``: Particular satellite swath (from observational input) discrete sampling geometry preview only (no data)
+
+  * Configuration file:
+    `um-satellite-8.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/um-satellite-8.json>`_
+  * Input datasets available from: TODO
+
 * ``[US9]``: Particular satellite swath (from observational input) discrete sampling geometry preview only (no data)
+
+  * Configuration file:
+    `um-satellite-9.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/um-satellite-9.json>`_
+  * Input datasets available from: TODO
 
 
 Examples using the WRF Model
