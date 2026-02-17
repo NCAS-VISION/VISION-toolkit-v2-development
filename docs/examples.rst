@@ -121,8 +121,31 @@ Examples using WRF and flight paths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * ``[WF1]``: WRF model data co-located onto FAAM STANCO campaign flight path
-* ``[WF2]``: WRF model data co-located onto FAAM STANCO campaign flight path (overriding start time)
-* ``[WF3]``: WRF model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
-* ``[WF4]``: WRF model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
-* ``[WF5]``: WRF model data co-located onto a minimal two-point flight test case
 
+  * Configuration file:
+    `wrf-faam-stanco-1.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/wrf-faam-stanco-1.json>`_
+  * Input datasets available from: TODO
+
+* ``[WF2]``: WRF model data co-located onto FAAM STANCO campaign flight path (overriding start time)
+
+  * Configuration file:
+    `wrf-faam-stanco-2.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/wrf-faam-stanco-2.json>`_
+  * Input datasets available from: TODO
+
+* ``[WF3]``: WRF model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
+
+  * Configuration file:
+    `wrf-faam-stanco-3.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/wrf-faam-stanco-3.json>`_
+  * Input datasets available from: TODO
+
+* ``[WF4]``: WRF model data co-located onto FAAM STANCO campaign flight path (different overriding start time)
+
+  * Configuration file:
+    `wrf-faam-stanco-4.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/wrf-faam-stanco-4.json>`_
+  * Input datasets available from: TODO
+
+* ``[WF5]``: WRF model data co-located onto a minimal two-point flight (as a test case)
+
+  * Configuration file:
+    `wrf-faam-stanco-5-minimaltwopointcase.json <https://github.com/NCAS-VISION/VISION-toolkit-v2-development/blob/main/visiontoolkit/configurations/wrf-faam-stanco-5-minimaltwopointcase.json>`_
+  * Input datasets available from: TODO
