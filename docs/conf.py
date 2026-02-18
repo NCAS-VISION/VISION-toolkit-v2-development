@@ -40,6 +40,3 @@ html_theme_options = {
     "toctree_collapse": True,  # theme equivalent to "collapse"
     "toctree_titles_only": False,  # theme equivlent to "titles_only"
 }
-
-# -- Extensions config. -------------------------------------------------
-### TODO
