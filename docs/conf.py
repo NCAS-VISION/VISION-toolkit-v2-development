@@ -39,10 +39,4 @@ html_theme_options = {
     "globaltoc_expand_depth": 1,
     "toctree_collapse": True,  # theme equivalent to "collapse"
     "toctree_titles_only": False,  # theme equivlent to "titles_only"
-    # Alow nav bar to expand to more nested levels than default:
-    "navigation_depth": 3,
-    "collapse_navigation": True,
 }
-
-# -- Extensions config. -------------------------------------------------
-### TODO
