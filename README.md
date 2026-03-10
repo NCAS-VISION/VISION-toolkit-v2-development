@@ -1,13 +1,15 @@
-# VISION-toolkit-v2-development
+# VISION Toolkit Version 2(+)
 
-**Version 2 of the VISION project toolkit**
+## The Virtual Integration of Satellite and In-Situ Observation Networks (VISION) Toolkit, Version 2+
 
-:warning: Note this code is *under development though should be relatively stable now*, though
-there may be some changes. For a released earlier version of the toolkit, please see and
-use the tool provided in the
-[`VISION-toolkit`](https://github.com/NCAS-VISION/VISION-toolkit) repository,
-and consult the documentation there. (When this code is ready it will be copied to that
-repository as its canonical home and marked as Version 2.0 of the toolkit.) :warning:
+* The **V**irtual **I**ntegration of **S**atellite and **In**-Situ **O**bservation
+  **N**etworks (**VISION**) Toolkit is part of the VISION project to enable
+  better integration of models and observations to enhance our confidence in future
+  climate projections.
+* This repository is for Version 2 and onwards of the toolkit. For a released earlier version,
+  please see and use the tool provided in the
+  [`VISION-toolkit`](https://github.com/NCAS-VISION/VISION-toolkit) repository,
+  and consult the documentation there.
 
 ## Documentation
 
